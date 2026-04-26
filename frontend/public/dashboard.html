@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Planning Poker 🃏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-dashboard">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">🃏 Planning Poker</a>
+    <div class="navbar-actions">
+      <span class="navbar-user" id="navUser"></span>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn">Uitloggen</button>
+    </div>
+  </nav>
+
+  <main class="dashboard-main">
+    <div class="dashboard-header">
+      <div>
+        <h1 id="dashboardTitle">Welkom terug!</h1>
+        <p class="text-muted" id="planBadge"></p>
+      </div>
+      <button class="btn btn-primary" id="newRoomBtn">+ Nieuwe kamer</button>
+    </div>
+
+    <!-- New room modal -->
+    <div id="newRoomModal" class="modal hidden">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-card">
+        <h2>Nieuwe kamer aanmaken</h2>
+        <div class="form-group">
+          <label for="modalRoomName">Kamernaam</label>
+          <div class="input-with-btn">
+            <input id="modalRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
+            <button id="modalRandomBtn" class="btn btn-ghost btn-icon" title="Willekeurige naam">🎲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modalMethod">Schattingsmethode</label>
+          <select id="modalMethod" class="input">
+            <option value="fibonacci">Fibonacci 😊</option>
+            <option value="modified_fibonacci">Modified Fibonacci</option>
+            <option value="tshirt">T-shirt maten</option>
+            <option value="powers_of_2">Powers of 2</option>
+          </select>
+        </div>
+        <p id="modalError" class="form-error hidden"></p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="modalCancelBtn">Annuleren</button>
+          <button class="btn btn-primary" id="modalCreateBtn">Aanmaken →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room list -->
+    <section class="dashboard-rooms">
+      <h2>Mijn kamers</h2>
+      <div id="roomList" class="room-list">
+        <div class="room-list-loading">Kamers laden…</div>
+      </div>
+    </section>
+
+    <!-- Plan info -->
+    <section class="plan-info">
+      <h2>Abonnement</h2>
+      <div class="plan-cards" id="planCards">
+        <div class="plan-card" data-plan="free">
+          <div class="plan-name">Free</div>
+          <ul class="plan-features">
+            <li>✓ 3 kamers</li>
+            <li>✓ 5 deelnemers</li>
+            <li>✓ 30 dagen bewaard</li>
+          </ul>
+        </div>
+        <div class="plan-card" data-plan="pro">
+          <div class="plan-name">Pro</div>
+          <ul class="plan-features">
+            <li>✓ 20 kamers</li>
+            <li>✓ 15 deelnemers</li>
+            <li>✓ 30 dagen bewaard</li>
+          </ul>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="pro">Upgraden</button>
+        </div>
+        <div class="plan-card plan-card-premium" data-plan="premium">
+          <div class="plan-badge">⭐ Premium</div>
+          <div class="plan-name">Premium</div>
+          <ul class="plan-features">
+            <li>✓ Onbeperkt kamers</li>
+            <li>✓ Onbeperkt deelnemers</li>
+            <li>✓ Kamers nooit verwijderd</li>
+          </ul>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="premium">Upgraden</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planning Poker 🃏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-landing">
+
+  <!-- Nav -->
+  <nav class="navbar">
+    <div class="navbar-brand">🃏 Planning Poker</div>
+    <div class="navbar-actions" id="navActions">
+      <a href="/login.html" class="btn btn-ghost">Inloggen</a>
+      <a href="/login.html#register" class="btn btn-primary btn-sm">Registreren</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main class="landing-main">
+    <div class="landing-hero">
+      <h1 class="landing-title">🃏 Planning Poker</h1>
+      <p class="landing-subtitle">Real-time scrum estimaties voor jouw team</p>
+      <p class="landing-anon-note">✅ Geen account nodig — gewoon een naam invullen en spelen!</p>
+    </div>
+
+    <div class="landing-cards">
+
+      <!-- Create room card -->
+      <div class="form-card">
+        <h2 class="form-card-title">✨ Kamer aanmaken</h2>
+
+        <div class="form-group">
+          <label for="createName">Jouw naam</label>
+          <input id="createName" type="text" class="input" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label for="createRoomName">Kamernaam</label>
+          <div class="input-with-btn">
+            <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
+            <button id="randomNameBtn" class="btn btn-ghost btn-icon" title="Nieuwe willekeurige naam">🎲</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="createMethod">Schattingsmethode</label>
+          <select id="createMethod" class="input">
+            <option value="fibonacci">Fibonacci 😊</option>
+            <option value="modified_fibonacci">Modified Fibonacci</option>
+            <option value="tshirt">T-shirt maten</option>
+            <option value="powers_of_2">Powers of 2</option>
+          </select>
+        </div>
+
+        <button id="createRoomBtn" class="btn btn-primary btn-full">
+          Kamer aanmaken →
+        </button>
+        <p id="createError" class="form-error hidden"></p>
+      </div>
+
+      <div class="landing-or">
+        <span>of</span>
+      </div>
+
+      <!-- Join room card -->
+      <div class="form-card">
+        <h2 class="form-card-title">🚪 Kamer joinen</h2>
+
+        <div class="form-group">
+          <label for="joinName">Jouw naam</label>
+          <input id="joinName" type="text" class="input" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <label for="joinCode">Kamercode</label>
+          <input
+            id="joinCode"
+            type="text"
+            class="input input-code"
+            placeholder="ABC123"
+            maxlength="6"
+            autocomplete="off"
+            style="text-transform:uppercase;letter-spacing:.15em;"
+          />
+        </div>
+
+        <button id="joinRoomBtn" class="btn btn-secondary btn-full">
+          Joinen →
+        </button>
+        <p id="joinError" class="form-error hidden"></p>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kamer — Planning Poker 🃏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-room">
+
+  <!-- Name prompt modal (shown when name is not yet known) -->
+  <div id="nameModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h2>👋 Wat is jouw naam?</h2>
+      <div class="form-group">
+        <input id="nameInput" type="text" class="input" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
+      </div>
+      <p id="nameError" class="form-error hidden">Vul een naam in</p>
+      <button class="btn btn-primary btn-full" id="nameSubmitBtn">Joinen →</button>
+    </div>
+  </div>
+
+  <!-- Room expired / not found overlay -->
+  <div id="roomOverlay" class="room-overlay hidden">
+    <div class="room-overlay-card">
+      <div id="overlayIcon">😴</div>
+      <h2 id="overlayTitle">Kamer verlopen</h2>
+      <p id="overlayMessage">Deze kamer is niet meer beschikbaar.</p>
+      <a href="/" class="btn btn-primary">Terug naar home →</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="room-header">
+    <a href="/" class="room-back" title="Terug naar home">←</a>
+
+    <div class="room-title-wrap">
+      <span id="roomNameDisplay" class="room-name"></span>
+      <button id="editNameBtn" class="btn-icon-sm" title="Naam aanpassen">✏️</button>
+      <input id="roomNameInput" class="room-name-input hidden" type="text" maxlength="100" />
+    </div>
+
+    <div class="room-meta">
+      <span id="methodBadge" class="badge"></span>
+      <span class="room-code-wrap">
+        Code: <strong id="roomCodeDisplay"></strong>
+        <button id="copyCodeBtn" class="btn-icon-sm" title="Kopieer code">📋</button>
+      </span>
+      <span id="playerCount" class="text-muted"></span>
+    </div>
+  </header>
+
+  <!-- Main area -->
+  <main class="room-main">
+
+    <!-- Poker table -->
+    <div class="table-area">
+      <div class="poker-table" id="pokerTable">
+        <div class="table-label">🃏</div>
+        <!-- Player slots are injected by room.js -->
+      </div>
+    </div>
+
+    <!-- Status + action bar -->
+    <div class="action-bar">
+      <span id="voteStatus" class="vote-status"></span>
+      <div class="action-btns">
+        <button id="revealBtn" class="btn btn-primary" disabled>👁 Reveal</button>
+        <button id="newRoundBtn" class="btn btn-ghost hidden">🔄 Nieuwe ronde</button>
+      </div>
+    </div>
+
+    <!-- Stats panel (visible after reveal) -->
+    <div id="statsPanel" class="stats-panel hidden">
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <!-- Card picker -->
+    <div class="card-picker">
+      <p class="card-picker-label">Kies jouw kaart:</p>
+      <div class="card-picker-row" id="cardPickerRow"></div>
+    </div>
+
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/room.js"></script>
+</body>
+</html>

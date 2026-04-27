@@ -23,7 +23,6 @@ function generateRoomName() {
 const savedName = localStorage.getItem('userName');
 if (savedName) {
   document.getElementById('createName').value = savedName;
-  document.getElementById('joinName').value = savedName;
 }
 
 // Set random room name
@@ -42,13 +41,13 @@ updateNavbar();
 const user = getCurrentUser();
 if (user) {
   document.getElementById('createName').value = user.name;
-  document.getElementById('joinName').value = user.name;
 }
 
 // ── Handle room code from URL (e.g. shared link) ─────────────────────────────
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('join')) {
   document.getElementById('joinCode').value = urlParams.get('join').toUpperCase();
+  lookupRoom();
 }
 if (urlParams.get('error')) {
   const errMap = {
@@ -75,37 +74,68 @@ document.getElementById('createRoomBtn').addEventListener('click', async () => {
       method: 'POST',
       body: JSON.stringify({ name: roomName, method }),
     });
-    // Navigate to room, carrying name for socket join
     window.location.href = `/room.html?id=${room.id}&name=${encodeURIComponent(name)}`;
   } catch (err) {
     showCreateError(err.message);
   }
 });
 
-// ── Join room ─────────────────────────────────────────────────────────────────
+// ── Join room — step 1: look up code ─────────────────────────────────────────
 
-document.getElementById('joinRoomBtn').addEventListener('click', async () => {
+document.getElementById('joinLookupBtn').addEventListener('click', lookupRoom);
+document.getElementById('joinCode').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') lookupRoom();
+});
+
+async function lookupRoom() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if (!code || code.length < 4) return showJoinError('Voer een geldige kamercode in');
+
+  hideJoinError();
+  const btn = document.getElementById('joinLookupBtn');
+  btn.disabled = true;
+  btn.textContent = 'Zoeken…';
+
+  try {
+    const room = await apiFetch(`/rooms/${code}`);
+    document.getElementById('joinFoundBanner').textContent = `✅ "${room.name}" gevonden!`;
+    document.getElementById('joinStep1').classList.add('hidden');
+    document.getElementById('joinStep2').classList.remove('hidden');
+    const nameInput = document.getElementById('joinName');
+    if (savedName) nameInput.value = savedName;
+    if (user) nameInput.value = user.name;
+    nameInput.focus();
+  } catch {
+    showJoinError('Kamer niet gevonden. Controleer de code en probeer opnieuw.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Kamer zoeken →';
+  }
+}
+
+// ── Join room — step 2: enter name and join ───────────────────────────────────
+
+document.getElementById('joinBackBtn').addEventListener('click', () => {
+  document.getElementById('joinStep2').classList.add('hidden');
+  document.getElementById('joinStep1').classList.remove('hidden');
+  hideJoinError();
+  document.getElementById('joinCode').focus();
+});
+
+document.getElementById('joinRoomBtn').addEventListener('click', joinRoom);
+document.getElementById('joinName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') joinRoom();
+});
+
+function joinRoom() {
   const name = document.getElementById('joinName').value.trim();
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
 
   if (!name) return showJoinError('Vul jouw naam in');
-  if (!code || code.length < 4) return showJoinError('Voer een geldige kamercode in');
 
   localStorage.setItem('userName', name);
-
-  try {
-    // Verify the room exists before navigating
-    await apiFetch(`/rooms/${code}`);
-    window.location.href = `/room.html?id=${code}&name=${encodeURIComponent(name)}`;
-  } catch {
-    showJoinError('Kamer niet gevonden. Controleer de code en probeer opnieuw.');
-  }
-});
-
-// Allow Enter key on join code input
-document.getElementById('joinCode').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('joinRoomBtn').click();
-});
+  window.location.href = `/room.html?id=${code}&name=${encodeURIComponent(name)}`;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -119,4 +149,8 @@ function showJoinError(msg) {
   const el = document.getElementById('joinError');
   el.textContent = msg;
   el.classList.remove('hidden');
+}
+
+function hideJoinError() {
+  document.getElementById('joinError').classList.add('hidden');
 }

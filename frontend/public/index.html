@@ -29,31 +29,33 @@
 
     <div class="landing-cards">
 
-      <!-- Create room card -->
-      <div class="form-card">
+      <!-- Create room card — full width -->
+      <div class="form-card form-card-wide">
         <h2 class="form-card-title">✨ Kamer aanmaken</h2>
 
-        <div class="form-group">
-          <label for="createName">Jouw naam</label>
-          <input id="createName" type="text" class="input" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
-        </div>
-
-        <div class="form-group">
-          <label for="createRoomName">Kamernaam</label>
-          <div class="input-with-btn">
-            <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
-            <button id="randomNameBtn" class="btn btn-ghost btn-icon" title="Nieuwe willekeurige naam">🎲</button>
+        <div class="create-fields">
+          <div class="form-group">
+            <label for="createName">Jouw naam</label>
+            <input id="createName" type="text" class="input" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="createMethod">Schattingsmethode</label>
-          <select id="createMethod" class="input">
-            <option value="fibonacci">Fibonacci 😊</option>
-            <option value="modified_fibonacci">Modified Fibonacci</option>
-            <option value="tshirt">T-shirt maten</option>
-            <option value="powers_of_2">Powers of 2</option>
-          </select>
+          <div class="form-group">
+            <label for="createRoomName">Kamernaam</label>
+            <div class="input-with-btn">
+              <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
+              <button id="randomNameBtn" class="btn btn-ghost btn-icon" title="Nieuwe willekeurige naam">🎲</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createMethod">Schattingsmethode</label>
+            <select id="createMethod" class="input">
+              <option value="fibonacci">Fibonacci 😊</option>
+              <option value="modified_fibonacci">Modified Fibonacci</option>
+              <option value="tshirt">T-shirt maten</option>
+              <option value="powers_of_2">Powers of 2</option>
+            </select>
+          </div>
         </div>
 
         <button id="createRoomBtn" class="btn btn-primary btn-full">
@@ -62,35 +64,42 @@
         <p id="createError" class="form-error hidden"></p>
       </div>
 
-      <div class="landing-or">
-        <span>of</span>
-      </div>
-
-      <!-- Join room card -->
-      <div class="form-card">
+      <!-- Join room card — step 1: code, step 2: name -->
+      <div class="form-card form-card-wide">
         <h2 class="form-card-title">🚪 Kamer joinen</h2>
 
-        <div class="form-group">
-          <label for="joinName">Jouw naam</label>
-          <input id="joinName" type="text" class="input" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+        <!-- Step 1: code -->
+        <div id="joinStep1">
+          <div class="form-group">
+            <label for="joinCode">Kamercode</label>
+            <input
+              id="joinCode"
+              type="text"
+              class="input input-code"
+              placeholder="ABC123"
+              maxlength="6"
+              autocomplete="off"
+              style="text-transform:uppercase;letter-spacing:.15em;"
+            />
+          </div>
+          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem">
+            Kamer zoeken →
+          </button>
         </div>
 
-        <div class="form-group">
-          <label for="joinCode">Kamercode</label>
-          <input
-            id="joinCode"
-            type="text"
-            class="input input-code"
-            placeholder="ABC123"
-            maxlength="6"
-            autocomplete="off"
-            style="text-transform:uppercase;letter-spacing:.15em;"
-          />
+        <!-- Step 2: name (hidden until code verified) -->
+        <div id="joinStep2" class="hidden">
+          <div class="join-found-banner" id="joinFoundBanner"></div>
+          <div class="form-group" style="margin-top:.8rem">
+            <label for="joinName">Jouw naam</label>
+            <input id="joinName" type="text" class="input" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+          </div>
+          <div class="join-step2-actions">
+            <button id="joinBackBtn" class="btn btn-ghost">← Terug</button>
+            <button id="joinRoomBtn" class="btn btn-secondary btn-full">Joinen →</button>
+          </div>
         </div>
 
-        <button id="joinRoomBtn" class="btn btn-secondary btn-full">
-          Joinen →
-        </button>
         <p id="joinError" class="form-error hidden"></p>
       </div>
 

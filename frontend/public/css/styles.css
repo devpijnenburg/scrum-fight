@@ -211,12 +211,11 @@ select.input { cursor: pointer; }
 
 .landing-cards {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   gap: 1.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
   width: 100%;
-  max-width: 860px;
+  max-width: 640px;
 }
 
 .form-card {
@@ -230,15 +229,32 @@ select.input { cursor: pointer; }
   width: min(360px, 100%);
   box-shadow: var(--shadow);
 }
+.form-card-wide { width: 100%; }
 .form-card-title { font-size: 1.15rem; font-weight: 800; }
 
-.landing-or {
-  display: flex;
-  align-items: center;
-  color: var(--text-muted);
+.create-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 560px) {
+  .create-fields { grid-template-columns: 1fr; }
+}
+
+.join-found-banner {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: .6rem 1rem;
+  font-size: .9rem;
   font-weight: 700;
-  padding: 2rem 0;
-  align-self: center;
+  color: var(--success);
+}
+
+.join-step2-actions {
+  display: flex;
+  gap: .8rem;
+  margin-top: .6rem;
 }
 
 /* ── Auth page ──────────────────────────────────────────────────────────────── */
@@ -678,8 +694,6 @@ select.input { cursor: pointer; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .landing-cards { flex-direction: column; align-items: center; }
-  .landing-or { padding: .5rem 0; }
   .poker-table { border-width: 5px; }
   .card-container { width: 42px; height: 63px; }
   .card-value { font-size: 1.1rem; }

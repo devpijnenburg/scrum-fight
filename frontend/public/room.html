@@ -50,6 +50,19 @@
         <button id="copyCodeBtn" class="btn-icon-sm" title="Kopieer code">📋</button>
       </span>
       <span id="playerCount" class="text-muted"></span>
+
+      <!-- Share button + popover -->
+      <div class="share-wrap">
+        <button id="shareBtn" class="btn btn-ghost btn-sm" data-i18n="room.share" data-i18n-title="room.share.title">🔗 Uitnodigen</button>
+        <div id="sharePopover" class="share-popover hidden">
+          <p class="share-popover-label" data-i18n="room.share.label">Uitnodigingslink</p>
+          <div class="share-popover-row">
+            <input id="shareUrl" class="share-url-input" type="text" readonly />
+            <button id="sharePopoverCopyBtn" class="btn btn-primary btn-sm" data-i18n="room.share.copy_btn">Kopieer</button>
+          </div>
+          <p id="shareCopiedMsg" class="share-copied hidden"></p>
+        </div>
+      </div>
     </div>
 
     <div class="lang-switcher lang-switcher-sm">

@@ -449,6 +449,42 @@ select.input { cursor: pointer; }
 .room-code-wrap { font-size: .85rem; color: var(--text-muted); display: flex; align-items: center; gap: .3rem; }
 .room-code-wrap strong { font-size: 1rem; color: var(--text); letter-spacing: .1em; }
 
+.share-wrap { position: relative; }
+
+.share-popover {
+  position: absolute;
+  top: calc(100% + .5rem);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  min-width: 320px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.share-popover-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+
+.share-popover-row { display: flex; gap: .5rem; }
+
+.share-url-input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: monospace;
+  font-size: .8rem;
+  padding: .4rem .6rem;
+  min-width: 0;
+}
+
+.share-copied { font-size: .8rem; font-weight: 700; color: var(--success); }
+
 /* ── Room main ──────────────────────────────────────────────────────────────── */
 .room-main {
   flex: 1;

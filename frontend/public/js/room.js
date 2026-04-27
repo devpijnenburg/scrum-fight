@@ -213,6 +213,36 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
 });
 
+// ── Share / invite ────────────────────────────────────────────────────────────
+
+const shareBtn = document.getElementById('shareBtn');
+const sharePopover = document.getElementById('sharePopover');
+const shareUrl = document.getElementById('shareUrl');
+
+shareBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const link = `${location.origin}/?join=${ROOM_ID}`;
+  shareUrl.value = link;
+  sharePopover.classList.toggle('hidden');
+  if (!sharePopover.classList.contains('hidden')) {
+    shareUrl.select();
+  }
+});
+
+document.getElementById('sharePopoverCopyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(shareUrl.value).catch(() => {});
+  const msg = document.getElementById('shareCopiedMsg');
+  msg.textContent = t('room.share.copied');
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2000);
+});
+
+document.addEventListener('click', (e) => {
+  if (!sharePopover.classList.contains('hidden') && !sharePopover.contains(e.target) && e.target !== shareBtn) {
+    sharePopover.classList.add('hidden');
+  }
+});
+
 // ── Render ────────────────────────────────────────────────────────────────────
 
 function renderAll(state) {

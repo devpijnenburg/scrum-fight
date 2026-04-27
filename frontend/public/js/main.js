@@ -10,7 +10,7 @@ const NOUNS = [
   'Gecko','Panda','Kraken','Platypus','Hamster','Octopus','Dinosaur','Giraffe',
   'Axolotl','Capybara','Quokka','Meerkat','Sloth','Dodo','Narwhal',
 ];
-const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Sessie'];
+const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Session'];
 
 function generateRoomName() {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -19,31 +19,26 @@ function generateRoomName() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-// Pre-fill name from localStorage if available
 const savedName = localStorage.getItem('userName');
 if (savedName) {
   document.getElementById('createName').value = savedName;
 }
 
-// Set random room name
 document.getElementById('createRoomName').value = generateRoomName();
 
-// Randomize button
 document.getElementById('randomNameBtn').addEventListener('click', () => {
   document.getElementById('createRoomName').value = generateRoomName();
   document.getElementById('createRoomName').focus();
 });
 
-// Update navbar if logged in
 updateNavbar();
 
-// Pre-fill name from token
 const user = getCurrentUser();
 if (user) {
   document.getElementById('createName').value = user.name;
 }
 
-// ── Handle room code from URL (e.g. shared link) ─────────────────────────────
+// ── Handle room code from URL ─────────────────────────────────────────────────
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('join')) {
   document.getElementById('joinCode').value = urlParams.get('join').toUpperCase();
@@ -51,10 +46,10 @@ if (urlParams.get('join')) {
 }
 if (urlParams.get('error')) {
   const errMap = {
-    oauth_state_invalid: 'OAuth verificatie mislukt, probeer opnieuw.',
-    oauth_failed: 'OAuth inloggen mislukt, probeer opnieuw.',
+    oauth_state_invalid: t('oauth.state_invalid'),
+    oauth_failed: t('oauth.failed'),
   };
-  showJoinError(errMap[urlParams.get('error')] || 'Er is een fout opgetreden.');
+  showJoinError(errMap[urlParams.get('error')] || t('oauth.error'));
 }
 
 // ── Create room ───────────────────────────────────────────────────────────────
@@ -64,8 +59,8 @@ document.getElementById('createRoomBtn').addEventListener('click', async () => {
   const roomName = document.getElementById('createRoomName').value.trim();
   const method = document.getElementById('createMethod').value;
 
-  if (!name) return showCreateError('Vul jouw naam in');
-  if (!roomName) return showCreateError('Vul een kamernaam in');
+  if (!name) return showCreateError(t('error.name'));
+  if (!roomName) return showCreateError(t('error.roomname'));
 
   localStorage.setItem('userName', name);
 
@@ -89,16 +84,16 @@ document.getElementById('joinCode').addEventListener('keydown', (e) => {
 
 async function lookupRoom() {
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
-  if (!code || code.length < 4) return showJoinError('Voer een geldige kamercode in');
+  if (!code || code.length < 4) return showJoinError(t('error.code'));
 
   hideJoinError();
   const btn = document.getElementById('joinLookupBtn');
   btn.disabled = true;
-  btn.textContent = 'Zoeken…';
+  btn.textContent = t('landing.join.searching');
 
   try {
     const room = await apiFetch(`/rooms/${code}`);
-    document.getElementById('joinFoundBanner').textContent = `✅ "${room.name}" gevonden!`;
+    document.getElementById('joinFoundBanner').textContent = t('landing.join.found', { name: room.name });
     document.getElementById('joinStep1').classList.add('hidden');
     document.getElementById('joinStep2').classList.remove('hidden');
     const nameInput = document.getElementById('joinName');
@@ -106,10 +101,10 @@ async function lookupRoom() {
     if (user) nameInput.value = user.name;
     nameInput.focus();
   } catch {
-    showJoinError('Kamer niet gevonden. Controleer de code en probeer opnieuw.');
+    showJoinError(t('error.room_not_found'));
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Kamer zoeken →';
+    btn.textContent = t('landing.join.search');
   }
 }
 
@@ -131,7 +126,7 @@ function joinRoom() {
   const name = document.getElementById('joinName').value.trim();
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
 
-  if (!name) return showJoinError('Vul jouw naam in');
+  if (!name) return showJoinError(t('error.name'));
 
   localStorage.setItem('userName', name);
   window.location.href = `/room.html?id=${code}&name=${encodeURIComponent(name)}`;

@@ -14,8 +14,12 @@
   <nav class="navbar">
     <div class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></div>
     <div class="navbar-actions" id="navActions">
-      <a href="/login.html" class="btn btn-ghost">Inloggen</a>
-      <a href="/login.html#register" class="btn btn-primary btn-sm">Registreren</a>
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="nl">NL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <a href="/login.html" class="btn btn-ghost" data-i18n="nav.login">Inloggen</a>
+      <a href="/login.html#register" class="btn btn-primary btn-sm" data-i18n="nav.register">Registreren</a>
     </div>
   </nav>
 
@@ -23,42 +27,42 @@
   <main class="landing-main">
     <div class="landing-hero">
       <h1 class="landing-title">⚔️ Scrum Fight</h1>
-      <p class="landing-subtitle">Planning Poker 2.0 — Real-time scrum estimaties voor jouw team</p>
-      <p class="landing-anon-note">✅ Geen account nodig — gewoon een naam invullen en spelen!</p>
+      <p class="landing-subtitle" data-i18n="landing.subtitle">Planning Poker 2.0 — Real-time scrum estimaties voor jouw team</p>
+      <p class="landing-anon-note" data-i18n="landing.anon">✅ Geen account nodig — gewoon een naam invullen en spelen!</p>
     </div>
 
     <div class="landing-cards">
 
       <!-- Create room card — full width -->
       <div class="form-card form-card-wide">
-        <h2 class="form-card-title">✨ Kamer aanmaken</h2>
+        <h2 class="form-card-title" data-i18n="landing.create.title">✨ Kamer aanmaken</h2>
 
         <div class="create-fields">
           <div class="form-group">
-            <label for="createName">Jouw naam</label>
-            <input id="createName" type="text" class="input" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
+            <label for="createName" data-i18n="landing.create.yourname">Jouw naam</label>
+            <input id="createName" type="text" class="input" data-i18n-ph="landing.create.yourname.ph" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
           </div>
 
           <div class="form-group">
-            <label for="createRoomName">Kamernaam</label>
+            <label for="createRoomName" data-i18n="landing.create.roomname">Kamernaam</label>
             <div class="input-with-btn">
               <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
-              <button id="randomNameBtn" class="btn btn-ghost btn-icon" title="Nieuwe willekeurige naam">🎲</button>
+              <button id="randomNameBtn" class="btn btn-ghost btn-icon" data-i18n-title="landing.create.random.title" title="Nieuwe willekeurige naam">🎲</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="createMethod">Schattingsmethode</label>
+            <label for="createMethod" data-i18n="landing.create.method">Schattingsmethode</label>
             <select id="createMethod" class="input">
-              <option value="fibonacci">Fibonacci 😊</option>
-              <option value="modified_fibonacci">Modified Fibonacci</option>
-              <option value="tshirt">T-shirt maten</option>
-              <option value="powers_of_2">Powers of 2</option>
+              <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci 😊</option>
+              <option value="modified_fibonacci" data-i18n="landing.create.method.modified_fibonacci">Modified Fibonacci</option>
+              <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
+              <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
             </select>
           </div>
         </div>
 
-        <button id="createRoomBtn" class="btn btn-primary btn-full">
+        <button id="createRoomBtn" class="btn btn-primary btn-full" data-i18n="landing.create.btn">
           Kamer aanmaken →
         </button>
         <p id="createError" class="form-error hidden"></p>
@@ -66,23 +70,24 @@
 
       <!-- Join room card — step 1: code, step 2: name -->
       <div class="form-card form-card-wide">
-        <h2 class="form-card-title">🚪 Kamer joinen</h2>
+        <h2 class="form-card-title" data-i18n="landing.join.title">🚪 Kamer joinen</h2>
 
         <!-- Step 1: code -->
         <div id="joinStep1">
           <div class="form-group">
-            <label for="joinCode">Kamercode</label>
+            <label for="joinCode" data-i18n="landing.join.code">Kamercode</label>
             <input
               id="joinCode"
               type="text"
               class="input input-code"
+              data-i18n-ph="landing.join.code.ph"
               placeholder="ABC123"
               maxlength="6"
               autocomplete="off"
               style="text-transform:uppercase;letter-spacing:.15em;"
             />
           </div>
-          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem">
+          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem" data-i18n="landing.join.search">
             Kamer zoeken →
           </button>
         </div>
@@ -91,12 +96,12 @@
         <div id="joinStep2" class="hidden">
           <div class="join-found-banner" id="joinFoundBanner"></div>
           <div class="form-group" style="margin-top:.8rem">
-            <label for="joinName">Jouw naam</label>
-            <input id="joinName" type="text" class="input" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+            <label for="joinName" data-i18n="landing.join.yourname">Jouw naam</label>
+            <input id="joinName" type="text" class="input" data-i18n-ph="landing.join.yourname.ph" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
           </div>
           <div class="join-step2-actions">
-            <button id="joinBackBtn" class="btn btn-ghost">← Terug</button>
-            <button id="joinRoomBtn" class="btn btn-secondary btn-full">Joinen →</button>
+            <button id="joinBackBtn" class="btn btn-ghost" data-i18n="landing.join.back">← Terug</button>
+            <button id="joinRoomBtn" class="btn btn-secondary btn-full" data-i18n="landing.join.btn">Joinen →</button>
           </div>
         </div>
 
@@ -106,6 +111,7 @@
     </div>
   </main>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/main.js"></script>

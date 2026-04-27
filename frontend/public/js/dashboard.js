@@ -10,7 +10,7 @@ const NOUNS = [
   'Gecko','Panda','Kraken','Platypus','Hamster','Octopus','Dinosaur','Giraffe',
   'Axolotl','Capybara','Quokka','Meerkat','Sloth',
 ];
-const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Sessie'];
+const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Session'];
 
 function generateRoomName() {
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -18,7 +18,6 @@ function generateRoomName() {
 }
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
-// Handle OAuth token from redirect
 const urlParams = new URLSearchParams(location.search);
 const oauthToken = urlParams.get('token');
 if (oauthToken) {
@@ -34,11 +33,10 @@ if (!user) {
 // ── Page init ─────────────────────────────────────────────────────────────────
 
 document.getElementById('navUser').textContent = `👤 ${user.name}`;
-document.getElementById('dashboardTitle').textContent = `Welkom terug, ${user.name}!`;
-document.getElementById('planBadge').textContent = `Huidig plan: ${user.plan.toUpperCase()}`;
+document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
+document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
 document.getElementById('logoutBtn').addEventListener('click', logout);
 
-// Highlight active plan
 document.querySelectorAll('.plan-card').forEach((card) => {
   if (card.dataset.plan === user.plan) {
     card.setAttribute('data-active', 'true');
@@ -47,7 +45,6 @@ document.querySelectorAll('.plan-card').forEach((card) => {
   }
 });
 
-// Set random room name in modal
 document.getElementById('modalRoomName').value = generateRoomName();
 document.getElementById('modalRandomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();
@@ -60,7 +57,7 @@ async function loadRooms() {
   try {
     const rooms = await apiFetch('/rooms');
     if (!rooms.length) {
-      list.innerHTML = '<p class="room-list-empty">Je hebt nog geen kamers. Maak er een aan!</p>';
+      list.innerHTML = `<p class="room-list-empty">${t('dashboard.rooms.empty')}</p>`;
       return;
     }
     list.innerHTML = rooms.map((r) => `
@@ -70,16 +67,16 @@ async function loadRooms() {
           <span class="badge">${methodLabel(r.method)}</span>
           <span class="text-muted">${r.id}</span>
         </div>
-        <div class="text-muted" style="font-size:.8rem;">Actief: ${formatDate(r.last_active)}</div>
+        <div class="text-muted" style="font-size:.8rem;">${t('dashboard.rooms.active', { date: formatDate(r.last_active) })}</div>
         <div class="room-item-actions">
-          <a href="/room.html?id=${r.id}" class="btn btn-primary btn-sm">Openen →</a>
+          <a href="/room.html?id=${r.id}" class="btn btn-primary btn-sm">${t('dashboard.rooms.open')}</a>
           <button class="btn btn-ghost btn-sm" onclick="copyCode('${r.id}')">📋 Code</button>
           <button class="btn btn-ghost btn-sm" onclick="deleteRoom('${r.id}')">🗑</button>
         </div>
       </div>
     `).join('');
   } catch (err) {
-    list.innerHTML = `<p class="form-error">Kamers laden mislukt: ${escapeHtml(err.message)}</p>`;
+    list.innerHTML = `<p class="form-error">${t('dashboard.rooms.load_error', { error: escapeHtml(err.message) })}</p>`;
   }
 }
 
@@ -107,7 +104,7 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
   errEl.classList.add('hidden');
 
   if (!name) {
-    errEl.textContent = 'Vul een kamernaam in';
+    errEl.textContent = t('dashboard.modal.error');
     errEl.classList.remove('hidden');
     return;
   }
@@ -128,18 +125,18 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 async function deleteRoom(id) {
-  if (!confirm('Kamer verwijderen? Dit kan niet ongedaan worden.')) return;
+  if (!confirm(t('dashboard.rooms.delete_confirm'))) return;
   try {
     await apiFetch(`/rooms/${id}`, { method: 'DELETE' });
     loadRooms();
   } catch (err) {
-    alert(`Verwijderen mislukt: ${err.message}`);
+    alert(t('dashboard.rooms.delete_error', { error: err.message }));
   }
 }
 
 function copyCode(id) {
   navigator.clipboard.writeText(id).catch(() => {});
-  alert(`Kamercode ${id} gekopieerd!`);
+  alert(t('dashboard.rooms.copied', { id }));
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -156,7 +153,9 @@ function methodLabel(method) {
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString(getLang() === 'nl' ? 'nl-NL' : 'en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
 }
 
 function escapeHtml(str) {

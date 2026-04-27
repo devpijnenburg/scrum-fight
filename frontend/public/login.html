@@ -12,6 +12,12 @@
 
   <nav class="navbar">
     <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+    <div class="navbar-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="nl">NL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
   </nav>
 
   <main class="auth-main">
@@ -19,44 +25,46 @@
 
       <!-- Tabs -->
       <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login">Inloggen</button>
-        <button class="auth-tab" data-tab="register">Registreren</button>
+        <button class="auth-tab active" data-tab="login" data-i18n="login.tab.login">Inloggen</button>
+        <button class="auth-tab" data-tab="register" data-i18n="login.tab.register">Registreren</button>
       </div>
 
       <!-- Login form -->
       <form id="loginForm" class="auth-form" autocomplete="on">
         <div class="form-group">
-          <label for="loginEmail">E-mailadres</label>
-          <input id="loginEmail" type="email" class="input" placeholder="naam@email.nl" required />
+          <label for="loginEmail" data-i18n="login.email">E-mailadres</label>
+          <input id="loginEmail" type="email" class="input" data-i18n-ph="login.email.ph" placeholder="naam@email.nl" required />
         </div>
         <div class="form-group">
-          <label for="loginPassword">Wachtwoord</label>
-          <input id="loginPassword" type="password" class="input" placeholder="••••••••" required />
+          <label for="loginPassword" data-i18n="login.password">Wachtwoord</label>
+          <input id="loginPassword" type="password" class="input" data-i18n-ph="login.password.ph" placeholder="••••••••" required />
         </div>
-        <button type="submit" class="btn btn-primary btn-full">Inloggen →</button>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="login.btn">Inloggen →</button>
         <p id="loginError" class="form-error hidden"></p>
       </form>
 
       <!-- Register form -->
       <form id="registerForm" class="auth-form hidden" autocomplete="on">
         <div class="form-group">
-          <label for="regName">Naam</label>
-          <input id="regName" type="text" class="input" placeholder="Jouw naam" maxlength="50" required />
+          <label for="regName" data-i18n="login.register.name">Naam</label>
+          <input id="regName" type="text" class="input" data-i18n-ph="login.register.name.ph" placeholder="Jouw naam" maxlength="50" required />
         </div>
         <div class="form-group">
-          <label for="regEmail">E-mailadres</label>
-          <input id="regEmail" type="email" class="input" placeholder="naam@email.nl" required />
+          <label for="regEmail" data-i18n="login.email">E-mailadres</label>
+          <input id="regEmail" type="email" class="input" data-i18n-ph="login.email.ph" placeholder="naam@email.nl" required />
         </div>
         <div class="form-group">
-          <label for="regPassword">Wachtwoord <small>(min. 8 tekens)</small></label>
-          <input id="regPassword" type="password" class="input" placeholder="••••••••" minlength="8" required />
+          <label for="regPassword">
+            <span data-i18n="login.password">Wachtwoord</span> <small data-i18n="login.password.hint">(min. 8 tekens)</small>
+          </label>
+          <input id="regPassword" type="password" class="input" data-i18n-ph="login.password.ph" placeholder="••••••••" minlength="8" required />
         </div>
-        <button type="submit" class="btn btn-primary btn-full">Account aanmaken →</button>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="login.register.btn">Account aanmaken →</button>
         <p id="registerError" class="form-error hidden"></p>
       </form>
 
       <!-- OAuth divider -->
-      <div class="oauth-divider"><span>of ga verder met</span></div>
+      <div class="oauth-divider"><span data-i18n="login.oauth.divider">of ga verder met</span></div>
 
       <div class="oauth-buttons">
         <a href="/api/auth/google" class="btn btn-oauth">
@@ -72,6 +80,7 @@
     </div>
   </main>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
@@ -84,12 +93,10 @@
         document.getElementById(tab.dataset.tab === 'login' ? 'loginForm' : 'registerForm').classList.remove('hidden');
       });
     });
-    // Activate register tab from hash
     if (location.hash === '#register') {
       document.querySelector('[data-tab="register"]').click();
     }
 
-    // Login
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('loginError');
@@ -111,7 +118,6 @@
       }
     });
 
-    // Register
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('registerError');

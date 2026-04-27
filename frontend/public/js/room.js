@@ -72,6 +72,7 @@ function joinRoomSocket(name, token) {
 socket.on('connect', () => {
   mySocketId = socket.id;
   resolveAndJoin();
+  initRoomAuth();
 });
 
 socket.on('room-state', (state) => {
@@ -213,6 +214,99 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   btn.textContent = '✅';
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
 });
+
+// ── Auth button (guests only) ─────────────────────────────────────────────────
+
+function initRoomAuth() {
+  const user = getCurrentUser();
+  if (user) {
+    showRoomUserBadge(user.name);
+    return;
+  }
+
+  const authBtn = document.getElementById('roomAuthBtn');
+  authBtn.classList.remove('hidden');
+  authBtn.addEventListener('click', () => openRoomAuthModal());
+
+  // Tab switching
+  document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#roomAuthModal .auth-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('roomLoginForm').classList.toggle('hidden', tab.dataset.tab !== 'login');
+      document.getElementById('roomRegisterForm').classList.toggle('hidden', tab.dataset.tab !== 'register');
+    });
+  });
+
+  document.getElementById('roomAuthBackdrop').addEventListener('click', closeRoomAuthModal);
+
+  document.getElementById('roomLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('roomLoginError');
+    err.classList.add('hidden');
+    try {
+      const { user, token } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: document.getElementById('roomLoginEmail').value,
+          password: document.getElementById('roomLoginPassword').value,
+        }),
+      });
+      onRoomAuthSuccess(user, token);
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('roomRegisterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('roomRegError');
+    err.classList.add('hidden');
+    try {
+      const { user, token } = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: document.getElementById('roomRegName').value,
+          email: document.getElementById('roomRegEmail').value,
+          password: document.getElementById('roomRegPassword').value,
+        }),
+      });
+      onRoomAuthSuccess(user, token);
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.remove('hidden');
+    }
+  });
+
+  // Pass current room URL as redirect for OAuth
+  const returnUrl = encodeURIComponent(location.pathname + location.search);
+  document.getElementById('roomGoogleBtn').href = `/api/auth/google?return=${returnUrl}`;
+  document.getElementById('roomGithubBtn').href = `/api/auth/github?return=${returnUrl}`;
+}
+
+function openRoomAuthModal() {
+  document.getElementById('roomAuthModal').classList.remove('hidden');
+  document.getElementById('roomLoginEmail').focus();
+}
+
+function closeRoomAuthModal() {
+  document.getElementById('roomAuthModal').classList.add('hidden');
+}
+
+function onRoomAuthSuccess(user, token) {
+  localStorage.setItem('token', token);
+  localStorage.setItem('userName', user.name);
+  closeRoomAuthModal();
+  document.getElementById('roomAuthBtn').classList.add('hidden');
+  showRoomUserBadge(user.name);
+}
+
+function showRoomUserBadge(name) {
+  const badge = document.getElementById('roomUserBadge');
+  badge.textContent = `👤 ${name}`;
+  badge.classList.remove('hidden');
+}
 
 // ── Share / invite ────────────────────────────────────────────────────────────
 

@@ -151,6 +151,9 @@ select.input { cursor: pointer; }
 .lang-btn-active { background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important; }
 .lang-switcher-sm { margin-left: auto; }
 
+.room-header-right { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
+.room-user-badge { font-size: .85rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+
 /* ── Badge ──────────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;

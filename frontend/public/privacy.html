@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacybeleid — Scrum Fight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-legal">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+    <div class="navbar-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="nl">NL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="legal-main">
+    <article class="legal-card">
+      <h1>Privacybeleid</h1>
+      <p class="legal-meta">Laatst bijgewerkt: april 2025</p>
+
+      <section>
+        <h2>1. Wie zijn wij?</h2>
+        <p>Scrum Fight ("wij", "ons") is een online tool voor real-time planning poker sessies. Dit privacybeleid legt uit welke persoonsgegevens wij verwerken, waarom, en welke rechten jij hebt.</p>
+      </section>
+
+      <section>
+        <h2>2. Welke gegevens verzamelen wij?</h2>
+        <h3>Bij registratie</h3>
+        <ul>
+          <li><strong>Naam</strong> — om je te identificeren in kamers.</li>
+          <li><strong>E-mailadres</strong> — voor authenticatie en accountbeheer.</li>
+          <li><strong>Wachtwoord</strong> — opgeslagen als een versleutelde hash (bcrypt). Wij zien je wachtwoord nooit in leesbare tekst.</li>
+        </ul>
+        <h3>Bij OAuth-login (Google / GitHub)</h3>
+        <ul>
+          <li>Naam en e-mailadres zoals verstrekt door de OAuth-provider.</li>
+          <li>Wij slaan geen OAuth-tokens op na de authenticatie.</li>
+        </ul>
+        <h3>Bij gebruik van de dienst</h3>
+        <ul>
+          <li><strong>Kamerdata</strong> — naam van kamers en stemmen worden opgeslagen om de sessie mogelijk te maken. Gastgegevens worden automatisch verwijderd na 7 dagen inactiviteit.</li>
+          <li><strong>Lokale opslag</strong> — naam en taalvoorkeur worden opgeslagen in je browser (localStorage/sessionStorage). Er worden geen tracking-cookies geplaatst.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. Waarvoor gebruiken wij deze gegevens?</h2>
+        <ul>
+          <li>Authenticatie en accountbeheer.</li>
+          <li>Het faciliteren van planning poker sessies.</li>
+          <li>Verbetering van de dienst (geen externe analytics).</li>
+        </ul>
+        <p>Wij verkopen jouw gegevens <strong>nooit</strong> aan derden.</p>
+      </section>
+
+      <section>
+        <h2>4. Hoe lang bewaren wij gegevens?</h2>
+        <ul>
+          <li><strong>Accounts</strong> — zolang je account actief is. Je kunt je account op elk moment verwijderen.</li>
+          <li><strong>Gastkamers</strong> — worden na 7 dagen inactiviteit automatisch verwijderd.</li>
+          <li><strong>Kamers (free-plan)</strong> — worden na 30 dagen inactiviteit verwijderd.</li>
+          <li><strong>Kamers (premium)</strong> — worden nooit automatisch verwijderd.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Delen wij gegevens met derden?</h2>
+        <p>Wij maken gebruik van de volgende diensten van derden:</p>
+        <ul>
+          <li><strong>Google OAuth</strong> (optioneel) — alleen als je kiest voor "Inloggen met Google". Zie het <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacybeleid van Google</a>.</li>
+          <li><strong>GitHub OAuth</strong> (optioneel) — alleen als je kiest voor "Inloggen met GitHub". Zie het <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">privacybeleid van GitHub</a>.</li>
+        </ul>
+        <p>Buiten deze providers worden jouw gegevens niet gedeeld met andere partijen.</p>
+      </section>
+
+      <section>
+        <h2>6. Jouw rechten (AVG/GDPR)</h2>
+        <p>Op grond van de Algemene Verordening Gegevensbescherming heb je het recht om:</p>
+        <ul>
+          <li>Inzage te vragen in jouw persoonsgegevens.</li>
+          <li>Onjuiste gegevens te laten corrigeren.</li>
+          <li>Jouw gegevens te laten verwijderen ("recht op vergetelheid").</li>
+          <li>Bezwaar te maken tegen verwerking.</li>
+          <li>Jouw gegevens over te laten dragen (dataportabiliteit).</li>
+        </ul>
+        <p>Neem contact op via het e-mailadres hieronder om een verzoek in te dienen.</p>
+      </section>
+
+      <section>
+        <h2>7. Beveiliging</h2>
+        <p>Wachtwoorden worden versleuteld opgeslagen (bcrypt). Sessies worden beveiligd via JWT-tokens met een beperkte geldigheidsduur. Wij treffen redelijke technische maatregelen om jouw gegevens te beschermen.</p>
+      </section>
+
+      <section>
+        <h2>8. Contact</h2>
+        <p>Heb je vragen of verzoeken omtrent jouw privacy? Neem contact met ons op via <a href="mailto:privacy@scrumfight.app">privacy@scrumfight.app</a>.</p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-copy">© 2025 Scrum Fight</span>
+      <nav class="footer-links">
+        <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+        <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+</body>
+</html>

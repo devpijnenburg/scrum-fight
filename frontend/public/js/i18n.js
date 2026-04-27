@@ -121,6 +121,10 @@ const TRANSLATIONS = {
     'oauth.state_invalid': 'OAuth verificatie mislukt, probeer opnieuw.',
     'oauth.failed': 'OAuth inloggen mislukt, probeer opnieuw.',
     'oauth.error': 'Er is een fout opgetreden.',
+
+    'footer.privacy': 'Privacybeleid',
+    'footer.terms': 'Algemene voorwaarden',
+    'footer.copy': '© 2025 Scrum Fight',
   },
   en: {
     'nav.login': 'Log in',
@@ -242,6 +246,10 @@ const TRANSLATIONS = {
     'oauth.state_invalid': 'OAuth verification failed, please try again.',
     'oauth.failed': 'OAuth sign in failed, please try again.',
     'oauth.error': 'An error occurred.',
+
+    'footer.privacy': 'Privacy Policy',
+    'footer.terms': 'Terms & Conditions',
+    'footer.copy': '© 2025 Scrum Fight',
   },
 };
 

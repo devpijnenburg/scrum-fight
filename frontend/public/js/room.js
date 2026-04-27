@@ -2,7 +2,8 @@
 
 const params = new URLSearchParams(location.search);
 const ROOM_ID = (params.get('id') || '').toUpperCase();
-const NAME_FROM_URL = params.get('name') || '';
+const NAME_FROM_SESSION = sessionStorage.getItem('pendingName') || '';
+sessionStorage.removeItem('pendingName');
 
 if (!ROOM_ID) {
   window.location.href = '/';
@@ -31,7 +32,7 @@ function resolveAndJoin() {
     return;
   }
 
-  const savedName = NAME_FROM_URL || localStorage.getItem('userName') || '';
+  const savedName = NAME_FROM_SESSION || localStorage.getItem('userName') || '';
   if (savedName) {
     myName = savedName;
     joinRoomSocket(savedName, null);

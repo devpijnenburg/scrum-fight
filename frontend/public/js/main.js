@@ -69,7 +69,8 @@ document.getElementById('createRoomBtn').addEventListener('click', async () => {
       method: 'POST',
       body: JSON.stringify({ name: roomName, method }),
     });
-    window.location.href = `/room.html?id=${room.id}&name=${encodeURIComponent(name)}`;
+    sessionStorage.setItem('pendingName', name);
+    window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {
     showCreateError(err.message);
   }
@@ -129,7 +130,8 @@ function joinRoom() {
   if (!name) return showJoinError(t('error.name'));
 
   localStorage.setItem('userName', name);
-  window.location.href = `/room.html?id=${code}&name=${encodeURIComponent(name)}`;
+  sessionStorage.setItem('pendingName', name);
+  window.location.href = `/room.html?id=${code}`;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

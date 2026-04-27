@@ -489,6 +489,45 @@ select.input { cursor: pointer; }
 
 .share-copied { font-size: .8rem; font-weight: 700; color: var(--success); }
 
+/* ── Ad banner ──────────────────────────────────────────────────────────────── */
+.ad-banner {
+  width: 100%;
+  max-width: 728px;
+  margin: .5rem auto 0;
+}
+.ad-banner-inner {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  text-align: center;
+}
+.ad-label {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  opacity: .6;
+}
+.ad-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
+  min-height: 60px;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: .9rem;
+}
+.ad-upgrade-note { font-size: .8rem; }
+.ad-upgrade-note a { color: var(--primary); font-weight: 700; }
+.ad-upgrade-note a:hover { text-decoration: underline; }
+
 /* ── Room main ──────────────────────────────────────────────────────────────── */
 .room-main {
   flex: 1;

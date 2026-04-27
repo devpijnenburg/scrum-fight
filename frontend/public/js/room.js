@@ -73,6 +73,7 @@ socket.on('connect', () => {
   mySocketId = socket.id;
   resolveAndJoin();
   initRoomAuth();
+  initAdBanner();
 });
 
 socket.on('room-state', (state) => {
@@ -303,6 +304,12 @@ function showRoomUserBadge(name) {
   const badge = document.getElementById('roomUserBadge');
   badge.textContent = `👤 ${name}`;
   badge.classList.remove('hidden');
+}
+
+function initAdBanner() {
+  const user = getCurrentUser();
+  const isPaid = user && (user.plan === 'pro' || user.plan === 'premium');
+  document.getElementById('adBanner').classList.toggle('hidden', isPaid);
 }
 
 // ── Share / invite ────────────────────────────────────────────────────────────

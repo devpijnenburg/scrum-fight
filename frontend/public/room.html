@@ -158,6 +158,38 @@
       <div class="card-picker-row" id="cardPickerRow"></div>
     </div>
 
+    <!-- Ad banner — shown for anonymous and free users -->
+    <div id="adBanner" class="ad-banner hidden">
+      <div class="ad-banner-inner">
+        <!--
+          ═══════════════════════════════════════════════════════
+          ADVERTENTIE — vervang dit blok met je eigen ad-code.
+
+          Aanbevolen diensten (geen Google):
+            • Carbon Ads   — https://www.carbonads.net
+            • EthicalAds   — https://www.ethicalads.io   (50k+ pv/mnd)
+            • Media.net    — https://www.media.net
+
+          Carbon Ads voorbeeld:
+            <script async type="text/javascript"
+              src="//cdn.carbonads.com/carbon.js?serve=XXXX&placement=yoursite"
+              id="_carbonads_js"></script>
+
+          EthicalAds voorbeeld:
+            <div data-ea-publisher="yoursite" data-ea-type="image"></div>
+            <script async src="https://media.ethicalads.io/media/client/ethicalads.min.js"></script>
+          ═══════════════════════════════════════════════════════
+        -->
+        <div class="ad-placeholder">
+          <span class="ad-label" data-i18n="ad.label">Advertentie</span>
+          <p data-i18n="ad.placeholder">Hier komt jouw advertentie</p>
+        </div>
+        <p class="ad-upgrade-note">
+          <a href="/login.html#register" data-i18n="ad.upgrade">Upgrade naar Pro om advertenties te verwijderen →</a>
+        </p>
+      </div>
+    </div>
+
   </main>
 
   <script src="/socket.io/socket.io.js"></script>

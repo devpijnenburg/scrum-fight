@@ -250,9 +250,10 @@ select.input { cursor: pointer; }
 
 .create-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+.create-fields .field-full { grid-column: 1 / -1; }
 @media (max-width: 560px) {
   .create-fields { grid-template-columns: 1fr; }
 }

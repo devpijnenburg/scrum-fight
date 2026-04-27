@@ -20,6 +20,15 @@ function cleanExpiredStates() {
   }
 }
 
+// ── Provider discovery ────────────────────────────────────────────────────────
+
+router.get('/providers', (req, res) => {
+  res.json({
+    google: google.isConfigured(),
+    github: github.isConfigured(),
+  });
+});
+
 // ── Email / password ──────────────────────────────────────────────────────────
 
 router.post('/register', async (req, res) => {

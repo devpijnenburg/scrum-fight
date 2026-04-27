@@ -239,6 +239,7 @@ function initRoomAuth() {
   });
 
   document.getElementById('roomAuthBackdrop').addEventListener('click', closeRoomAuthModal);
+  initOAuthButtons(document.getElementById('roomAuthModal'));
 
   document.getElementById('roomLoginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -279,10 +280,6 @@ function initRoomAuth() {
     }
   });
 
-  // Pass current room URL as redirect for OAuth
-  const returnUrl = encodeURIComponent(location.pathname + location.search);
-  document.getElementById('roomGoogleBtn').href = `/api/auth/google?return=${returnUrl}`;
-  document.getElementById('roomGithubBtn').href = `/api/auth/github?return=${returnUrl}`;
 }
 
 function openRoomAuthModal() {

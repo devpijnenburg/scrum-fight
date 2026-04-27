@@ -390,7 +390,7 @@ select.input { cursor: pointer; }
 .plan-card[data-active="true"] { border-color: var(--primary); }
 
 /* ── Room header ────────────────────────────────────────────────────────────── */
-.page-room { display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+.page-room { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 
 .room-header {
   display: flex;
@@ -494,7 +494,6 @@ select.input { cursor: pointer; }
   align-items: center;
   gap: 1rem;
   padding: 1rem 1rem 1.5rem;
-  overflow-y: auto;
 }
 
 /* ── Poker table ────────────────────────────────────────────────────────────── */

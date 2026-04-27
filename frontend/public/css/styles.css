@@ -135,6 +135,22 @@ select.input { cursor: pointer; }
 .navbar-actions { display: flex; align-items: center; gap: .6rem; }
 .navbar-user { font-size: .9rem; color: var(--text-muted); }
 
+.lang-switcher { display: flex; gap: .2rem; }
+.lang-btn {
+  padding: .2rem .5rem;
+  font-size: .75rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.lang-btn:hover { background: var(--surface-2); color: var(--text); }
+.lang-btn-active { background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important; }
+.lang-switcher-sm { margin-left: auto; }
+
 /* ── Badge ──────────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;

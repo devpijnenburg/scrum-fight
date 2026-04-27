@@ -1,4 +1,4 @@
-// Planning Poker room — real-time game logic
+// Scrum Fight room — real-time game logic
 
 const params = new URLSearchParams(location.search);
 const ROOM_ID = (params.get('id') || '').toUpperCase();
@@ -12,7 +12,7 @@ if (!ROOM_ID) {
 
 let mySocketId = null;
 let myName = null;
-let roomState = null;        // latest serialized room from server
+let roomState = null;
 let myVote = null;
 let isRevealed = false;
 
@@ -26,17 +26,15 @@ function resolveAndJoin() {
   const user = getCurrentUser();
 
   if (user) {
-    // Logged-in user: name from token
     myName = user.name;
-    joinRoom(user.name, localStorage.getItem('token'));
+    joinRoomSocket(user.name, localStorage.getItem('token'));
     return;
   }
 
-  // Guest: use name from URL param or localStorage or show modal
   const savedName = NAME_FROM_URL || localStorage.getItem('userName') || '';
   if (savedName) {
     myName = savedName;
-    joinRoom(savedName, null);
+    joinRoomSocket(savedName, null);
   } else {
     showNameModal();
   }
@@ -61,10 +59,10 @@ function submitName() {
   document.getElementById('nameModal').classList.add('hidden');
   myName = name;
   localStorage.setItem('userName', name);
-  joinRoom(name, null);
+  joinRoomSocket(name, null);
 }
 
-function joinRoom(name, token) {
+function joinRoomSocket(name, token) {
   socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token });
 }
 
@@ -108,7 +106,6 @@ socket.on('player-voted', ({ socketId }) => {
 socket.on('cards-revealed', ({ players, stats }) => {
   isRevealed = true;
   if (roomState) {
-    // Merge votes into local state
     players.forEach(({ socketId, vote }) => {
       const p = roomState.players.find((p) => p.socketId === socketId);
       if (p) { p.vote = vote; p.hasVoted = true; }
@@ -120,7 +117,7 @@ socket.on('cards-revealed', ({ players, stats }) => {
   document.getElementById('revealBtn').classList.add('hidden');
   document.getElementById('newRoundBtn').classList.remove('hidden');
   setPickerDisabled(true);
-  document.getElementById('voteStatus').textContent = 'Kaarten onthuld!';
+  document.getElementById('voteStatus').textContent = t('room.revealed');
 });
 
 socket.on('round-reset', () => {
@@ -149,22 +146,20 @@ socket.on('room-name-updated', ({ name }) => {
 socket.on('room-expired', ({ reason }) => {
   showOverlay(
     '😴',
-    'Kamer verlopen',
-    reason === 'inactivity'
-      ? 'Deze gastkamer is verwijderd wegens inactiviteit.'
-      : 'Deze kamer bestaat niet meer.'
+    t('room.overlay.expired'),
+    reason === 'inactivity' ? t('room.expired_inactivity') : t('room.expired_other')
   );
 });
 
 socket.on('error', ({ code, message }) => {
   if (code === 'ROOM_NOT_FOUND') {
-    showOverlay('🚫', 'Kamer niet gevonden', 'Deze kamer bestaat niet (meer). Controleer de code of maak een nieuwe kamer aan.');
+    showOverlay('🚫', t('room.not_found'), t('room.not_found_msg'));
   } else if (code === 'ROOM_FULL') {
-    showOverlay('😶', 'Kamer is vol', message);
+    showOverlay('😶', t('room.full'), message);
   } else if (code === 'NAME_REQUIRED') {
     showNameModal();
   } else {
-    showOverlay('⚠️', 'Fout', message || 'Er is een onbekende fout opgetreden.');
+    showOverlay('⚠️', t('room.error'), message || t('room.error_unknown'));
   }
 });
 
@@ -178,7 +173,6 @@ document.getElementById('newRoundBtn').addEventListener('click', () => {
   socket.emit('new-round');
 });
 
-// Room name edit
 const roomNameDisplay = document.getElementById('roomNameDisplay');
 const roomNameInput = document.getElementById('roomNameInput');
 const editNameBtn = document.getElementById('editNameBtn');
@@ -211,7 +205,6 @@ roomNameInput.addEventListener('keydown', (e) => {
   }
 });
 
-// Copy code
 document.getElementById('copyCodeBtn').addEventListener('click', () => {
   const code = document.getElementById('roomCodeDisplay').textContent;
   navigator.clipboard.writeText(code).catch(() => {});
@@ -245,20 +238,17 @@ function renderAll(state) {
 function renderTable(state) {
   if (!state) return;
   const table = document.getElementById('pokerTable');
-
-  // Remove old seats (keep table-label)
   table.querySelectorAll('.player-seat').forEach((el) => el.remove());
 
   const players = state.players;
   const count = players.length;
   if (!count) return;
 
-  // Place players around the ellipse: top arc for opponents, bottom center for self
   players.forEach((player, i) => {
     const isMe = player.socketId === mySocketId;
-    const angle = (2 * Math.PI * i) / count - Math.PI / 2; // start at top
-    const rx = 42; // % of width
-    const ry = 38; // % of height
+    const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+    const rx = 42;
+    const ry = 38;
     const cx = 50 + rx * Math.cos(angle);
     const cy = 50 + ry * Math.sin(angle);
 
@@ -285,12 +275,10 @@ function createCardEl(player, revealed, isMe) {
   const card = document.createElement('div');
   card.className = 'card';
 
-  // Card back
   const back = document.createElement('div');
   back.className = 'card-face card-back-face';
   back.textContent = player.hasVoted ? '🂠' : '';
 
-  // Card front
   const front = document.createElement('div');
   front.className = 'card-face card-front-face';
   front.setAttribute('data-value', player.vote || '');
@@ -305,7 +293,6 @@ function createCardEl(player, revealed, isMe) {
   card.appendChild(back);
   card.appendChild(front);
 
-  // Flip if revealed and has voted
   if (revealed && player.hasVoted) {
     card.classList.add('flipped');
   }
@@ -333,22 +320,16 @@ function castVote(value, cardEl) {
   if (isRevealed) return;
   myVote = value;
 
-  // Update picker UI
   document.querySelectorAll('.picker-card').forEach((c) => c.classList.remove('selected'));
   cardEl.classList.add('selected');
 
-  // Update local state
   if (roomState) {
     const me = roomState.players.find((p) => p.socketId === mySocketId);
     if (me) { me.vote = value; me.hasVoted = true; }
   }
 
   socket.emit('vote', { value });
-
-  // Enable reveal button
   document.getElementById('revealBtn').disabled = false;
-
-  // Re-render my seat card (show voted state)
   renderTable(roomState);
   updateVoteStatus();
 }
@@ -375,17 +356,17 @@ function showStats(stats) {
   let html = '';
 
   if (stats.allSame) {
-    html += `<div class="stat-consensus">🎉 Consensus! Iedereen koos hetzelfde.</div>`;
+    html += `<div class="stat-consensus">${t('room.stats.consensus')}</div>`;
   }
 
   if (stats.average !== undefined) {
-    html += statItem(stats.average, 'Gemiddelde');
-    html += statItem(stats.min, 'Minimum');
-    html += statItem(stats.max, 'Maximum');
+    html += statItem(stats.average, t('room.stats.average'));
+    html += statItem(stats.min, t('room.stats.min'));
+    html += statItem(stats.max, t('room.stats.max'));
   }
 
   if (stats.mode) {
-    html += statItem(stats.mode, 'Meest gekozen');
+    html += statItem(stats.mode, t('room.stats.mode'));
   }
 
   if (stats.distribution) {
@@ -393,7 +374,7 @@ function showStats(stats) {
       .sort((a, b) => b[1] - a[1])
       .map(([v, c]) => `<span>${v}: ${c}×</span>`)
       .join('');
-    html += `<div class="stat-item"><div style="display:flex;gap:.6rem;flex-wrap:wrap;font-size:.85rem;color:var(--text-muted)">${distItems}</div><div class="stat-label">Verdeling</div></div>`;
+    html += `<div class="stat-item"><div style="display:flex;gap:.6rem;flex-wrap:wrap;font-size:.85rem;color:var(--text-muted)">${distItems}</div><div class="stat-label">${t('room.stats.distribution')}</div></div>`;
   }
 
   grid.innerHTML = html;
@@ -410,17 +391,18 @@ function updateVoteStatus() {
   if (!roomState) return;
   const voted = roomState.players.filter((p) => p.hasVoted).length;
   const total = roomState.players.length;
+  const word = total === 1 ? t('room.player_s') : t('room.player_p');
   document.getElementById('voteStatus').textContent =
-    isRevealed ? 'Kaarten onthuld!' : `${voted} van ${total} ${total === 1 ? 'speler heeft' : 'spelers hebben'} gestemd`;
+    isRevealed ? t('room.revealed') : t('room.voted', { voted, total, word });
 
-  // Auto-enable reveal when at least one vote exists
   if (!isRevealed) {
     document.getElementById('revealBtn').disabled = voted === 0;
   }
 }
 
 function updatePlayerCount(count) {
-  document.getElementById('playerCount').textContent = `${count} deelnemer${count === 1 ? '' : 's'}`;
+  const key = count === 1 ? 'room.participants_s' : 'room.participants_p';
+  document.getElementById('playerCount').textContent = t(key, { count });
 }
 
 function showOverlay(icon, title, message) {
@@ -428,6 +410,5 @@ function showOverlay(icon, title, message) {
   document.getElementById('overlayTitle').textContent = title;
   document.getElementById('overlayMessage').textContent = message;
   document.getElementById('roomOverlay').classList.remove('hidden');
-  // Auto-redirect after 5s
   setTimeout(() => { window.location.href = '/'; }, 5000);
 }

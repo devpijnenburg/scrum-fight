@@ -13,8 +13,12 @@
   <nav class="navbar">
     <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
     <div class="navbar-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="nl">NL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
       <span class="navbar-user" id="navUser"></span>
-      <button class="btn btn-ghost btn-sm" id="logoutBtn">Uitloggen</button>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn" data-i18n="nav.logout">Uitloggen</button>
     </div>
   </nav>
 
@@ -24,41 +28,41 @@
         <h1 id="dashboardTitle">Welkom terug!</h1>
         <p class="text-muted" id="planBadge"></p>
       </div>
-      <button class="btn btn-primary" id="newRoomBtn">+ Nieuwe kamer</button>
+      <button class="btn btn-primary" id="newRoomBtn" data-i18n="dashboard.newroom">+ Nieuwe kamer</button>
     </div>
 
     <!-- New room modal -->
     <div id="newRoomModal" class="modal hidden">
       <div class="modal-backdrop" id="modalBackdrop"></div>
       <div class="modal-card">
-        <h2>Nieuwe kamer aanmaken</h2>
+        <h2 data-i18n="dashboard.modal.title">Nieuwe kamer aanmaken</h2>
         <div class="form-group">
-          <label for="modalRoomName">Kamernaam</label>
+          <label for="modalRoomName" data-i18n="dashboard.modal.roomname">Kamernaam</label>
           <div class="input-with-btn">
             <input id="modalRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
             <button id="modalRandomBtn" class="btn btn-ghost btn-icon" title="Willekeurige naam">🎲</button>
           </div>
         </div>
         <div class="form-group">
-          <label for="modalMethod">Schattingsmethode</label>
+          <label for="modalMethod" data-i18n="dashboard.modal.method">Schattingsmethode</label>
           <select id="modalMethod" class="input">
-            <option value="fibonacci">Fibonacci 😊</option>
-            <option value="modified_fibonacci">Modified Fibonacci</option>
-            <option value="tshirt">T-shirt maten</option>
-            <option value="powers_of_2">Powers of 2</option>
+            <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci 😊</option>
+            <option value="modified_fibonacci" data-i18n="landing.create.method.modified_fibonacci">Modified Fibonacci</option>
+            <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
+            <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
           </select>
         </div>
         <p id="modalError" class="form-error hidden"></p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" id="modalCancelBtn">Annuleren</button>
-          <button class="btn btn-primary" id="modalCreateBtn">Aanmaken →</button>
+          <button class="btn btn-ghost" id="modalCancelBtn" data-i18n="dashboard.modal.cancel">Annuleren</button>
+          <button class="btn btn-primary" id="modalCreateBtn" data-i18n="dashboard.modal.create">Aanmaken →</button>
         </div>
       </div>
     </div>
 
     <!-- Room list -->
     <section class="dashboard-rooms">
-      <h2>Mijn kamers</h2>
+      <h2 data-i18n="dashboard.rooms.title">Mijn kamers</h2>
       <div id="roomList" class="room-list">
         <div class="room-list-loading">Kamers laden…</div>
       </div>
@@ -66,39 +70,40 @@
 
     <!-- Plan info -->
     <section class="plan-info">
-      <h2>Abonnement</h2>
+      <h2 data-i18n="dashboard.plan.title">Abonnement</h2>
       <div class="plan-cards" id="planCards">
         <div class="plan-card" data-plan="free">
-          <div class="plan-name">Free</div>
+          <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>
           <ul class="plan-features">
-            <li>✓ 3 kamers</li>
-            <li>✓ 5 deelnemers</li>
-            <li>✓ 30 dagen bewaard</li>
+            <li data-i18n="dashboard.plan.rooms_3">✓ 3 kamers</li>
+            <li data-i18n="dashboard.plan.players_5">✓ 5 deelnemers</li>
+            <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
           </ul>
         </div>
         <div class="plan-card" data-plan="pro">
           <div class="plan-name">Pro</div>
           <ul class="plan-features">
-            <li>✓ 20 kamers</li>
-            <li>✓ 15 deelnemers</li>
-            <li>✓ 30 dagen bewaard</li>
+            <li data-i18n="dashboard.plan.rooms_20">✓ 20 kamers</li>
+            <li data-i18n="dashboard.plan.players_15">✓ 15 deelnemers</li>
+            <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
           </ul>
-          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="pro">Upgraden</button>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="pro" data-i18n="dashboard.plan.upgrade">Upgraden</button>
         </div>
         <div class="plan-card plan-card-premium" data-plan="premium">
           <div class="plan-badge">⭐ Premium</div>
           <div class="plan-name">Premium</div>
           <ul class="plan-features">
-            <li>✓ Onbeperkt kamers</li>
-            <li>✓ Onbeperkt deelnemers</li>
-            <li>✓ Kamers nooit verwijderd</li>
+            <li data-i18n="dashboard.plan.rooms_unlimited">✓ Onbeperkt kamers</li>
+            <li data-i18n="dashboard.plan.players_unlimited">✓ Onbeperkt deelnemers</li>
+            <li data-i18n="dashboard.plan.never_deleted">✓ Kamers nooit verwijderd</li>
           </ul>
-          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="premium">Upgraden</button>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="premium" data-i18n="dashboard.plan.upgrade">Upgraden</button>
         </div>
       </div>
     </section>
   </main>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/dashboard.js"></script>

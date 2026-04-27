@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-poker}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-poker} -d ${POSTGRES_DB:-planningpoker}"]
       interval: 5s
       timeout: 5s
       retries: 10

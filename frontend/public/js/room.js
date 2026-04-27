@@ -143,7 +143,7 @@ socket.on('round-reset', () => {
 socket.on('room-name-updated', ({ name }) => {
   if (roomState) roomState.name = name;
   document.getElementById('roomNameDisplay').textContent = name;
-  document.title = `${name} — Planning Poker 🃏`;
+  document.title = `${name} — Scrum Fight`;
 });
 
 socket.on('room-expired', ({ reason }) => {
@@ -226,7 +226,7 @@ function renderAll(state) {
   document.getElementById('roomNameDisplay').textContent = state.name;
   document.getElementById('roomCodeDisplay').textContent = state.id;
   document.getElementById('methodBadge').textContent = state.methodLabel;
-  document.title = `${state.name} — Planning Poker 🃏`;
+  document.title = `${state.name} — Scrum Fight`;
 
   updatePlayerCount(state.players.length);
   renderPickerCards(state.cardValues);

@@ -67,6 +67,16 @@
           <div class="stats-card-value" id="statAverage">—</div>
           <div class="stats-card-label" data-i18n="stats.avg_vote">Gemiddelde stem</div>
         </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="statStreak">—</div>
+          <div class="stats-card-label" data-i18n="stats.streak_label">Huidige streak</div>
+          <div class="stats-card-sub" id="statStreakMax"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="statConsensus">—</div>
+          <div class="stats-card-label" data-i18n="stats.consensus_label">Consensus rate</div>
+          <div class="stats-card-sub" id="statConsensusRounds"></div>
+        </div>
       </div>
 
       <!-- Charts row -->
@@ -106,6 +116,13 @@
         <div class="chart-wrap chart-wrap-sm">
           <canvas id="hoursChart"></canvas>
         </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="stats-badges-section">
+        <h2 data-i18n="stats.badges_title">🏅 Badges</h2>
+        <p class="text-muted" data-i18n="stats.badges_desc">Verdien badges door te spelen en speciale prestaties te behalen</p>
+        <div id="badgesGrid" class="badges-grid"></div>
       </div>
 
     </div>

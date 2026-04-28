@@ -36,9 +36,11 @@ function updateNavbar() {
   if (user) {
     navActions.innerHTML = `
       <span class="navbar-user">👤 ${escapeHtml(user.name)}</span>
-      <a href="/dashboard.html" class="btn btn-ghost btn-sm">Dashboard</a>
-      <button class="btn btn-ghost btn-sm" onclick="logout()">Uitloggen</button>
+      <a href="/dashboard.html" class="btn btn-ghost btn-sm" data-i18n="nav.dashboard">Dashboard</a>
+      <a href="/stats.html" class="btn btn-ghost btn-sm" data-i18n="nav.stats">Statistieken</a>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" data-i18n="nav.logout">Uitloggen</button>
     `;
+    if (typeof applyTranslations === 'function') applyTranslations();
   }
 }
 

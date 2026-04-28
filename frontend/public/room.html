@@ -33,6 +33,43 @@
     </div>
   </div>
 
+  <!-- Settings modal (account users only) -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-backdrop" id="settingsBackdrop"></div>
+    <div class="modal-card">
+      <h2 data-i18n="room.settings.title">⚙️ Instellingen</h2>
+      <div class="settings-row">
+        <span class="settings-label" data-i18n="room.settings.analytics_auto">Analyse automatisch openen bij reveal</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settingAnalyticsAuto" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <label class="settings-label" for="settingDefaultMethod" data-i18n="room.settings.default_method">Favoriete schattingsmethode</label>
+        <select id="settingDefaultMethod" class="input" style="width:auto;min-width:160px">
+          <option value="" data-i18n="room.settings.method_none">Geen voorkeur</option>
+          <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci 😊</option>
+          <option value="modified_fibonacci" data-i18n="landing.create.method.modified_fibonacci">Modified Fibonacci</option>
+          <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
+          <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
+        </select>
+      </div>
+      <div class="settings-kbd-section">
+        <p class="settings-label" data-i18n="room.settings.shortcuts_label">Toetsenbordsnelkoppelingen</p>
+        <div class="settings-kbd-list">
+          <span><kbd>1</kbd>–<kbd>9</kbd> <span data-i18n="room.settings.shortcut_cards">kaart kiezen</span></span>
+          <span><kbd>R</kbd> <span data-i18n="room.settings.shortcut_reveal">reveal</span></span>
+          <span><kbd>N</kbd> <span data-i18n="room.settings.shortcut_new">nieuwe ronde</span></span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-sm" id="settingsCancelBtn" data-i18n="dashboard.modal.cancel">Annuleren</button>
+        <button class="btn btn-primary btn-sm" id="settingsSaveBtn" data-i18n="room.settings.save">Opslaan</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="room-header">
     <a href="/" class="room-back" title="Terug naar home">←</a>
@@ -72,6 +109,8 @@
       </div>
       <button id="roomAuthBtn" class="btn btn-primary btn-sm hidden" data-i18n="room.auth.btn">Inloggen / Registreren</button>
       <span id="roomUserBadge" class="room-user-badge hidden"></span>
+      <button id="analyticsToggleBtn" class="btn btn-ghost btn-sm" data-i18n-title="room.analytics.toggle_title">📊</button>
+      <button id="settingsBtn" class="btn btn-ghost btn-sm hidden" data-i18n-title="room.settings.toggle_title">⚙️</button>
     </div>
   </header>
 
@@ -140,16 +179,14 @@
 
     <!-- Status + action bar -->
     <div class="action-bar">
-      <span id="voteStatus" class="vote-status"></span>
+      <div class="action-left">
+        <span id="voteStatus" class="vote-status"></span>
+        <span id="consensusBadge" class="consensus-badge hidden"></span>
+      </div>
       <div class="action-btns">
         <button id="revealBtn" class="btn btn-primary" disabled data-i18n="room.reveal">👁 Reveal</button>
         <button id="newRoundBtn" class="btn btn-ghost hidden" data-i18n="room.new_round">🔄 Nieuwe ronde</button>
       </div>
-    </div>
-
-    <!-- Stats panel -->
-    <div id="statsPanel" class="stats-panel hidden">
-      <div class="stats-grid" id="statsGrid"></div>
     </div>
 
     <!-- Card picker -->
@@ -164,21 +201,6 @@
         <!--
           ═══════════════════════════════════════════════════════
           ADVERTENTIE — vervang dit blok met je eigen ad-code.
-
-          Aanbevolen diensten (geen Google):
-            • Carbon Ads   — https://www.carbonads.net
-            • EthicalAds   — https://www.ethicalads.io   (50k+ pv/mnd)
-            • Media.net    — https://www.media.net
-
-          Carbon Ads voorbeeld:
-            <script async type="text/javascript"
-              src="//cdn.carbonads.com/carbon.js?serve=XXXX&placement=yoursite"
-              id="_carbonads_js"></script>
-
-          EthicalAds voorbeeld:
-            <div data-ea-publisher="yoursite" data-ea-type="image"></div>
-            <script async src="https://media.ethicalads.io/media/client/ethicalads.min.js"></script>
-          ═══════════════════════════════════════════════════════
         -->
         <div class="ad-placeholder">
           <span class="ad-label" data-i18n="ad.label">Advertentie</span>
@@ -191,6 +213,32 @@
     </div>
 
   </main>
+
+  <!-- Analytics side panel -->
+  <aside id="analyticsPanel" class="analytics-panel hidden" aria-label="Analyse">
+    <div class="analytics-panel-hd">
+      <span class="analytics-panel-title" data-i18n="room.analytics.title">📊 Analyse</span>
+      <button id="analyticsPanelCloseBtn" class="btn-icon-sm" aria-label="Sluiten">✕</button>
+    </div>
+    <div class="analytics-panel-body">
+
+      <!-- Current round section (shown after reveal) -->
+      <div id="analyticsCurrent" class="analytics-section hidden">
+        <p class="analytics-section-label" data-i18n="room.analytics.current_round">Huidige ronde</p>
+        <div id="analyticsConsensus"></div>
+        <div id="analyticsStatsGrid" class="stats-grid analytics-stats-grid"></div>
+      </div>
+
+      <!-- History section -->
+      <div class="analytics-section">
+        <p class="analytics-section-label" data-i18n="room.analytics.history">Vorige rondes</p>
+        <div id="analyticsHistoryList" class="analytics-history-list">
+          <p id="analyticsHistoryEmpty" class="analytics-empty" data-i18n="room.analytics.empty">Nog geen rondes gespeeld.</p>
+        </div>
+      </div>
+
+    </div>
+  </aside>
 
   <footer class="site-footer">
     <div class="footer-inner">

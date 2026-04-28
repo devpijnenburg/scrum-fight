@@ -9,6 +9,7 @@ const path = require('path');
 const pool = require('./src/config/database');
 const authRoutes = require('./src/routes/auth');
 const roomRoutes = require('./src/routes/rooms');
+const userRoutes = require('./src/routes/users');
 const setupSocket = require('./src/socket');
 require('./src/jobs/cleanup');
 
@@ -24,15 +25,17 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
+const MIGRATIONS = ['001_init.sql', '002_user_votes.sql'];
+
 async function runMigrations() {
-  const sql = fs.readFileSync(
-    path.join(__dirname, 'src/db/migrations/001_init.sql'),
-    'utf8'
-  );
-  await pool.query(sql);
+  for (const file of MIGRATIONS) {
+    const sql = fs.readFileSync(path.join(__dirname, 'src/db/migrations', file), 'utf8');
+    await pool.query(sql);
+  }
   console.log('[db] Migrations applied');
 }
 

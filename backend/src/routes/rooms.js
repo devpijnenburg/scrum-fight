@@ -100,6 +100,20 @@ router.get('/:id', async (req, res) => {
   res.json(rows[0]);
 });
 
+// ── Get room history ──────────────────────────────────────────────────────────
+
+router.get('/:id/history', async (req, res) => {
+  const { rows } = await db.query(
+    `SELECT id, votes, created_at
+     FROM round_history
+     WHERE room_id = $1
+     ORDER BY created_at DESC
+     LIMIT 20`,
+    [req.params.id.toUpperCase()]
+  );
+  res.json(rows);
+});
+
 // ── Delete room ───────────────────────────────────────────────────────────────
 
 router.delete('/:id', authMiddleware, async (req, res) => {

@@ -845,7 +845,7 @@ select.input { cursor: pointer; }
 .site-footer {
   border-top: 1px solid var(--border);
   background: var(--surface);
-  padding: 1rem 1.5rem;
+  padding: .9rem 1.5rem;
   margin-top: auto;
 }
 .footer-inner {
@@ -857,10 +857,20 @@ select.input { cursor: pointer; }
   gap: 1rem;
   flex-wrap: wrap;
 }
+.footer-left { display: flex; align-items: center; gap: .8rem; }
 .footer-copy { font-size: .8rem; color: var(--text-muted); }
-.footer-links { display: flex; gap: 1.2rem; }
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
 .footer-links a { font-size: .8rem; color: var(--text-muted); transition: color .15s; }
 .footer-links a:hover { color: var(--primary); }
+.footer-auth { display: contents; }
+.footer-auth a { font-size: .8rem; color: var(--text-muted); transition: color .15s; }
+.footer-auth a:hover { color: var(--primary); }
+.footer-auth a:first-child::before { content: '·'; margin-right: 1.2rem; opacity: .4; }
 
 /* ── Legal pages ─────────────────────────────────────────────────────────────── */
 .page-legal { display: flex; flex-direction: column; min-height: 100vh; }

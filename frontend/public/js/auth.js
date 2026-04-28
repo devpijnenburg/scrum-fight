@@ -20,6 +20,13 @@ function logout() {
   window.location.href = '/';
 }
 
+// Hide footer auth links when already logged in
+function initFooterAuth() {
+  if (!getCurrentUser()) return;
+  const el = document.getElementById('footerAuth');
+  if (el) el.classList.add('hidden');
+}
+
 // Update navbar for logged-in state
 function updateNavbar() {
   const user = getCurrentUser();
@@ -34,6 +41,8 @@ function updateNavbar() {
     `;
   }
 }
+
+document.addEventListener('DOMContentLoaded', initFooterAuth);
 
 function escapeHtml(str) {
   return String(str)

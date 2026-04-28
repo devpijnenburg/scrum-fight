@@ -247,10 +247,22 @@ module.exports = function setupSocket(io) {
       try {
         const votes = {};
         for (const [, p] of room.players) votes[p.name] = p.vote;
-        await db.query(
-          `INSERT INTO round_history (room_id, votes) VALUES ($1, $2)`,
+        const { rows: rhRows } = await db.query(
+          `INSERT INTO round_history (room_id, votes) VALUES ($1, $2) RETURNING id`,
           [roomId, JSON.stringify(votes)]
         );
+        const roundId = rhRows[0].id;
+
+        // Save per-user votes for statistics
+        for (const [, p] of room.players) {
+          if (p.userId && p.vote) {
+            await db.query(
+              `INSERT INTO user_votes (user_id, room_id, round_id, value) VALUES ($1, $2, $3, $4)`,
+              [p.userId, roomId, roundId, p.vote]
+            );
+          }
+        }
+
         await db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
       } catch (err) {
         console.error('Error saving round history:', err);

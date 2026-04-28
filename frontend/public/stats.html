@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mijn statistieken — Scrum Fight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-stats">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+    <div class="navbar-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="nl">NL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <span class="navbar-user" id="navUser"></span>
+      <a href="/dashboard.html" class="btn btn-ghost btn-sm" data-i18n="nav.dashboard">Dashboard</a>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn" data-i18n="nav.logout">Uitloggen</button>
+    </div>
+  </nav>
+
+  <main class="stats-main">
+
+    <!-- Page header -->
+    <div class="stats-header">
+      <div>
+        <h1 data-i18n="stats.title">📊 Mijn statistieken</h1>
+        <p class="text-muted" id="statsSubtitle"></p>
+      </div>
+      <div id="personalityBadge" class="personality-badge hidden"></div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="statsLoading" class="stats-loading">
+      <span data-i18n="stats.loading">Statistieken laden…</span>
+    </div>
+
+    <!-- Empty state -->
+    <div id="statsEmpty" class="stats-empty hidden">
+      <div class="stats-empty-icon">🃏</div>
+      <p data-i18n="stats.empty">Nog geen statistieken. Speel een paar rondes om je eerste data te zien!</p>
+      <a href="/" class="btn btn-primary" data-i18n="stats.empty_cta">Kamer aanmaken →</a>
+    </div>
+
+    <!-- Stats content (hidden until loaded) -->
+    <div id="statsContent" class="hidden">
+
+      <!-- Quick stat cards -->
+      <div class="stats-cards" id="statsCards">
+        <div class="stats-card">
+          <div class="stats-card-value" id="statRounds">—</div>
+          <div class="stats-card-label" data-i18n="stats.total_rounds">Rondes gespeeld</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="statSessions">—</div>
+          <div class="stats-card-label" data-i18n="stats.total_sessions">Sessies</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="statFavorite">—</div>
+          <div class="stats-card-label" data-i18n="stats.fav_card">Favoriete kaart</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="statAverage">—</div>
+          <div class="stats-card-label" data-i18n="stats.avg_vote">Gemiddelde stem</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="stats-charts">
+
+        <!-- Vote distribution -->
+        <div class="stats-chart-card">
+          <h2 data-i18n="stats.dist_title">Stemverdeling</h2>
+          <p class="text-muted" data-i18n="stats.dist_desc">Hoe vaak koos jij elke kaartwaarde</p>
+          <div class="chart-wrap">
+            <canvas id="distChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Activity over time -->
+        <div class="stats-chart-card">
+          <h2 data-i18n="stats.activity_title">Activiteit</h2>
+          <p class="text-muted" data-i18n="stats.activity_desc">Rondes per dag (laatste 90 dagen)</p>
+          <div class="chart-wrap">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Activity heatmap -->
+      <div class="stats-chart-card">
+        <h2 data-i18n="stats.heatmap_title">Activiteitsheatmap</h2>
+        <p class="text-muted" data-i18n="stats.heatmap_desc">Meest actieve dagen de afgelopen 3 maanden</p>
+        <div id="heatmapWrap" class="heatmap-wrap"></div>
+      </div>
+
+      <!-- Active hours -->
+      <div class="stats-chart-card">
+        <h2 data-i18n="stats.hours_title">Actieve uren</h2>
+        <p class="text-muted" data-i18n="stats.hours_desc">Op welk tijdstip poker je het meest</p>
+        <div class="chart-wrap chart-wrap-sm">
+          <canvas id="hoursChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="lang-switcher"></div>
+        <span class="footer-copy" data-i18n="footer.copy">© 2025 Scrum Fight</span>
+      </div>
+      <nav class="footer-links">
+        <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+        <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/stats.js"></script>
+</body>
+</html>

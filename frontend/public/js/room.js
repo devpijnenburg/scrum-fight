@@ -2,7 +2,8 @@
 
 const params = new URLSearchParams(location.search);
 const ROOM_ID = (params.get('id') || '').toUpperCase();
-const NAME_FROM_URL = params.get('name') || '';
+const NAME_FROM_SESSION = sessionStorage.getItem('pendingName') || '';
+sessionStorage.removeItem('pendingName');
 
 if (!ROOM_ID) {
   window.location.href = '/';
@@ -31,7 +32,7 @@ function resolveAndJoin() {
     return;
   }
 
-  const savedName = NAME_FROM_URL || localStorage.getItem('userName') || '';
+  const savedName = NAME_FROM_SESSION || localStorage.getItem('userName') || '';
   if (savedName) {
     myName = savedName;
     joinRoomSocket(savedName, null);
@@ -71,6 +72,8 @@ function joinRoomSocket(name, token) {
 socket.on('connect', () => {
   mySocketId = socket.id;
   resolveAndJoin();
+  initRoomAuth();
+  initAdBanner();
 });
 
 socket.on('room-state', (state) => {
@@ -211,6 +214,132 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   const btn = document.getElementById('copyCodeBtn');
   btn.textContent = '✅';
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
+});
+
+// ── Auth button (guests only) ─────────────────────────────────────────────────
+
+function initRoomAuth() {
+  const user = getCurrentUser();
+  if (user) {
+    showRoomUserBadge(user.name);
+    return;
+  }
+
+  const authBtn = document.getElementById('roomAuthBtn');
+  authBtn.classList.remove('hidden');
+  authBtn.addEventListener('click', () => openRoomAuthModal());
+
+  // Tab switching
+  document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#roomAuthModal .auth-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('roomLoginForm').classList.toggle('hidden', tab.dataset.tab !== 'login');
+      document.getElementById('roomRegisterForm').classList.toggle('hidden', tab.dataset.tab !== 'register');
+    });
+  });
+
+  document.getElementById('roomAuthBackdrop').addEventListener('click', closeRoomAuthModal);
+  initOAuthButtons(document.getElementById('roomAuthModal'));
+
+  document.getElementById('roomLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('roomLoginError');
+    err.classList.add('hidden');
+    try {
+      const { user, token } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: document.getElementById('roomLoginEmail').value,
+          password: document.getElementById('roomLoginPassword').value,
+        }),
+      });
+      onRoomAuthSuccess(user, token);
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('roomRegisterForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('roomRegError');
+    err.classList.add('hidden');
+    try {
+      const { user, token } = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: document.getElementById('roomRegName').value,
+          email: document.getElementById('roomRegEmail').value,
+          password: document.getElementById('roomRegPassword').value,
+        }),
+      });
+      onRoomAuthSuccess(user, token);
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.classList.remove('hidden');
+    }
+  });
+
+}
+
+function openRoomAuthModal() {
+  document.getElementById('roomAuthModal').classList.remove('hidden');
+  document.getElementById('roomLoginEmail').focus();
+}
+
+function closeRoomAuthModal() {
+  document.getElementById('roomAuthModal').classList.add('hidden');
+}
+
+function onRoomAuthSuccess(user, token) {
+  localStorage.setItem('token', token);
+  localStorage.setItem('userName', user.name);
+  closeRoomAuthModal();
+  document.getElementById('roomAuthBtn').classList.add('hidden');
+  showRoomUserBadge(user.name);
+}
+
+function showRoomUserBadge(name) {
+  const badge = document.getElementById('roomUserBadge');
+  badge.textContent = `👤 ${name}`;
+  badge.classList.remove('hidden');
+}
+
+function initAdBanner() {
+  const user = getCurrentUser();
+  const isPaid = user && (user.plan === 'pro' || user.plan === 'premium');
+  document.getElementById('adBanner').classList.toggle('hidden', isPaid);
+}
+
+// ── Share / invite ────────────────────────────────────────────────────────────
+
+const shareBtn = document.getElementById('shareBtn');
+const sharePopover = document.getElementById('sharePopover');
+const shareUrl = document.getElementById('shareUrl');
+
+shareBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const link = `${location.origin}/?join=${ROOM_ID}`;
+  shareUrl.value = link;
+  sharePopover.classList.toggle('hidden');
+  if (!sharePopover.classList.contains('hidden')) {
+    shareUrl.select();
+  }
+});
+
+document.getElementById('sharePopoverCopyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(shareUrl.value).catch(() => {});
+  const msg = document.getElementById('shareCopiedMsg');
+  msg.textContent = t('room.share.copied');
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2000);
+});
+
+document.addEventListener('click', (e) => {
+  if (!sharePopover.classList.contains('hidden') && !sharePopover.contains(e.target) && e.target !== shareBtn) {
+    sharePopover.classList.add('hidden');
+  }
 });
 
 // ── Render ────────────────────────────────────────────────────────────────────

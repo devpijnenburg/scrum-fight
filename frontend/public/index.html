@@ -43,7 +43,7 @@
             <input id="createName" type="text" class="input" data-i18n-ph="landing.create.yourname.ph" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
           </div>
 
-          <div class="form-group">
+          <div class="form-group field-full">
             <label for="createRoomName" data-i18n="landing.create.roomname">Kamernaam</label>
             <div class="input-with-btn">
               <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
@@ -110,6 +110,23 @@
 
     </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="lang-switcher"></div>
+        <span class="footer-copy" data-i18n="footer.copy">© 2025 Scrum Fight</span>
+      </div>
+      <nav class="footer-links">
+        <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+        <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+        <span class="footer-auth" id="footerAuth">
+          <a href="/login.html" data-i18n="footer.login">Inloggen</a>
+          <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
+        </span>
+      </nav>
+    </div>
+  </footer>
 
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>

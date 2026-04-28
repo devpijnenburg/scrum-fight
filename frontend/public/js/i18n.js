@@ -80,6 +80,17 @@ const TRANSLATIONS = {
     'room.overlay.expired_msg': 'Deze kamer is niet meer beschikbaar.',
     'room.overlay.home': 'Terug naar home →',
     'room.code_label': 'Code:',
+    'ad.label': 'Advertentie',
+    'ad.placeholder': 'Hier komt jouw advertentie',
+    'ad.upgrade': 'Upgrade naar Pro om advertenties te verwijderen →',
+    'room.auth.btn': 'Inloggen / Registreren',
+    'room.auth.title': 'Account',
+    'room.auth.success': 'Welkom, {name}!',
+    'room.share': '🔗 Uitnodigen',
+    'room.share.title': 'Kopieer uitnodigingslink',
+    'room.share.copy_btn': 'Kopieer',
+    'room.share.copied': '✅ Link gekopieerd!',
+    'room.share.label': 'Uitnodigingslink',
     'room.reveal': '👁 Reveal',
     'room.new_round': '🔄 Nieuwe ronde',
     'room.pick': 'Kies jouw kaart:',
@@ -110,6 +121,12 @@ const TRANSLATIONS = {
     'oauth.state_invalid': 'OAuth verificatie mislukt, probeer opnieuw.',
     'oauth.failed': 'OAuth inloggen mislukt, probeer opnieuw.',
     'oauth.error': 'Er is een fout opgetreden.',
+
+    'footer.privacy': 'Privacybeleid',
+    'footer.terms': 'Algemene voorwaarden',
+    'footer.copy': '© 2025 Scrum Fight',
+    'footer.login': 'Inloggen',
+    'footer.register': 'Registreren',
   },
   en: {
     'nav.login': 'Log in',
@@ -190,6 +207,17 @@ const TRANSLATIONS = {
     'room.overlay.expired_msg': 'This room is no longer available.',
     'room.overlay.home': 'Back to home →',
     'room.code_label': 'Code:',
+    'ad.label': 'Advertisement',
+    'ad.placeholder': 'Your ad goes here',
+    'ad.upgrade': 'Upgrade to Pro to remove ads →',
+    'room.auth.btn': 'Log in / Sign up',
+    'room.auth.title': 'Account',
+    'room.auth.success': 'Welcome, {name}!',
+    'room.share': '🔗 Invite',
+    'room.share.title': 'Copy invite link',
+    'room.share.copy_btn': 'Copy',
+    'room.share.copied': '✅ Link copied!',
+    'room.share.label': 'Invite link',
     'room.reveal': '👁 Reveal',
     'room.new_round': '🔄 New round',
     'room.pick': 'Pick your card:',
@@ -220,6 +248,12 @@ const TRANSLATIONS = {
     'oauth.state_invalid': 'OAuth verification failed, please try again.',
     'oauth.failed': 'OAuth sign in failed, please try again.',
     'oauth.error': 'An error occurred.',
+
+    'footer.privacy': 'Privacy Policy',
+    'footer.terms': 'Terms & Conditions',
+    'footer.copy': '© 2025 Scrum Fight',
+    'footer.login': 'Log in',
+    'footer.register': 'Sign up',
   },
 };
 
@@ -274,19 +308,67 @@ function applyTranslations() {
   document.documentElement.lang = currentLang;
 }
 
+const LANG_META = {
+  nl: { flag: '🇳🇱', label: 'NL' },
+  en: { flag: '🇬🇧', label: 'EN' },
+};
+
+function buildLangDropdown(container) {
+  container.innerHTML = '';
+  container.classList.add('lang-dropdown');
+
+  const toggle = document.createElement('button');
+  toggle.className = 'lang-toggle';
+  toggle.type = 'button';
+
+  const menu = document.createElement('div');
+  menu.className = 'lang-menu hidden';
+
+  SUPPORTED.forEach((lang) => {
+    const { flag, label } = LANG_META[lang];
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'lang-option';
+    option.dataset.lang = lang;
+    option.innerHTML = `<span class="lang-flag">${flag}</span><span class="lang-code">${label}</span>`;
+    option.addEventListener('click', () => {
+      setLang(lang);
+      menu.classList.add('hidden');
+    });
+    menu.appendChild(option);
+  });
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('hidden');
+  });
+
+  container.appendChild(toggle);
+  container.appendChild(menu);
+
+  updateLangSwitcher();
+}
+
 function updateLangSwitcher() {
-  document.querySelectorAll('.lang-btn').forEach((btn) => {
-    btn.classList.toggle('lang-btn-active', btn.dataset.lang === currentLang);
+  document.querySelectorAll('.lang-dropdown').forEach((container) => {
+    const { flag, label } = LANG_META[currentLang];
+    const toggle = container.querySelector('.lang-toggle');
+    if (toggle) {
+      toggle.innerHTML = `<span class="lang-flag">${flag}</span><span class="lang-code">${label}</span><span class="lang-arrow">▾</span>`;
+    }
+    container.querySelectorAll('.lang-option').forEach((opt) => {
+      opt.classList.toggle('lang-option-active', opt.dataset.lang === currentLang);
+    });
   });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
   applyTranslations();
-  updateLangSwitcher();
 
-  document.querySelectorAll('.lang-btn').forEach((btn) => {
-    btn.addEventListener('click', () => setLang(btn.dataset.lang));
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.lang-menu').forEach((m) => m.classList.add('hidden'));
   });
 });

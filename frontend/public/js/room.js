@@ -16,6 +16,20 @@ let myName = null;
 let roomState = null;
 let myVote = null;
 let isRevealed = false;
+let analyticsLoaded = false;
+let currentStats = null;
+
+// ── Settings (localStorage) ───────────────────────────────────────────────────
+
+const SETTINGS_KEY = 'sfSettings';
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
+}
+
+function saveSettings(s) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
 
 // ── Socket connection ─────────────────────────────────────────────────────────
 
@@ -108,6 +122,7 @@ socket.on('player-voted', ({ socketId }) => {
 
 socket.on('cards-revealed', ({ players, stats }) => {
   isRevealed = true;
+  currentStats = stats;
   if (roomState) {
     players.forEach(({ socketId, vote }) => {
       const p = roomState.players.find((p) => p.socketId === socketId);
@@ -116,22 +131,32 @@ socket.on('cards-revealed', ({ players, stats }) => {
     roomState.revealed = true;
   }
   renderTable(roomState);
-  showStats(stats);
+  showConsensusInline(stats);
+  updateAnalyticsCurrent(stats);
+  prependHistoryRound(players, stats);
   document.getElementById('revealBtn').classList.add('hidden');
   document.getElementById('newRoundBtn').classList.remove('hidden');
   setPickerDisabled(true);
   document.getElementById('voteStatus').textContent = t('room.revealed');
+
+  // Auto-open analytics panel based on settings
+  const settings = loadSettings();
+  if (settings.analyticsAutoOpen !== false) {
+    openAnalyticsPanel();
+  }
 });
 
 socket.on('round-reset', () => {
   isRevealed = false;
   myVote = null;
+  currentStats = null;
   if (roomState) {
     roomState.revealed = false;
     roomState.players.forEach((p) => { p.vote = null; p.hasVoted = false; });
   }
   renderTable(roomState);
-  document.getElementById('statsPanel').classList.add('hidden');
+  document.getElementById('consensusBadge').classList.add('hidden');
+  document.getElementById('analyticsCurrent').classList.add('hidden');
   document.getElementById('revealBtn').classList.remove('hidden');
   document.getElementById('revealBtn').disabled = true;
   document.getElementById('newRoundBtn').classList.add('hidden');
@@ -216,12 +241,208 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
 });
 
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', (e) => {
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  const key = e.key.toLowerCase();
+
+  if (key === 'r') {
+    const btn = document.getElementById('revealBtn');
+    if (!btn.disabled && !btn.classList.contains('hidden')) socket.emit('reveal');
+    return;
+  }
+
+  if (key === 'n') {
+    const btn = document.getElementById('newRoundBtn');
+    if (!btn.classList.contains('hidden')) socket.emit('new-round');
+    return;
+  }
+
+  // 1-9 select picker card by position
+  const idx = parseInt(e.key, 10);
+  if (!isNaN(idx)) {
+    const cards = [...document.querySelectorAll('.picker-card:not(.disabled)')];
+    const target = idx === 0 ? cards[9] : cards[idx - 1];
+    if (target) target.click();
+    return;
+  }
+
+  // ? key selects the ? card
+  if (e.key === '?') {
+    const qCard = [...document.querySelectorAll('.picker-card:not(.disabled)')]
+      .find((c) => c.dataset.value === '?');
+    if (qCard) qCard.click();
+  }
+});
+
+// ── Analytics panel ───────────────────────────────────────────────────────────
+
+function openAnalyticsPanel() {
+  const panel = document.getElementById('analyticsPanel');
+  panel.classList.remove('hidden');
+  if (!analyticsLoaded) loadHistory();
+}
+
+function closeAnalyticsPanel() {
+  document.getElementById('analyticsPanel').classList.add('hidden');
+}
+
+document.getElementById('analyticsToggleBtn').addEventListener('click', () => {
+  const panel = document.getElementById('analyticsPanel');
+  if (panel.classList.contains('hidden')) openAnalyticsPanel();
+  else closeAnalyticsPanel();
+});
+
+document.getElementById('analyticsPanelCloseBtn').addEventListener('click', closeAnalyticsPanel);
+
+async function loadHistory() {
+  analyticsLoaded = true;
+  try {
+    const rows = await apiFetch(`/rooms/${ROOM_ID}/history`, { method: 'GET' });
+    const list = document.getElementById('analyticsHistoryList');
+    const empty = document.getElementById('analyticsHistoryEmpty');
+
+    if (!rows.length) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    rows.forEach((row, i) => {
+      const el = buildHistoryRoundEl(row.votes, null, row.created_at, rows.length - i);
+      list.appendChild(el);
+    });
+  } catch {
+    // history is optional — silently skip
+  }
+}
+
+function prependHistoryRound(players, stats) {
+  analyticsLoaded = true;
+  const list = document.getElementById('analyticsHistoryList');
+  document.getElementById('analyticsHistoryEmpty').classList.add('hidden');
+
+  const votes = {};
+  players.forEach((p) => { votes[p.name] = p.vote; });
+
+  const roundNum = list.querySelectorAll('.history-round').length + 1;
+  const el = buildHistoryRoundEl(votes, stats, new Date().toISOString(), roundNum);
+  list.insertBefore(el, list.firstChild);
+}
+
+function buildHistoryRoundEl(votes, stats, createdAt, roundNum) {
+  const level = stats ? consensusLevel(stats) : consensusLevelFromVotes(votes);
+  const badge = consensusBadgeHtml(level);
+  const time = formatRelativeTime(createdAt);
+
+  const voteItems = Object.entries(votes || {})
+    .map(([name, vote]) => `<span class="history-vote"><strong>${escapeHtml(name)}</strong> ${escapeHtml(vote || '–')}</span>`)
+    .join('');
+
+  const el = document.createElement('div');
+  el.className = 'history-round fade-in';
+  el.innerHTML = `
+    <div class="history-round-hd">
+      <span class="history-round-num">#${roundNum}</span>
+      ${badge}
+      <span class="history-round-time">${time}</span>
+    </div>
+    <div class="history-round-votes">${voteItems}</div>
+  `;
+  return el;
+}
+
+function updateAnalyticsCurrent(stats) {
+  const section = document.getElementById('analyticsCurrent');
+  const consensusEl = document.getElementById('analyticsConsensus');
+  const grid = document.getElementById('analyticsStatsGrid');
+
+  if (!stats) { section.classList.add('hidden'); return; }
+
+  const level = consensusLevel(stats);
+  consensusEl.innerHTML = level !== 'neutral'
+    ? `<div class="consensus-badge-lg consensus-badge-${level}">${consensusBadgeText(level)}</div>`
+    : '';
+
+  let html = '';
+  if (stats.allSame) html += `<div class="stat-consensus">${t('room.stats.consensus')}</div>`;
+  if (stats.average !== undefined) {
+    html += statItem(stats.average, t('room.stats.average'));
+    html += statItem(stats.min, t('room.stats.min'));
+    html += statItem(stats.max, t('room.stats.max'));
+  }
+  if (stats.mode) html += statItem(stats.mode, t('room.stats.mode'));
+  if (stats.distribution) {
+    const distItems = Object.entries(stats.distribution)
+      .sort((a, b) => b[1] - a[1])
+      .map(([v, c]) => `<span>${v}: ${c}×</span>`)
+      .join('');
+    html += `<div class="stat-item"><div style="display:flex;gap:.6rem;flex-wrap:wrap;font-size:.85rem;color:var(--text-muted)">${distItems}</div><div class="stat-label">${t('room.stats.distribution')}</div></div>`;
+  }
+
+  grid.innerHTML = html;
+  section.classList.remove('hidden');
+}
+
+// ── Consensus helpers ─────────────────────────────────────────────────────────
+
+function consensusLevel(stats) {
+  if (!stats) return 'neutral';
+  if (stats.allSame) return 'full';
+  if (stats.max !== undefined && stats.min !== undefined && stats.max - stats.min <= 2) return 'close';
+  if (stats.max !== undefined) return 'spread';
+  return 'neutral';
+}
+
+function consensusLevelFromVotes(votes) {
+  const vals = Object.values(votes || {}).filter(Boolean);
+  if (!vals.length) return 'neutral';
+  if (new Set(vals).size === 1) return 'full';
+  const nums = vals
+    .filter((v) => !['?', '☕', '😊', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
+    .map((v) => (v === '½' ? 0.5 : parseFloat(v)))
+    .filter((n) => !isNaN(n));
+  if (!nums.length) return 'neutral';
+  return Math.max(...nums) - Math.min(...nums) <= 2 ? 'close' : 'spread';
+}
+
+function consensusBadgeText(level) {
+  if (level === 'full')   return t('room.analytics.consensus_full');
+  if (level === 'close')  return t('room.analytics.consensus_close');
+  if (level === 'spread') return t('room.analytics.consensus_spread');
+  return '';
+}
+
+function consensusBadgeHtml(level) {
+  if (level === 'neutral') return '';
+  return `<span class="consensus-badge-sm consensus-badge-sm-${level}">${consensusBadgeText(level)}</span>`;
+}
+
+function showConsensusInline(stats) {
+  const badge = document.getElementById('consensusBadge');
+  const level = consensusLevel(stats);
+  if (!stats || level === 'neutral') { badge.classList.add('hidden'); return; }
+  badge.className = `consensus-badge consensus-badge-${level}`;
+  badge.textContent = consensusBadgeText(level);
+  badge.classList.remove('hidden');
+}
+
+function formatRelativeTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return t('room.analytics.just_now');
+  if (mins < 60) return t('room.analytics.mins_ago', { n: mins });
+  return t('room.analytics.hrs_ago', { n: Math.floor(mins / 60) });
+}
+
 // ── Auth button (guests only) ─────────────────────────────────────────────────
 
 function initRoomAuth() {
   const user = getCurrentUser();
   if (user) {
     showRoomUserBadge(user.name);
+    initSettings();
     return;
   }
 
@@ -229,7 +450,6 @@ function initRoomAuth() {
   authBtn.classList.remove('hidden');
   authBtn.addEventListener('click', () => openRoomAuthModal());
 
-  // Tab switching
   document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('#roomAuthModal .auth-tab').forEach((t) => t.classList.remove('active'));
@@ -280,7 +500,6 @@ function initRoomAuth() {
       err.classList.remove('hidden');
     }
   });
-
 }
 
 function openRoomAuthModal() {
@@ -298,6 +517,7 @@ function onRoomAuthSuccess(user, token) {
   closeRoomAuthModal();
   document.getElementById('roomAuthBtn').classList.add('hidden');
   showRoomUserBadge(user.name);
+  initSettings();
 }
 
 function showRoomUserBadge(name) {
@@ -312,6 +532,39 @@ function initAdBanner() {
   document.getElementById('adBanner').classList.toggle('hidden', isPaid);
 }
 
+// ── Settings (account users only) ────────────────────────────────────────────
+
+function initSettings() {
+  const settingsBtn = document.getElementById('settingsBtn');
+  settingsBtn.classList.remove('hidden');
+
+  // Guard against double-init (e.g. after in-room login)
+  if (settingsBtn.dataset.initialized) return;
+  settingsBtn.dataset.initialized = '1';
+
+  settingsBtn.addEventListener('click', openSettingsModal);
+  document.getElementById('settingsBackdrop').addEventListener('click', closeSettingsModal);
+  document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsModal);
+  document.getElementById('settingsSaveBtn').addEventListener('click', () => {
+    const settings = loadSettings();
+    settings.analyticsAutoOpen = document.getElementById('settingAnalyticsAuto').checked;
+    settings.defaultMethod = document.getElementById('settingDefaultMethod').value;
+    saveSettings(settings);
+    closeSettingsModal();
+  });
+}
+
+function openSettingsModal() {
+  const settings = loadSettings();
+  document.getElementById('settingAnalyticsAuto').checked = settings.analyticsAutoOpen !== false;
+  document.getElementById('settingDefaultMethod').value = settings.defaultMethod || '';
+  document.getElementById('settingsModal').classList.remove('hidden');
+}
+
+function closeSettingsModal() {
+  document.getElementById('settingsModal').classList.add('hidden');
+}
+
 // ── Share / invite ────────────────────────────────────────────────────────────
 
 const shareBtn = document.getElementById('shareBtn');
@@ -323,9 +576,7 @@ shareBtn.addEventListener('click', (e) => {
   const link = `${location.origin}/?join=${ROOM_ID}`;
   shareUrl.value = link;
   sharePopover.classList.toggle('hidden');
-  if (!sharePopover.classList.contains('hidden')) {
-    shareUrl.select();
-  }
+  if (!sharePopover.classList.contains('hidden')) shareUrl.select();
 });
 
 document.getElementById('sharePopoverCopyBtn').addEventListener('click', () => {
@@ -376,8 +627,7 @@ function renderTable(state) {
   players.forEach((player, i) => {
     const isMe = player.socketId === mySocketId;
     const angle = (2 * Math.PI * i) / count - Math.PI / 2;
-    const rx = 42;
-    const ry = 38;
+    const rx = 42, ry = 38;
     const cx = 50 + rx * Math.cos(angle);
     const cy = 50 + ry * Math.sin(angle);
 
@@ -421,10 +671,7 @@ function createCardEl(player, revealed, isMe) {
 
   card.appendChild(back);
   card.appendChild(front);
-
-  if (revealed && player.hasVoted) {
-    card.classList.add('flipped');
-  }
+  if (revealed && player.hasVoted) card.classList.add('flipped');
 
   container.appendChild(card);
   return container;
@@ -474,47 +721,11 @@ function clearPickerSelection() {
   document.querySelectorAll('.picker-card').forEach((c) => c.classList.remove('selected'));
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-
-function showStats(stats) {
-  const panel = document.getElementById('statsPanel');
-  const grid = document.getElementById('statsGrid');
-
-  if (!stats) { panel.classList.add('hidden'); return; }
-
-  let html = '';
-
-  if (stats.allSame) {
-    html += `<div class="stat-consensus">${t('room.stats.consensus')}</div>`;
-  }
-
-  if (stats.average !== undefined) {
-    html += statItem(stats.average, t('room.stats.average'));
-    html += statItem(stats.min, t('room.stats.min'));
-    html += statItem(stats.max, t('room.stats.max'));
-  }
-
-  if (stats.mode) {
-    html += statItem(stats.mode, t('room.stats.mode'));
-  }
-
-  if (stats.distribution) {
-    const distItems = Object.entries(stats.distribution)
-      .sort((a, b) => b[1] - a[1])
-      .map(([v, c]) => `<span>${v}: ${c}×</span>`)
-      .join('');
-    html += `<div class="stat-item"><div style="display:flex;gap:.6rem;flex-wrap:wrap;font-size:.85rem;color:var(--text-muted)">${distItems}</div><div class="stat-label">${t('room.stats.distribution')}</div></div>`;
-  }
-
-  grid.innerHTML = html;
-  panel.classList.remove('hidden');
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function statItem(value, label) {
   return `<div class="stat-item"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function updateVoteStatus() {
   if (!roomState) return;

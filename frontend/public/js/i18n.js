@@ -155,6 +155,7 @@ const TRANSLATIONS = {
 
     'nav.dashboard': 'Dashboard',
     'nav.stats': 'Statistieken',
+    'nav.profile': 'Profiel',
 
     'stats.title': '📊 Mijn statistieken',
     'stats.loading': 'Statistieken laden…',
@@ -192,9 +193,20 @@ const TRANSLATIONS = {
     'stats.personality.fashionista.desc': 'T-shirt maten? Dat is jouw ding.',
 
     'stats.streak_label': 'Huidige streak 🔥',
-    'stats.streak_best': 'Beste: {n} dagen',
+    'stats.streak_best': 'Beste: {n} op rij',
     'stats.consensus_label': 'Consensus rate',
     'stats.consensus_of': '{n} van {total} rondes',
+    'stats.consensus_streak_label': 'Consensus-streak 🎯',
+    'stats.team_diff_label': 'Vs. team',
+    'stats.team_diff_sub': 'over {rounds} rondes',
+    'stats.sessions_title': '📋 Sessie-overzicht',
+    'stats.sessions_desc': 'Jouw laatste 10 sessies',
+    'stats.sessions_col_room': 'Kamer',
+    'stats.sessions_col_method': 'Methode',
+    'stats.sessions_col_rounds': 'Rondes',
+    'stats.sessions_col_fav': 'Fav. kaart',
+    'stats.sessions_col_date': 'Datum',
+    'stats.sessions_empty': 'Nog geen sessies.',
 
     'stats.badges_title': 'Planning Poker badges & achievements',
     'stats.badges_desc': 'Verdien badges door stories te schatten, samen te werken en je team naar een hoger niveau te tillen.',
@@ -392,6 +404,7 @@ const TRANSLATIONS = {
 
     'nav.dashboard': 'Dashboard',
     'nav.stats': 'Stats',
+    'nav.profile': 'Profile',
 
     'stats.title': '📊 My statistics',
     'stats.loading': 'Loading statistics…',
@@ -429,9 +442,20 @@ const TRANSLATIONS = {
     'stats.personality.fashionista.desc': "T-shirt sizes? That's your thing.",
 
     'stats.streak_label': 'Current streak 🔥',
-    'stats.streak_best': 'Best: {n} days',
+    'stats.streak_best': 'Best: {n} in a row',
     'stats.consensus_label': 'Consensus rate',
     'stats.consensus_of': '{n} of {total} rounds',
+    'stats.consensus_streak_label': 'Consensus streak 🎯',
+    'stats.team_diff_label': 'Vs. team',
+    'stats.team_diff_sub': 'over {rounds} rounds',
+    'stats.sessions_title': '📋 Session history',
+    'stats.sessions_desc': 'Your last 10 sessions',
+    'stats.sessions_col_room': 'Room',
+    'stats.sessions_col_method': 'Method',
+    'stats.sessions_col_rounds': 'Rounds',
+    'stats.sessions_col_fav': 'Fav. card',
+    'stats.sessions_col_date': 'Date',
+    'stats.sessions_empty': 'No sessions yet.',
 
     'stats.badges_title': 'Planning Poker badges & achievements',
     'stats.badges_desc': 'Earn badges by estimating stories, collaborating, and lifting your team to the next level.',

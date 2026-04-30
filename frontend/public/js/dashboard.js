@@ -32,10 +32,9 @@ if (!user) {
 
 // ── Page init ─────────────────────────────────────────────────────────────────
 
-document.getElementById('navUser').textContent = `👤 ${user.name}`;
+updateNavbar();
 document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
 document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
-document.getElementById('logoutBtn').addEventListener('click', logout);
 
 document.querySelectorAll('.plan-card').forEach((card) => {
   if (card.dataset.plan === user.plan) {

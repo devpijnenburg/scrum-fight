@@ -76,6 +76,10 @@ async function loadRooms() {
       </div>
     `).join('');
   } catch (err) {
+    if (err.status === 401) {
+      window.location.href = '/login.html';
+      return;
+    }
     list.innerHTML = `<p class="form-error">${t('dashboard.rooms.load_error', { error: escapeHtml(err.message) })}</p>`;
   }
 }
@@ -117,6 +121,10 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
     closeModal();
     window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {
+    if (err.status === 401) {
+      window.location.href = '/login.html';
+      return;
+    }
     errEl.textContent = err.message;
     errEl.classList.remove('hidden');
   }

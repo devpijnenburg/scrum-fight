@@ -184,8 +184,8 @@ const TRANSLATIONS = {
     'stats.personality.minimalist.desc': 'Jij schat altijd conservatief — beter te weinig dan te veel.',
     'stats.personality.maximalist': 'De Optimist',
     'stats.personality.maximalist.desc': 'Vol gas! Jij denkt groot en schat hoog.',
-    'stats.personality.middle': 'Het Midden',
-    'stats.personality.middle.desc': 'Jij zoekt altijd de gulden middenweg.',
+    'stats.personality.middleground': 'Het Midden',
+    'stats.personality.middleground.desc': 'Jij zoekt altijd de gulden middenweg.',
     'stats.personality.fashionista': 'De Fashionista',
     'stats.personality.fashionista.desc': 'T-shirt maten? Dat is jouw ding.',
 
@@ -419,8 +419,8 @@ const TRANSLATIONS = {
     'stats.personality.minimalist.desc': 'You always estimate conservatively — better safe than sorry.',
     'stats.personality.maximalist': 'The Optimist',
     'stats.personality.maximalist.desc': 'Full throttle! You think big and estimate high.',
-    'stats.personality.middle': 'The Middle Ground',
-    'stats.personality.middle.desc': 'You always seek the golden middle way.',
+    'stats.personality.middleground': 'The Middle Ground',
+    'stats.personality.middleground.desc': 'You always seek the golden middle way.',
     'stats.personality.fashionista': 'The Fashionista',
     'stats.personality.fashionista.desc': "T-shirt sizes? That's your thing.",
 

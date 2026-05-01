@@ -117,8 +117,14 @@ module.exports = function setupSocket(io) {
       if (token) {
         try {
           const payload = verify(token);
-          userId = payload.id;
-          name = payload.name;
+          const { rows } = await db.query(
+            'SELECT id, name FROM users WHERE id = $1',
+            [payload.id]
+          );
+          if (rows.length) {
+            userId = rows[0].id;
+            name = rows[0].name;
+          }
         } catch {
           // invalid token — fall back to provided name
         }
@@ -199,6 +205,8 @@ module.exports = function setupSocket(io) {
       // Update last_active for non-guest rooms
       if (!dbRoom.is_guest) {
         db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [normalizedId]).catch(console.error);
+      } else {
+        resetGuestTimer(io, normalizedId);
       }
     });
 
@@ -317,10 +325,7 @@ module.exports = function setupSocket(io) {
 
       io.to(roomId).emit('player-left', { socketId: socket.id, name: player?.name });
 
-      // Guest room: delete immediately when empty, redirect all remaining clients
-      if (room.isGuest && room.players.size === 0) {
-        await deleteGuestRoom(io, roomId);
-      }
+      // Guest rooms remain available until their inactivity timer expires.
     });
   });
 };

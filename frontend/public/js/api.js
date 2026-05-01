@@ -43,8 +43,13 @@ async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+    }
     const body = await res.json().catch(() => ({ error: 'Verzoek mislukt' }));
-    throw new Error(body.error || 'Verzoek mislukt');
+    const err = new Error(body.error || 'Verzoek mislukt');
+    err.status = res.status;
+    throw err;
   }
 
   return res.json();

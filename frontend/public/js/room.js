@@ -42,6 +42,7 @@ function resolveAndJoin() {
 
   if (user) {
     myName = user.name;
+    setProfileName(user.name);
     joinRoomSocket(user.name, localStorage.getItem('token'));
     return;
   }
@@ -49,6 +50,7 @@ function resolveAndJoin() {
   const savedName = NAME_FROM_SESSION || localStorage.getItem('userName') || '';
   if (savedName) {
     myName = savedName;
+    setProfileName(savedName);
     joinRoomSocket(savedName, null);
   } else {
     showNameModal();
@@ -73,6 +75,7 @@ function submitName() {
   }
   document.getElementById('nameModal').classList.add('hidden');
   myName = name;
+  setProfileName(name);
   localStorage.setItem('userName', name);
   joinRoomSocket(name, null);
 }
@@ -241,6 +244,32 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
 });
 
+// ── Profile menu ─────────────────────────────────────────────────────────────
+
+const profileMenuBtn = document.getElementById('profileMenuBtn');
+const profileMenu = document.getElementById('profileMenu');
+
+profileMenuBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = !profileMenu.classList.contains('hidden');
+  profileMenu.classList.toggle('hidden', isOpen);
+  profileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+profileMenu.addEventListener('click', (e) => e.stopPropagation());
+
+document.addEventListener('click', () => closeProfileMenu());
+
+function closeProfileMenu() {
+  profileMenu.classList.add('hidden');
+  profileMenuBtn.setAttribute('aria-expanded', 'false');
+}
+
+function setProfileName(name) {
+  const label = document.getElementById('profileNameLabel');
+  if (label) label.textContent = name || 'Profiel';
+}
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', (e) => {
@@ -295,6 +324,7 @@ document.getElementById('analyticsToggleBtn').addEventListener('click', () => {
   const panel = document.getElementById('analyticsPanel');
   if (panel.classList.contains('hidden')) openAnalyticsPanel();
   else closeAnalyticsPanel();
+  closeProfileMenu();
 });
 
 document.getElementById('analyticsPanelCloseBtn').addEventListener('click', closeAnalyticsPanel);
@@ -448,7 +478,10 @@ function initRoomAuth() {
 
   const authBtn = document.getElementById('roomAuthBtn');
   authBtn.classList.remove('hidden');
-  authBtn.addEventListener('click', () => openRoomAuthModal());
+  authBtn.addEventListener('click', () => {
+    closeProfileMenu();
+    openRoomAuthModal();
+  });
 
   document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
@@ -521,9 +554,7 @@ function onRoomAuthSuccess(user, token) {
 }
 
 function showRoomUserBadge(name) {
-  const badge = document.getElementById('roomUserBadge');
-  badge.textContent = `👤 ${name}`;
-  badge.classList.remove('hidden');
+  setProfileName(name);
 }
 
 function initAdBanner() {
@@ -542,7 +573,10 @@ function initSettings() {
   if (settingsBtn.dataset.initialized) return;
   settingsBtn.dataset.initialized = '1';
 
-  settingsBtn.addEventListener('click', openSettingsModal);
+  settingsBtn.addEventListener('click', () => {
+    closeProfileMenu();
+    openSettingsModal();
+  });
   document.getElementById('settingsBackdrop').addEventListener('click', closeSettingsModal);
   document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsModal);
   document.getElementById('settingsSaveBtn').addEventListener('click', () => {
@@ -573,6 +607,7 @@ const shareUrl = document.getElementById('shareUrl');
 
 shareBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  closeProfileMenu();
   const link = `${location.origin}/?join=${ROOM_ID}`;
   shareUrl.value = link;
   sharePopover.classList.toggle('hidden');

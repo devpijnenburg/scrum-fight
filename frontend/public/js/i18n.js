@@ -91,6 +91,8 @@ const TRANSLATIONS = {
     'room.share.copy_btn': 'Kopieer',
     'room.share.copied': '✅ Link gekopieerd!',
     'room.share.label': 'Uitnodigingslink',
+    'room.menu.analytics': 'Analyse',
+    'room.menu.language': 'Taal',
     'room.reveal': '👁 Reveal',
     'room.new_round': '🔄 Nieuwe ronde',
     'room.pick': 'Kies jouw kaart:',
@@ -194,8 +196,8 @@ const TRANSLATIONS = {
     'stats.consensus_label': 'Consensus rate',
     'stats.consensus_of': '{n} van {total} rondes',
 
-    'stats.badges_title': '🏅 Badges',
-    'stats.badges_desc': 'Verdien badges door te spelen en speciale prestaties te behalen',
+    'stats.badges_title': 'Planning Poker badges & achievements',
+    'stats.badges_desc': 'Verdien badges door stories te schatten, samen te werken en je team naar een hoger niveau te tillen.',
 
     'stats.badge.first_round': 'Eerste ronde',
     'stats.badge.first_round.desc': 'Speel je allereerste ronde.',
@@ -326,6 +328,8 @@ const TRANSLATIONS = {
     'room.share.copy_btn': 'Copy',
     'room.share.copied': '✅ Link copied!',
     'room.share.label': 'Invite link',
+    'room.menu.analytics': 'Analytics',
+    'room.menu.language': 'Language',
     'room.reveal': '👁 Reveal',
     'room.new_round': '🔄 New round',
     'room.pick': 'Pick your card:',
@@ -429,8 +433,8 @@ const TRANSLATIONS = {
     'stats.consensus_label': 'Consensus rate',
     'stats.consensus_of': '{n} of {total} rounds',
 
-    'stats.badges_title': '🏅 Badges',
-    'stats.badges_desc': 'Earn badges by playing and hitting special milestones',
+    'stats.badges_title': 'Planning Poker badges & achievements',
+    'stats.badges_desc': 'Earn badges by estimating stories, collaborating, and lifting your team to the next level.',
 
     'stats.badge.first_round': 'First Round',
     'stats.badge.first_round.desc': 'Play your very first round.',

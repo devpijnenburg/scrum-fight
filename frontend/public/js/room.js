@@ -680,6 +680,16 @@ function renderTable(state) {
 
   const players = state.players;
   const count = players.length;
+
+  const existingHint = table.querySelector('.table-waiting');
+  if (existingHint) existingHint.remove();
+  if (count < 2 && !state.revealed) {
+    const hint = document.createElement('div');
+    hint.className = 'table-waiting';
+    hint.textContent = t('room.table_waiting');
+    table.appendChild(hint);
+  }
+
   if (!count) return;
 
   players.forEach((player, i) => {

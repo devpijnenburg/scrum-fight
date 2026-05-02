@@ -449,6 +449,30 @@ select.input { cursor: pointer; }
 .room-list-loading { color: var(--text-muted); font-size: .9rem; }
 .room-list-empty { color: var(--text-muted); font-size: .95rem; }
 
+.room-item-skeleton {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+.skeleton {
+  border-radius: 4px;
+  height: .9rem;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton-line-lg { height: 1.1rem; width: 60%; }
+.skeleton-line-md { height: .85rem; width: 45%; }
+.skeleton-line-sm { height: .75rem; width: 30%; }
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .room-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -483,7 +507,25 @@ select.input { cursor: pointer; }
 .plan-name { font-size: 1.2rem; font-weight: 800; }
 .plan-badge { font-size: .75rem; color: var(--table-gold); font-weight: 700; }
 .plan-features { list-style: none; display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; color: var(--text-muted); }
-.plan-card[data-active="true"] { border-color: var(--primary); }
+.plan-card[data-active="true"] {
+  border-color: var(--primary);
+  border-width: 2px;
+  position: relative;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+.plan-card[data-active="true"]::after {
+  content: '✓ Huidig plan';
+  position: absolute;
+  top: -1px; right: -1px;
+  background: var(--primary);
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 0 calc(var(--radius) - 1px) 0 var(--radius);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
 
 /* ── Room header ────────────────────────────────────────────────────────────── */
 .page-room { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
@@ -726,6 +768,7 @@ select.input { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .poker-table {
@@ -1369,6 +1412,28 @@ kbd {
   gap: .6rem;
 }
 .stats-card-sub { font-size: .7rem; color: var(--text-muted); margin-top: .1rem; }
+
+.stats-card--orange { border-left: 3px solid #f97316; }
+.stats-card--orange .stats-card-value {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stats-card--green { border-left: 3px solid #22c55e; }
+.stats-card--green .stats-card-value {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stats-card--blue { border-left: 3px solid #3b82f6; }
+.stats-card--blue .stats-card-value {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 .stats-chart-card h2 { font-size: 1.05rem; font-weight: 800; }
 .stats-chart-card .text-muted { font-size: .82rem; }
 
@@ -1621,13 +1686,36 @@ kbd {
 }
 .session-room-link:hover { text-decoration: underline; }
 
+/* ── Table waiting hint ──────────────────────────────────────────────────────── */
+.table-waiting {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255,255,255,.55);
+  font-size: .85rem;
+  font-weight: 600;
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
 /* ── Reaction bar ────────────────────────────────────────────────────────────── */
 .reaction-bar {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: .5rem;
   padding: .4rem 0 .6rem;
   animation: fadeIn .2s ease;
+}
+.reaction-label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: .15rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
 }
 .reaction-btn {
   font-size: 1.5rem;
@@ -1642,6 +1730,11 @@ kbd {
 }
 .reaction-btn:hover  { transform: scale(1.25); background: var(--surface); }
 .reaction-btn:active { transform: scale(.9); }
+.reaction-btn-pulse { animation: reactionPulse .6s ease 1; }
+@keyframes reactionPulse {
+  0%, 100% { transform: scale(1); }
+  40%       { transform: scale(1.2); }
+}
 
 .floating-reaction {
   position: absolute;
@@ -1709,3 +1802,25 @@ kbd {
 
 @keyframes toastIn  { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes toastOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+
+/* ── Tablet breakpoint (768px–1024px) ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .room-header { gap: .5rem; padding: .6rem 1rem; }
+  .card-picker-row { justify-content: center; }
+  .picker-card { min-width: 52px; padding: .6rem .4rem; }
+  .stats-cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .stats-charts { grid-template-columns: 1fr; }
+  .room-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .plan-cards { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .analytics-panel { width: min(360px, 90vw); }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

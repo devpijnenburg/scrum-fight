@@ -139,6 +139,7 @@ socket.on('cards-revealed', ({ players, stats }) => {
   prependHistoryRound(players, stats);
   document.getElementById('revealBtn').classList.add('hidden');
   document.getElementById('newRoundBtn').classList.remove('hidden');
+  document.getElementById('reactionBar').classList.remove('hidden');
   setPickerDisabled(true);
   document.getElementById('voteStatus').textContent = t('room.revealed');
 
@@ -160,6 +161,7 @@ socket.on('round-reset', () => {
   renderTable(roomState);
   document.getElementById('consensusBadge').classList.add('hidden');
   document.getElementById('analyticsCurrent').classList.add('hidden');
+  document.getElementById('reactionBar').classList.add('hidden');
   document.getElementById('revealBtn').classList.remove('hidden');
   document.getElementById('revealBtn').disabled = true;
   document.getElementById('newRoundBtn').classList.add('hidden');
@@ -192,6 +194,27 @@ socket.on('error', ({ code, message }) => {
   } else {
     showOverlay('⚠️', t('room.error'), message || t('room.error_unknown'));
   }
+});
+
+socket.on('reaction', ({ name, emoji }) => {
+  spawnFloatingEmoji(emoji, name);
+});
+
+function spawnFloatingEmoji(emoji, name) {
+  const area = document.querySelector('.table-area');
+  if (!area) return;
+  const el = document.createElement('div');
+  el.className = 'floating-reaction';
+  el.textContent = emoji;
+  el.title = name;
+  el.style.left = `${15 + Math.random() * 70}%`;
+  area.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// Wire reaction buttons once
+document.querySelectorAll('.reaction-btn').forEach(btn => {
+  btn.addEventListener('click', () => socket.emit('react', { emoji: btn.dataset.emoji }));
 });
 
 // ── Actions ───────────────────────────────────────────────────────────────────

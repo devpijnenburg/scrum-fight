@@ -11,8 +11,6 @@ Chart.defaults.font.family = 'Nunito, sans-serif';
 const user = getCurrentUser();
 if (!user) window.location.href = '/login.html';
 
-document.getElementById('navUser').textContent = `👤 ${user.name}`;
-document.getElementById('logoutBtn').addEventListener('click', logout);
 
 // ── Shield tier config ────────────────────────────────────────────────────────
 // Each tier: [highlight, main, shadow, text-color]
@@ -510,6 +508,63 @@ function buildHoursChart(byHour) {
   });
 }
 
+// ── Badge toast ───────────────────────────────────────────────────────────────
+
+const UNLOCKED_KEY = 'sfUnlockedBadges';
+
+function showBadgeToasts(unlockedIds) {
+  const prev = new Set(JSON.parse(localStorage.getItem(UNLOCKED_KEY) || 'null'));
+  const isFirstVisit = prev.size === 0 && !localStorage.getItem(UNLOCKED_KEY);
+  localStorage.setItem(UNLOCKED_KEY, JSON.stringify(unlockedIds));
+  if (isFirstVisit) return;
+  const newOnes = unlockedIds.filter(id => !prev.has(id));
+  newOnes.forEach((id, i) => setTimeout(() => showToast(id), i * 700));
+}
+
+function showToast(badgeId) {
+  const badge = BADGES.find(b => b.id === badgeId);
+  if (!badge) return;
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'badge-toast-item';
+  toast.innerHTML = `
+    <div class="badge-toast-shield">${shieldSvg(badge.tier, badge.emoji, badge.milestone, true, 1)}</div>
+    <div class="badge-toast-body">
+      <div class="badge-toast-label">${t('stats.toast_unlocked')}</div>
+      <div class="badge-toast-name">${t('stats.badge.' + badgeId)}</div>
+    </div>
+    <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    setTimeout(() => toast.remove(), 400);
+  }, 5500);
+}
+
+// ── Sessions table ────────────────────────────────────────────────────────────
+
+function renderSessions(sessions) {
+  const tbody = document.getElementById('sessionsTbody');
+  if (!sessions?.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center;padding:1rem">${t('stats.sessions_empty')}</td></tr>`;
+    return;
+  }
+  const locale = getLang() === 'nl' ? 'nl-NL' : 'en-GB';
+  sessions.forEach(s => {
+    const date = new Date(s.last_active).toLocaleDateString(locale, { dateStyle: 'medium' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><a href="/room.html?id=${escapeHtml(s.room_id)}" class="session-room-link">${escapeHtml(s.room_name)}</a></td>
+      <td class="text-muted">${escapeHtml(s.method)}</td>
+      <td>${s.rounds}</td>
+      <td>${s.fav_value ? escapeHtml(s.fav_value) : '—'}</td>
+      <td class="text-muted">${date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function loadStats() {
@@ -560,6 +615,26 @@ async function loadStats() {
       ? t('stats.consensus_of', { n: c.consensus_rounds, total: c.total_rounds })
       : '';
 
+    // Consensus streak
+    const cs = data.consensusStreak;
+    const curCS  = cs?.current_consensus_streak || 0;
+    const maxCS  = cs?.max_consensus_streak || 0;
+    document.getElementById('statConsensusStreak').textContent = `${curCS} 🎯`;
+    document.getElementById('statConsensusStreakMax').textContent = t('stats.streak_best', { n: maxCS });
+
+    // Team comparison
+    const tc = data.teamComparison;
+    if (tc && tc.compared_rounds >= 5 && tc.team_avg > 0) {
+      const diff = tc.user_avg - tc.team_avg;
+      const pct  = Math.round((diff / tc.team_avg) * 100);
+      const sign = pct >= 0 ? '+' : '';
+      document.getElementById('statTeamDiff').textContent    = `${sign}${pct}%`;
+      document.getElementById('statTeamDiffSub').textContent = t('stats.team_diff_sub', { rounds: tc.compared_rounds });
+    }
+
+    // Sessions table
+    renderSessions(data.sessions);
+
     // Personality badge
     const pType = derivePersonality(data.distribution);
     if (pType) {
@@ -576,7 +651,9 @@ async function loadStats() {
     }
 
     // Badges
+    const unlockedIds = BADGES.filter(b => b.unlock(data)).map(b => b.id);
     renderBadges(data);
+    showBadgeToasts(unlockedIds);
 
     // Charts
     buildDistChart(data.distribution);

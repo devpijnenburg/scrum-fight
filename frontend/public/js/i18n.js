@@ -207,6 +207,7 @@ const TRANSLATIONS = {
     'stats.sessions_col_fav': 'Fav. kaart',
     'stats.sessions_col_date': 'Datum',
     'stats.sessions_empty': 'Nog geen sessies.',
+    'stats.toast_unlocked': '🏅 Badge ontgrendeld!',
 
     'stats.badges_title': 'Planning Poker badges & achievements',
     'stats.badges_desc': 'Verdien badges door stories te schatten, samen te werken en je team naar een hoger niveau te tillen.',
@@ -456,6 +457,7 @@ const TRANSLATIONS = {
     'stats.sessions_col_fav': 'Fav. card',
     'stats.sessions_col_date': 'Date',
     'stats.sessions_empty': 'No sessions yet.',
+    'stats.toast_unlocked': '🏅 Badge unlocked!',
 
     'stats.badges_title': 'Planning Poker badges & achievements',
     'stats.badges_desc': 'Earn badges by estimating stories, collaborating, and lifting your team to the next level.',

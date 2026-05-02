@@ -508,6 +508,40 @@ function buildHoursChart(byHour) {
   });
 }
 
+// ── Badge toast ───────────────────────────────────────────────────────────────
+
+const UNLOCKED_KEY = 'sfUnlockedBadges';
+
+function showBadgeToasts(unlockedIds) {
+  const prev = new Set(JSON.parse(localStorage.getItem(UNLOCKED_KEY) || 'null'));
+  const isFirstVisit = prev.size === 0 && !localStorage.getItem(UNLOCKED_KEY);
+  localStorage.setItem(UNLOCKED_KEY, JSON.stringify(unlockedIds));
+  if (isFirstVisit) return;
+  const newOnes = unlockedIds.filter(id => !prev.has(id));
+  newOnes.forEach((id, i) => setTimeout(() => showToast(id), i * 700));
+}
+
+function showToast(badgeId) {
+  const badge = BADGES.find(b => b.id === badgeId);
+  if (!badge) return;
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'badge-toast-item';
+  toast.innerHTML = `
+    <div class="badge-toast-shield">${shieldSvg(badge.tier, badge.emoji, badge.milestone, true, 1)}</div>
+    <div class="badge-toast-body">
+      <div class="badge-toast-label">${t('stats.toast_unlocked')}</div>
+      <div class="badge-toast-name">${t('stats.badge.' + badgeId)}</div>
+    </div>
+    <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    setTimeout(() => toast.remove(), 400);
+  }, 5500);
+}
+
 // ── Sessions table ────────────────────────────────────────────────────────────
 
 function renderSessions(sessions) {
@@ -617,7 +651,9 @@ async function loadStats() {
     }
 
     // Badges
+    const unlockedIds = BADGES.filter(b => b.unlock(data)).map(b => b.id);
     renderBadges(data);
+    showBadgeToasts(unlockedIds);
 
     // Charts
     buildDistChart(data.distribution);

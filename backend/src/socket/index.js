@@ -293,6 +293,21 @@ module.exports = function setupSocket(io) {
       if (room.isGuest) resetGuestTimer(io, roomId);
     });
 
+    // ── react ─────────────────────────────────────────────────────────────────
+    socket.on('react', ({ emoji }) => {
+      const roomId = socket.data.roomId;
+      const room = activeRooms.get(roomId);
+      if (!room || !room.revealed) return;
+
+      const ALLOWED = ['🔥', '🤯', '😬', '👏', '🎉'];
+      if (!ALLOWED.includes(emoji)) return;
+
+      const player = room.players.get(socket.id);
+      if (!player) return;
+
+      io.to(roomId).emit('reaction', { name: player.name, emoji });
+    });
+
     // ── update-room-name ──────────────────────────────────────────────────────
     socket.on('update-room-name', async ({ name }) => {
       const roomId = socket.data.roomId;

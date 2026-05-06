@@ -1,6 +1,7 @@
 const db = require('../config/database');
 const { verify } = require('../auth/jwt');
 const { ESTIMATION_METHODS, PLAN_LIMITS } = require('../config/plans');
+const { calculateStats } = require('../utils/stats');
 
 // roomId → { id, name, method, isGuest, revealed, players: Map<socketId, player> }
 const activeRooms = new Map();
@@ -34,35 +35,6 @@ function serializeRoom(room, mySocketId) {
   };
 }
 
-function calculateStats(players) {
-  const votes = [...players.values()].map((p) => p.vote).filter(Boolean);
-  if (!votes.length) return null;
-
-  const distribution = {};
-  for (const v of votes) distribution[v] = (distribution[v] || 0) + 1;
-
-  const numericVotes = votes
-    .filter((v) => v !== '?' && v !== '☕' && v !== '😊' && !['XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
-    .map((v) => (v === '½' ? 0.5 : parseFloat(v)))
-    .filter((n) => !isNaN(n));
-
-  const mode = Object.entries(distribution).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const allSame = new Set(votes).size === 1;
-
-  if (numericVotes.length > 0) {
-    const avg = numericVotes.reduce((a, b) => a + b, 0) / numericVotes.length;
-    return {
-      average: parseFloat(avg.toFixed(1)),
-      min: Math.min(...numericVotes),
-      max: Math.max(...numericVotes),
-      mode,
-      distribution,
-      allSame,
-    };
-  }
-
-  return { mode, distribution, allSame };
-}
 
 function scheduleGuestExpiry(io, roomId) {
   if (guestTimers.has(roomId)) clearTimeout(guestTimers.get(roomId));
@@ -340,7 +312,9 @@ module.exports = function setupSocket(io) {
 
       io.to(roomId).emit('player-left', { socketId: socket.id, name: player?.name });
 
-      // Guest rooms remain available until their inactivity timer expires.
+      if (room.isGuest && room.players.size === 0) {
+        await deleteGuestRoom(io, roomId);
+      }
     });
   });
 };

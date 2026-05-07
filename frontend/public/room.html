@@ -81,30 +81,7 @@
     </div>
 
     <div class="room-header-right">
-      <div class="profile-menu-wrap">
-        <button id="profileMenuBtn" class="profile-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
-          <span class="profile-avatar">👤</span>
-          <span id="profileNameLabel" class="profile-name-label">Profiel</span>
-          <span class="profile-menu-arrow">▾</span>
-        </button>
-        <div id="profileMenu" class="profile-menu hidden">
-          <button id="analyticsToggleBtn" class="profile-menu-item" type="button" data-i18n-title="room.analytics.toggle_title">
-            <span>📊</span><span data-i18n="room.menu.analytics">Analyse</span>
-          </button>
-          <a href="/stats.html" class="profile-menu-item" data-i18n-title="nav.stats">
-            <span>🏅</span><span data-i18n="nav.stats">Statistieken</span>
-          </a>
-          <button id="settingsBtn" class="profile-menu-item hidden" type="button" data-i18n-title="room.settings.toggle_title">
-            <span>⚙️</span><span data-i18n="room.settings.toggle_title">Instellingen</span>
-          </button>
-          <button id="roomAuthBtn" class="profile-menu-item hidden" type="button" data-i18n="room.auth.btn">Inloggen / Registreren</button>
-          <div class="profile-menu-divider"></div>
-          <div class="profile-menu-lang">
-            <span data-i18n="room.menu.language">Taal</span>
-            <div class="lang-switcher"></div>
-          </div>
-        </div>
-      </div>
+      <profile-menu></profile-menu>
     </div>
   </header>
 
@@ -238,11 +215,18 @@
 
   </main>
 
+  <!-- Analytics tab trigger (desktop: vertical tab, mobile: FAB) -->
+  <button id="analyticsTab" class="analytics-tab" type="button" aria-label="Analyse openen" data-i18n-aria-label="room.analytics.toggle_title">
+    <span class="analytics-tab-icon">📊</span>
+    <span class="analytics-tab-label" data-i18n="room.menu.analytics">Analyse</span>
+  </button>
+
   <!-- Analytics side panel -->
   <aside id="analyticsPanel" class="analytics-panel hidden" aria-label="Analyse">
+    <button id="analyticsPanelCloseBtn" class="analytics-panel-collapse-btn" aria-label="Sluiten">‹</button>
     <div class="analytics-panel-hd">
       <span class="analytics-panel-title" data-i18n="room.analytics.title">📊 Analyse</span>
-      <button id="analyticsPanelCloseBtn" class="btn-icon-sm" aria-label="Sluiten">✕</button>
+      <button class="analytics-panel-close-mobile btn-icon-sm" onclick="document.getElementById('analyticsPanelCloseBtn').click()" aria-label="Sluiten">✕</button>
     </div>
     <div class="analytics-panel-body">
 
@@ -285,6 +269,7 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
+  <script src="/js/profile-menu.js"></script>
   <script src="/js/room.js"></script>
 </body>
 </html>

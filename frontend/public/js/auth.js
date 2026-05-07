@@ -27,46 +27,18 @@ function initFooterAuth() {
   if (el) el.classList.add('hidden');
 }
 
-// Update navbar for logged-in state — renders a user dropdown
+// Update navbar for logged-in state — injects the shared <profile-menu> component
 function updateNavbar() {
   const user = getCurrentUser();
   const navActions = document.getElementById('navActions');
   if (!navActions) return;
 
   if (user) {
-    navActions.innerHTML = `
-      <div class="nav-user-dropdown">
-        <button class="nav-user-trigger" aria-expanded="false">
-          👤 ${escapeHtml(user.name)} <span class="nav-user-arrow">▾</span>
-        </button>
-        <div class="nav-user-menu hidden">
-          <a href="/stats.html"     class="nav-user-item" data-i18n="nav.profile">📊 Profiel</a>
-          <a href="/dashboard.html" class="nav-user-item" data-i18n="nav.dashboard">🏠 Dashboard</a>
-          <div class="nav-user-divider"></div>
-          <button class="nav-user-item nav-user-item-danger" onclick="logout()" data-i18n="nav.logout">↪️ Uitloggen</button>
-        </div>
-      </div>
-    `;
-
-    const dropdown = navActions.querySelector('.nav-user-dropdown');
-    const trigger  = dropdown.querySelector('.nav-user-trigger');
-    const menu     = dropdown.querySelector('.nav-user-menu');
-
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const opening = menu.classList.contains('hidden');
-      menu.classList.toggle('hidden', !opening);
-      trigger.setAttribute('aria-expanded', String(opening));
-    });
-
-    if (typeof applyTranslations === 'function') applyTranslations();
+    const outerLang = document.getElementById('navLang');
+    if (outerLang) outerLang.classList.add('hidden');
+    navActions.innerHTML = '<profile-menu></profile-menu>';
   }
 }
-
-document.addEventListener('click', () => {
-  document.querySelectorAll('.nav-user-menu').forEach(m => m.classList.add('hidden'));
-  document.querySelectorAll('.nav-user-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
-});
 
 document.addEventListener('DOMContentLoaded', initFooterAuth);
 

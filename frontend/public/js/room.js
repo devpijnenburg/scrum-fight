@@ -269,28 +269,9 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
 
 // ── Profile menu ─────────────────────────────────────────────────────────────
 
-const profileMenuBtn = document.getElementById('profileMenuBtn');
-const profileMenu = document.getElementById('profileMenu');
-
-profileMenuBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const isOpen = !profileMenu.classList.contains('hidden');
-  profileMenu.classList.toggle('hidden', isOpen);
-  profileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
-});
-
-profileMenu.addEventListener('click', (e) => e.stopPropagation());
-
-document.addEventListener('click', () => closeProfileMenu());
-
-function closeProfileMenu() {
-  profileMenu.classList.add('hidden');
-  profileMenuBtn.setAttribute('aria-expanded', 'false');
-}
-
 function setProfileName(name) {
-  const label = document.getElementById('profileNameLabel');
-  if (label) label.textContent = name || 'Profiel';
+  const pm = document.querySelector('profile-menu');
+  if (pm) pm.setName(name);
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
@@ -336,18 +317,19 @@ document.addEventListener('keydown', (e) => {
 function openAnalyticsPanel() {
   const panel = document.getElementById('analyticsPanel');
   panel.classList.remove('hidden');
+  document.getElementById('analyticsTab').classList.add('panel-open');
   if (!analyticsLoaded) loadHistory();
 }
 
 function closeAnalyticsPanel() {
   document.getElementById('analyticsPanel').classList.add('hidden');
+  document.getElementById('analyticsTab').classList.remove('panel-open');
 }
 
-document.getElementById('analyticsToggleBtn').addEventListener('click', () => {
+document.getElementById('analyticsTab').addEventListener('click', () => {
   const panel = document.getElementById('analyticsPanel');
   if (panel.classList.contains('hidden')) openAnalyticsPanel();
   else closeAnalyticsPanel();
-  closeProfileMenu();
 });
 
 document.getElementById('analyticsPanelCloseBtn').addEventListener('click', closeAnalyticsPanel);
@@ -499,12 +481,8 @@ function initRoomAuth() {
     return;
   }
 
-  const authBtn = document.getElementById('roomAuthBtn');
-  authBtn.classList.remove('hidden');
-  authBtn.addEventListener('click', () => {
-    closeProfileMenu();
-    openRoomAuthModal();
-  });
+  // Guest: open in-room auth modal when profile menu fires the auth request
+  document.addEventListener('profile-auth-request', openRoomAuthModal, { once: false });
 
   document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
@@ -571,7 +549,6 @@ function onRoomAuthSuccess(user, token) {
   localStorage.setItem('token', token);
   localStorage.setItem('userName', user.name);
   closeRoomAuthModal();
-  document.getElementById('roomAuthBtn').classList.add('hidden');
   showRoomUserBadge(user.name);
   initSettings();
 }
@@ -589,17 +566,13 @@ function initAdBanner() {
 // ── Settings (account users only) ────────────────────────────────────────────
 
 function initSettings() {
-  const settingsBtn = document.getElementById('settingsBtn');
-  settingsBtn.classList.remove('hidden');
-
   // Guard against double-init (e.g. after in-room login)
-  if (settingsBtn.dataset.initialized) return;
-  settingsBtn.dataset.initialized = '1';
+  if (initSettings._done) return;
+  initSettings._done = true;
 
-  settingsBtn.addEventListener('click', () => {
-    closeProfileMenu();
-    openSettingsModal();
-  });
+  // Re-render the profile menu now that the user is logged in
+  document.querySelector('profile-menu')?.refresh();
+
   document.getElementById('settingsBackdrop').addEventListener('click', closeSettingsModal);
   document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsModal);
   document.getElementById('settingsSaveBtn').addEventListener('click', () => {
@@ -630,7 +603,7 @@ const shareUrl = document.getElementById('shareUrl');
 
 shareBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  closeProfileMenu();
+  document.querySelector('profile-menu')?.close();
   const link = `${location.origin}/?join=${ROOM_ID}`;
   shareUrl.value = link;
   sharePopover.classList.toggle('hidden');

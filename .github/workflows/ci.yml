@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: ${{ secrets.ZOT_REGISTRY }}
+  REGISTRY: reg.pijnenburg.dev
   IMAGE_BACKEND: scrum-fight/backend
   IMAGE_FRONTEND: scrum-fight/frontend
 
@@ -80,7 +80,7 @@ jobs:
       - name: Login to Zot
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.ZOT_REGISTRY }}
+          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.ZOT_USERNAME }}
           password: ${{ secrets.ZOT_PASSWORD }}
 

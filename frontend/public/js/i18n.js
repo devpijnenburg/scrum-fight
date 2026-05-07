@@ -154,6 +154,7 @@ const TRANSLATIONS = {
     'room.settings.shortcut_new': 'nieuwe ronde',
 
     'nav.dashboard': 'Dashboard',
+    'nav.myrooms': 'Mijn kamers',
     'nav.stats': 'Statistieken',
     'nav.profile': 'Profiel',
 
@@ -404,6 +405,7 @@ const TRANSLATIONS = {
     'room.settings.shortcut_new': 'new round',
 
     'nav.dashboard': 'Dashboard',
+    'nav.myrooms': 'My Rooms',
     'nav.stats': 'Stats',
     'nav.profile': 'Profile',
 

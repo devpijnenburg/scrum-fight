@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: reg.pijnenburg.dev
+  REGISTRY: ${{ vars.ZOT_REGISTRY }}
   IMAGE_BACKEND: scrum-fight/backend
   IMAGE_FRONTEND: scrum-fight/frontend
 

@@ -69,13 +69,13 @@ jobs:
 
       - name: Copy compose file to VM
         run: |
-          scp -P 622 -o StrictHostKeyChecking=accept-new -i ~/.ssh/deploy_key \
+          scp -P 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
       - name: Deploy on VM
         run: |
-          ssh -p 622 -o StrictHostKeyChecking=accept-new -i ~/.ssh/deploy_key \
+          ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
           echo "${{ secrets.GITHUB_TOKEN }}" | \

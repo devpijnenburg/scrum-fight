@@ -65,17 +65,17 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 662 murderbot.nl >> ~/.ssh/known_hosts || true
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
 
       - name: Copy compose file to VM
         run: |
-          scp -P 662 -i ~/.ssh/deploy_key \
+          scp -P 622 -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
       - name: Deploy on VM
         run: |
-          ssh -p 662 -i ~/.ssh/deploy_key \
+          ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
           echo "${{ secrets.GITHUB_TOKEN }}" | \

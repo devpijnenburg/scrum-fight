@@ -770,6 +770,17 @@ profile-menu { display: contents; }
 
 .player-name-tag.is-me { background: rgba(139,92,246,.6); color: #fff; }
 
+.player-late-label {
+  font-size: .6rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+  background: rgba(0,0,0,.3);
+  padding: .1rem .45rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  letter-spacing: .03em;
+}
+
 /* ── Playing cards ──────────────────────────────────────────────────────────── */
 .card-container {
   perspective: 600px;
@@ -788,6 +799,8 @@ profile-menu { display: contents; }
 }
 
 .card.flipped { transform: rotateY(180deg); }
+
+.card-mid-round .card { opacity: .35; }
 
 .card-face {
   position: absolute;
@@ -1159,20 +1172,20 @@ profile-menu { display: contents; }
 .analytics-panel-collapse-btn {
   position: absolute;
   top: 50%;
-  left: -18px;
+  left: -28px;
   transform: translateY(-50%);
-  width: 18px;
-  height: 48px;
+  width: 28px;
+  height: 64px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-right: none;
-  border-radius: 8px 0 0 8px;
+  border-radius: 10px 0 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.3rem;
   line-height: 1;
   box-shadow: -3px 0 8px rgba(0,0,0,.2);
   transition: background .15s, color .15s;

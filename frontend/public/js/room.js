@@ -101,7 +101,8 @@ socket.on('room-state', (state) => {
 
 socket.on('player-joined', ({ socketId, name }) => {
   if (!roomState) return;
-  roomState.players.push({ socketId, name, hasVoted: false, vote: null });
+  const votingInProgress = !roomState.revealed && roomState.players.some((p) => p.hasVoted);
+  roomState.players.push({ socketId, name, hasVoted: false, vote: null, joinedMidRound: votingInProgress });
   renderTable(roomState);
   updatePlayerCount(roomState.players.length);
   updateVoteStatus();
@@ -156,7 +157,7 @@ socket.on('round-reset', () => {
   currentStats = null;
   if (roomState) {
     roomState.revealed = false;
-    roomState.players.forEach((p) => { p.vote = null; p.hasVoted = false; });
+    roomState.players.forEach((p) => { p.vote = null; p.hasVoted = false; p.joinedMidRound = false; });
   }
   renderTable(roomState);
   document.getElementById('consensusBadge').classList.add('hidden');
@@ -684,13 +685,21 @@ function renderTable(state) {
 
     seat.appendChild(card);
     seat.appendChild(nameTag);
+
+    if (player.joinedMidRound) {
+      const lateLabel = document.createElement('div');
+      lateLabel.className = 'player-late-label';
+      lateLabel.textContent = t('room.late_joiner');
+      seat.appendChild(lateLabel);
+    }
+
     table.appendChild(seat);
   });
 }
 
 function createCardEl(player, revealed, isMe) {
   const container = document.createElement('div');
-  container.className = 'card-container';
+  container.className = `card-container${player.joinedMidRound ? ' card-mid-round' : ''}`;
 
   const card = document.createElement('div');
   card.className = 'card';

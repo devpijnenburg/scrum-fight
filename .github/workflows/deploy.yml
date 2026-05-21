@@ -68,7 +68,7 @@ jobs:
         run: |
           scp -P 662 -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
-            ${{ secrets.DEPLOY_USER }}@murderbot.nl:/opt/scrum-fight/
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
       - name: Deploy on VM
         run: |
@@ -78,17 +78,17 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | \
             docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker compose \
-            -f /opt/scrum-fight/docker-compose.prod.yml \
-            --env-file /opt/scrum-fight/.env \
+            -f ~/scrum-fight/docker-compose.prod.yml \
+            --env-file ~/scrum-fight/.env \
             pull
           docker compose \
-            -f /opt/scrum-fight/docker-compose.prod.yml \
-            --env-file /opt/scrum-fight/.env \
+            -f ~/scrum-fight/docker-compose.prod.yml \
+            --env-file ~/scrum-fight/.env \
             up -d --remove-orphans
           docker image prune -f
           docker compose \
-            -f /opt/scrum-fight/docker-compose.prod.yml \
-            --env-file /opt/scrum-fight/.env \
+            -f ~/scrum-fight/docker-compose.prod.yml \
+            --env-file ~/scrum-fight/.env \
             ps
           EOF
 

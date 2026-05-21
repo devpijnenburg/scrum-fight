@@ -62,9 +62,9 @@ jobs:
 
       - name: Configure SSH
         run: |
-          install -m 700 -d ~/.ssh
-          install -m 600 /dev/null ~/.ssh/deploy_key
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p 662 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Copy compose file to VM

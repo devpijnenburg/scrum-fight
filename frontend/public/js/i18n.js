@@ -97,6 +97,8 @@ const TRANSLATIONS = {
     'room.new_round': '🔄 Nieuwe ronde',
     'room.pick': 'Kies jouw kaart:',
     'room.revealed': 'Kaarten onthuld!',
+    'room.react_label': 'Reageer:',
+    'room.table_waiting': '⏳ Wacht op deelnemers…',
     'room.voted': '{voted} van {total} {word} gestemd',
     'room.player_s': 'speler heeft',
     'room.player_p': 'spelers hebben',
@@ -154,6 +156,7 @@ const TRANSLATIONS = {
     'room.settings.shortcut_new': 'nieuwe ronde',
 
     'nav.dashboard': 'Dashboard',
+    'nav.myrooms': 'Mijn kamers',
     'nav.stats': 'Statistieken',
     'nav.profile': 'Profiel',
 
@@ -347,6 +350,8 @@ const TRANSLATIONS = {
     'room.new_round': '🔄 New round',
     'room.pick': 'Pick your card:',
     'room.revealed': 'Cards revealed!',
+    'room.react_label': 'React:',
+    'room.table_waiting': '⏳ Waiting for participants…',
     'room.voted': '{voted} of {total} {word} voted',
     'room.player_s': 'player has',
     'room.player_p': 'players have',
@@ -404,6 +409,7 @@ const TRANSLATIONS = {
     'room.settings.shortcut_new': 'new round',
 
     'nav.dashboard': 'Dashboard',
+    'nav.myrooms': 'My Rooms',
     'nav.stats': 'Stats',
     'nav.profile': 'Profile',
 

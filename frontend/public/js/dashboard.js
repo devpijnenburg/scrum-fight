@@ -83,6 +83,15 @@ async function loadRooms() {
   }
 }
 
+document.getElementById('roomList').innerHTML = [1, 2, 3].map(() => `
+  <div class="room-item-skeleton">
+    <div class="skeleton skeleton-line-lg"></div>
+    <div class="skeleton skeleton-line-sm"></div>
+    <div class="skeleton skeleton-line-md"></div>
+    <div class="skeleton skeleton-line-sm" style="width:40%"></div>
+  </div>
+`).join('');
+
 loadRooms();
 
 // ── New room modal ────────────────────────────────────────────────────────────

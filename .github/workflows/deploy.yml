@@ -65,7 +65,7 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 662 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p 662 murderbot.nl >> ~/.ssh/known_hosts || true
 
       - name: Copy compose file to VM
         run: |

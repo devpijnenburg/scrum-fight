@@ -50,33 +50,48 @@ jobs:
 
   deploy:
     name: Deploy to VM
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, proxmox]   # Proxmox runner heeft thuis-IP → bereikt murderbot.nl
     needs: build-and-push
     environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to ghcr.io
+      - name: Configure SSH
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | \
-            docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          ssh-keyscan -p 662 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Pull and restart containers
-        env:
-          GHCR_OWNER: ${{ github.repository_owner }}
+      - name: Copy compose file to VM
         run: |
+          scp -P 662 -i ~/.ssh/deploy_key \
+            docker-compose.prod.yml \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl:/opt/scrum-fight/
+
+      - name: Deploy on VM
+        run: |
+          ssh -p 662 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker compose \
-            -f docker-compose.prod.yml \
+            -f /opt/scrum-fight/docker-compose.prod.yml \
             --env-file /opt/scrum-fight/.env \
             pull
           docker compose \
-            -f docker-compose.prod.yml \
+            -f /opt/scrum-fight/docker-compose.prod.yml \
             --env-file /opt/scrum-fight/.env \
             up -d --remove-orphans
           docker image prune -f
           docker compose \
-            -f docker-compose.prod.yml \
+            -f /opt/scrum-fight/docker-compose.prod.yml \
             --env-file /opt/scrum-fight/.env \
             ps
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

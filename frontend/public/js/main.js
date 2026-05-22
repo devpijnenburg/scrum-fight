@@ -41,8 +41,7 @@ if (user) {
 // ── Handle room code from URL ─────────────────────────────────────────────────
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('join')) {
-  document.getElementById('joinCode').value = urlParams.get('join').toUpperCase();
-  lookupRoom();
+  window.location.replace(`/room.html?id=${urlParams.get('join').toUpperCase()}`);
 }
 if (urlParams.get('error')) {
   const errMap = {

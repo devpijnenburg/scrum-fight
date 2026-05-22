@@ -605,7 +605,7 @@ const shareUrl = document.getElementById('shareUrl');
 shareBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   document.querySelector('profile-menu')?.close();
-  const link = `${location.origin}/?join=${ROOM_ID}`;
+  const link = `${location.origin}/room.html?id=${ROOM_ID}`;
   shareUrl.value = link;
   sharePopover.classList.toggle('hidden');
   if (!sharePopover.classList.contains('hidden')) shareUrl.select();

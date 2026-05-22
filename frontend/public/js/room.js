@@ -810,13 +810,25 @@ function updateVoteStatus() {
   if (!roomState) return;
   const voted = roomState.players.filter((p) => p.hasVoted).length;
   const total = roomState.players.length;
-  const word = total === 1 ? t('room.player_s') : t('room.player_p');
-  document.getElementById('voteStatus').textContent =
-    isRevealed ? t('room.revealed') : t('room.voted', { voted, total, word });
+  const el = document.getElementById('voteStatus');
 
-  if (!isRevealed) {
-    document.getElementById('revealBtn').disabled = voted === 0;
+  if (isRevealed) {
+    el.innerHTML = `<span class="vc-revealed">${t('room.revealed')}</span>`;
+    return;
   }
+
+  if (total === 0) { el.innerHTML = ''; return; }
+
+  const pct = Math.round((voted / total) * 100);
+  el.innerHTML = `
+    <div class="vc-row">
+      <span class="vc-num">${voted}</span><span class="vc-sep">/</span><span class="vc-total">${total}</span>
+      <span class="vc-label">${t('room.voted_label')}</span>
+    </div>
+    <div class="vc-bar"><div class="vc-bar-fill${voted === total ? ' complete' : ''}" style="width:${pct}%"></div></div>
+  `;
+
+  document.getElementById('revealBtn').disabled = voted === 0;
 }
 
 function updatePlayerCount(count) {

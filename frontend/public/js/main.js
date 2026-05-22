@@ -40,8 +40,9 @@ if (user) {
 
 // ── Handle room code from URL ─────────────────────────────────────────────────
 const urlParams = new URLSearchParams(location.search);
-if (urlParams.get('join')) {
-  window.location.replace(`/room.html?id=${urlParams.get('join').toUpperCase()}`);
+const joinCode = urlParams.get('join') || urlParams.get('room');
+if (joinCode) {
+  window.location.replace(`/room.html?id=${joinCode.toUpperCase()}&join=1`);
 }
 if (urlParams.get('error')) {
   const errMap = {

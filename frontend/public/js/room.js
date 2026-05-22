@@ -37,9 +37,10 @@ const socket = io();
 
 // ── Name resolution ───────────────────────────────────────────────────────────
 
-function resolveAndJoin() {
-  const user = getCurrentUser();
+const FROM_JOIN_LINK = !!params.get('join');
 
+async function resolveAndJoin() {
+  const user = getCurrentUser();
   if (user) {
     myName = user.name;
     setProfileName(user.name);
@@ -47,24 +48,52 @@ function resolveAndJoin() {
     return;
   }
 
-  const savedName = NAME_FROM_SESSION || localStorage.getItem('userName') || '';
-  if (savedName) {
+  if (NAME_FROM_SESSION) {
+    myName = NAME_FROM_SESSION;
+    setProfileName(NAME_FROM_SESSION);
+    joinRoomSocket(NAME_FROM_SESSION, null);
+    return;
+  }
+
+  const savedName = localStorage.getItem('userName') || '';
+
+  if (savedName && !FROM_JOIN_LINK) {
     myName = savedName;
     setProfileName(savedName);
     joinRoomSocket(savedName, null);
-  } else {
-    showNameModal();
+    return;
+  }
+
+  try {
+    const room = await apiFetch(`/rooms/${ROOM_ID}`);
+    showNameModal(room.name, savedName);
+  } catch {
+    showOverlay('🚫', t('room.not_found'), t('room.not_found_msg'));
   }
 }
 
-function showNameModal() {
-  document.getElementById('nameModal').classList.remove('hidden');
-  document.getElementById('nameInput').focus();
+let _nameModalInited = false;
+function showNameModal(roomName, prefillName = '') {
+  const label = document.getElementById('joinRoomLabel');
+  if (roomName && label) {
+    label.textContent = roomName;
+    label.classList.remove('hidden');
+  }
 
-  document.getElementById('nameSubmitBtn').addEventListener('click', submitName);
-  document.getElementById('nameInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') submitName();
-  });
+  const input = document.getElementById('nameInput');
+  if (prefillName) {
+    input.value = prefillName;
+  }
+
+  document.getElementById('nameModal').classList.remove('hidden');
+  input.focus();
+  if (prefillName) input.select();
+
+  if (!_nameModalInited) {
+    _nameModalInited = true;
+    document.getElementById('nameSubmitBtn').addEventListener('click', submitName);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitName(); });
+  }
 }
 
 function submitName() {
@@ -605,7 +634,7 @@ const shareUrl = document.getElementById('shareUrl');
 shareBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   document.querySelector('profile-menu')?.close();
-  const link = `${location.origin}/room.html?id=${ROOM_ID}`;
+  const link = `${location.origin}/room.html?id=${ROOM_ID}&join=1`;
   shareUrl.value = link;
   sharePopover.classList.toggle('hidden');
   if (!sharePopover.classList.contains('hidden')) shareUrl.select();

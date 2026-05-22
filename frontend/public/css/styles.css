@@ -918,7 +918,16 @@ profile-menu { display: contents; }
   flex-wrap: wrap;
 }
 
-.vote-status { font-size: .9rem; color: var(--text-muted); font-weight: 600; }
+.vote-counter { display: flex; flex-direction: column; gap: .3rem; min-width: 90px; }
+.vc-row { display: flex; align-items: baseline; gap: .3rem; }
+.vc-num { font-size: 1.5rem; font-weight: 900; color: var(--text); line-height: 1; }
+.vc-sep { font-size: 1rem; color: var(--text-muted); font-weight: 700; }
+.vc-total { font-size: 1rem; color: var(--text-muted); font-weight: 700; }
+.vc-label { font-size: .75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-left: .2rem; }
+.vc-bar { height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.vc-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width .4s ease; }
+.vc-bar-fill.complete { background: var(--success); }
+.vc-revealed { font-size: .9rem; color: var(--success); font-weight: 700; }
 .action-btns { display: flex; gap: .6rem; }
 
 /* ── Stats panel ────────────────────────────────────────────────────────────── */

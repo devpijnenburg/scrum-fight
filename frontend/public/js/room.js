@@ -153,7 +153,16 @@ socket.on('player-voted', ({ socketId }) => {
   updateVoteStatus();
 });
 
+socket.on('countdown', ({ count }) => {
+  showCountdownOverlay(count);
+});
+
+socket.on('countdown-cancelled', () => {
+  hideCountdownOverlay();
+});
+
 socket.on('cards-revealed', ({ players, stats }) => {
+  hideCountdownOverlay();
   isRevealed = true;
   currentStats = stats;
   if (roomState) {
@@ -181,6 +190,7 @@ socket.on('cards-revealed', ({ players, stats }) => {
 });
 
 socket.on('round-reset', () => {
+  hideCountdownOverlay();
   isRevealed = false;
   myVote = null;
   currentStats = null;
@@ -801,6 +811,21 @@ function clearPickerSelection() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function showCountdownOverlay(count) {
+  const overlay = document.getElementById('countdownOverlay');
+  const num = document.getElementById('countdownNumber');
+  num.textContent = count;
+  // Re-trigger animation by cloning the element
+  const clone = num.cloneNode(true);
+  num.parentNode.replaceChild(clone, num);
+  clone.id = 'countdownNumber';
+  overlay.classList.remove('hidden');
+}
+
+function hideCountdownOverlay() {
+  document.getElementById('countdownOverlay').classList.add('hidden');
+}
 
 function statItem(value, label) {
   return `<div class="stat-item"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;

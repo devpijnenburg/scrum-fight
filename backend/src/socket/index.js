@@ -8,6 +8,9 @@ const activeRooms = new Map();
 // roomId → setTimeout handle (1-hour guest room inactivity timer)
 const guestTimers = new Map();
 
+// roomId → [timer, timer, timer] — active countdown timers
+const countdownTimers = new Map();
+
 const GUEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 function serializeRoom(room, mySocketId) {
@@ -88,6 +91,46 @@ function scheduleGuestExpiry(io, roomId) {
 function resetGuestTimer(io, roomId) {
   scheduleGuestExpiry(io, roomId);
   db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]).catch(console.error);
+}
+
+async function doReveal(io, room, roomId) {
+  room.revealed = true;
+
+  const players = [...room.players.entries()].map(([socketId, p]) => ({
+    socketId,
+    name: p.name,
+    vote: p.vote,
+  }));
+
+  io.to(roomId).emit('cards-revealed', {
+    players,
+    stats: calculateStats(room.players),
+  });
+
+  try {
+    const votes = {};
+    for (const [, p] of room.players) votes[p.name] = p.vote;
+    const { rows: rhRows } = await db.query(
+      `INSERT INTO round_history (room_id, votes) VALUES ($1, $2) RETURNING id`,
+      [roomId, JSON.stringify(votes)]
+    );
+    const roundId = rhRows[0].id;
+
+    for (const [, p] of room.players) {
+      if (p.userId && p.vote) {
+        await db.query(
+          `INSERT INTO user_votes (user_id, room_id, round_id, value) VALUES ($1, $2, $3, $4)`,
+          [p.userId, roomId, roundId, p.vote]
+        );
+      }
+    }
+
+    await db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
+  } catch (err) {
+    console.error('Error saving round history:', err);
+  }
+
+  if (room.isGuest) resetGuestTimer(io, roomId);
 }
 
 async function deleteGuestRoom(io, roomId) {
@@ -238,45 +281,28 @@ module.exports = function setupSocket(io) {
       const hasAnyVote = [...room.players.values()].some((p) => p.vote !== null);
       if (!hasAnyVote) return;
 
-      room.revealed = true;
+      // Ignore if a countdown is already running
+      if (countdownTimers.has(roomId)) return;
 
-      const players = [...room.players.entries()].map(([socketId, p]) => ({
-        socketId,
-        name: p.name,
-        vote: p.vote,
-      }));
+      const allVoted = [...room.players.values()].every((p) => p.vote !== null);
 
-      io.to(roomId).emit('cards-revealed', {
-        players,
-        stats: calculateStats(room.players),
-      });
+      if (allVoted) {
+        await doReveal(io, room, roomId);
+      } else {
+        // Not everyone voted — start a 3-second countdown
+        io.to(roomId).emit('countdown', { count: 3 });
 
-      // Persist round history
-      try {
-        const votes = {};
-        for (const [, p] of room.players) votes[p.name] = p.vote;
-        const { rows: rhRows } = await db.query(
-          `INSERT INTO round_history (room_id, votes) VALUES ($1, $2) RETURNING id`,
-          [roomId, JSON.stringify(votes)]
-        );
-        const roundId = rhRows[0].id;
+        const timers = [];
+        timers.push(setTimeout(() => io.to(roomId).emit('countdown', { count: 2 }), 1000));
+        timers.push(setTimeout(() => io.to(roomId).emit('countdown', { count: 1 }), 2000));
+        timers.push(setTimeout(async () => {
+          countdownTimers.delete(roomId);
+          const r = activeRooms.get(roomId);
+          if (r && !r.revealed) await doReveal(io, r, roomId);
+        }, 3000));
 
-        // Save per-user votes for statistics
-        for (const [, p] of room.players) {
-          if (p.userId && p.vote) {
-            await db.query(
-              `INSERT INTO user_votes (user_id, room_id, round_id, value) VALUES ($1, $2, $3, $4)`,
-              [p.userId, roomId, roundId, p.vote]
-            );
-          }
-        }
-
-        await db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
-      } catch (err) {
-        console.error('Error saving round history:', err);
+        countdownTimers.set(roomId, timers);
       }
-
-      if (room.isGuest) resetGuestTimer(io, roomId);
     });
 
     // ── new-round ─────────────────────────────────────────────────────────────
@@ -284,6 +310,13 @@ module.exports = function setupSocket(io) {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room) return;
+
+      // Cancel any active countdown
+      if (countdownTimers.has(roomId)) {
+        for (const t of countdownTimers.get(roomId)) clearTimeout(t);
+        countdownTimers.delete(roomId);
+        io.to(roomId).emit('countdown-cancelled');
+      }
 
       room.revealed = false;
       for (const player of room.players.values()) player.vote = null;

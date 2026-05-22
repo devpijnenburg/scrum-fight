@@ -235,6 +235,7 @@ select.input { cursor: pointer; }
 }
 .modal-card h2 { font-size: 1.3rem; font-weight: 800; }
 .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+.join-room-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .15rem; }
 
 /* ── Landing page ───────────────────────────────────────────────────────────── */
 .page-landing { display: flex; flex-direction: column; min-height: 100vh; }

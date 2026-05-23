@@ -259,7 +259,12 @@ document.querySelectorAll('.reaction-btn').forEach(btn => {
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
+let revealCooldown = false;
+
 document.getElementById('revealBtn').addEventListener('click', () => {
+  if (revealCooldown) return;
+  revealCooldown = true;
+  setTimeout(() => { revealCooldown = false; }, 2000);
   socket.emit('reveal');
 });
 
@@ -821,10 +826,15 @@ function showCountdownOverlay(count) {
   num.parentNode.replaceChild(clone, num);
   clone.id = 'countdownNumber';
   overlay.classList.remove('hidden');
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('newRoundBtn').classList.add('hidden');
 }
 
 function hideCountdownOverlay() {
   document.getElementById('countdownOverlay').classList.add('hidden');
+  if (!isRevealed) {
+    document.getElementById('revealBtn').classList.remove('hidden');
+  }
 }
 
 function statItem(value, label) {

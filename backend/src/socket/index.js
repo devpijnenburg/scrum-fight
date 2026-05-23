@@ -278,6 +278,11 @@ module.exports = function setupSocket(io) {
       const room = activeRooms.get(roomId);
       if (!room || room.revealed) return;
 
+      // Flood control: max één reveal-poging per 2 seconden per socket
+      const now = Date.now();
+      if (socket.data.lastRevealAt && now - socket.data.lastRevealAt < 2000) return;
+      socket.data.lastRevealAt = now;
+
       const hasAnyVote = [...room.players.values()].some((p) => p.vote !== null);
       if (!hasAnyVote) return;
 

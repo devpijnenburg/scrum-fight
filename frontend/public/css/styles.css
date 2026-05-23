@@ -865,6 +865,45 @@ profile-menu { display: contents; }
 .card-front-face[data-value="XXL"] { background: #fff1f2; }
 
 /* Card picker (bottom row of clickable cards) */
+/* ── Round name bar ──────────────────────────────────────────────────────────── */
+.round-name-bar {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+}
+
+.round-name-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit;
+  font-size: .9rem;
+  padding: .45rem .8rem;
+  transition: border-color .15s;
+  outline: none;
+}
+.round-name-input::placeholder { color: var(--text-muted); }
+.round-name-input:focus { border-color: var(--primary); }
+.round-name-input:disabled { opacity: .45; cursor: not-allowed; }
+
+.history-round-name {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-round-name {
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+}
+
 .card-picker {
   width: 100%;
   max-width: 700px;

@@ -18,6 +18,7 @@ let myVote = null;
 let isRevealed = false;
 let analyticsLoaded = false;
 let currentStats = null;
+let currentRoundName = '';
 
 // ── Settings (localStorage) ───────────────────────────────────────────────────
 
@@ -125,6 +126,8 @@ socket.on('connect', () => {
 socket.on('room-state', (state) => {
   roomState = state;
   isRevealed = state.revealed;
+  currentRoundName = state.roundName || '';
+  document.getElementById('roundNameInput').value = currentRoundName;
   renderAll(state);
 });
 
@@ -161,8 +164,14 @@ socket.on('countdown-cancelled', () => {
   hideCountdownOverlay();
 });
 
-socket.on('cards-revealed', ({ players, stats }) => {
+socket.on('round-name-set', ({ name }) => {
+  currentRoundName = name;
+  document.getElementById('roundNameInput').value = name;
+});
+
+socket.on('cards-revealed', ({ players, stats, roundName }) => {
   hideCountdownOverlay();
+  currentRoundName = roundName || currentRoundName;
   isRevealed = true;
   currentStats = stats;
   if (roomState) {
@@ -174,12 +183,13 @@ socket.on('cards-revealed', ({ players, stats }) => {
   }
   renderTable(roomState);
   showConsensusInline(stats);
-  updateAnalyticsCurrent(stats);
-  prependHistoryRound(players, stats);
+  updateAnalyticsCurrent(stats, currentRoundName);
+  prependHistoryRound(players, stats, currentRoundName);
   document.getElementById('revealBtn').classList.add('hidden');
   document.getElementById('newRoundBtn').classList.remove('hidden');
   document.getElementById('reactionBar').classList.remove('hidden');
   setPickerDisabled(true);
+  document.getElementById('roundNameInput').disabled = true;
   document.getElementById('voteStatus').textContent = t('room.revealed');
 
   // Auto-open analytics panel based on settings
@@ -194,6 +204,7 @@ socket.on('round-reset', () => {
   isRevealed = false;
   myVote = null;
   currentStats = null;
+  currentRoundName = '';
   if (roomState) {
     roomState.revealed = false;
     roomState.players.forEach((p) => { p.vote = null; p.hasVoted = false; p.joinedMidRound = false; });
@@ -205,6 +216,9 @@ socket.on('round-reset', () => {
   document.getElementById('revealBtn').classList.remove('hidden');
   document.getElementById('revealBtn').disabled = true;
   document.getElementById('newRoundBtn').classList.add('hidden');
+  const rni = document.getElementById('roundNameInput');
+  rni.value = '';
+  rni.disabled = false;
   setPickerDisabled(false);
   clearPickerSelection();
   updateVoteStatus();
@@ -255,6 +269,17 @@ function spawnFloatingEmoji(emoji, name) {
 // Wire reaction buttons once
 document.querySelectorAll('.reaction-btn').forEach(btn => {
   btn.addEventListener('click', () => socket.emit('react', { emoji: btn.dataset.emoji }));
+});
+
+// ── Round name input ──────────────────────────────────────────────────────────
+
+let _roundNameTimer = null;
+document.getElementById('roundNameInput').addEventListener('input', (e) => {
+  currentRoundName = e.target.value;
+  clearTimeout(_roundNameTimer);
+  _roundNameTimer = setTimeout(() => {
+    socket.emit('set-round-name', { name: currentRoundName });
+  }, 400);
 });
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -390,7 +415,7 @@ async function loadHistory() {
     empty.classList.add('hidden');
 
     rows.forEach((row, i) => {
-      const el = buildHistoryRoundEl(row.votes, null, row.created_at, rows.length - i);
+      const el = buildHistoryRoundEl(row.votes, null, row.created_at, rows.length - i, row.name || '');
       list.appendChild(el);
     });
   } catch {
@@ -398,7 +423,7 @@ async function loadHistory() {
   }
 }
 
-function prependHistoryRound(players, stats) {
+function prependHistoryRound(players, stats, roundName) {
   analyticsLoaded = true;
   const list = document.getElementById('analyticsHistoryList');
   document.getElementById('analyticsHistoryEmpty').classList.add('hidden');
@@ -407,14 +432,17 @@ function prependHistoryRound(players, stats) {
   players.forEach((p) => { votes[p.name] = p.vote; });
 
   const roundNum = list.querySelectorAll('.history-round').length + 1;
-  const el = buildHistoryRoundEl(votes, stats, new Date().toISOString(), roundNum);
+  const el = buildHistoryRoundEl(votes, stats, new Date().toISOString(), roundNum, roundName || '');
   list.insertBefore(el, list.firstChild);
 }
 
-function buildHistoryRoundEl(votes, stats, createdAt, roundNum) {
+function buildHistoryRoundEl(votes, stats, createdAt, roundNum, roundName) {
   const level = stats ? consensusLevel(stats) : consensusLevelFromVotes(votes);
   const badge = consensusBadgeHtml(level);
   const time = formatRelativeTime(createdAt);
+  const nameHtml = roundName
+    ? `<span class="history-round-name">${escapeHtml(roundName)}</span>`
+    : '';
 
   const voteItems = Object.entries(votes || {})
     .map(([name, vote]) => `<span class="history-vote"><strong>${escapeHtml(name)}</strong> ${escapeHtml(vote || '–')}</span>`)
@@ -425,6 +453,7 @@ function buildHistoryRoundEl(votes, stats, createdAt, roundNum) {
   el.innerHTML = `
     <div class="history-round-hd">
       <span class="history-round-num">#${roundNum}</span>
+      ${nameHtml}
       ${badge}
       <span class="history-round-time">${time}</span>
     </div>
@@ -433,7 +462,7 @@ function buildHistoryRoundEl(votes, stats, createdAt, roundNum) {
   return el;
 }
 
-function updateAnalyticsCurrent(stats) {
+function updateAnalyticsCurrent(stats, roundName) {
   const section = document.getElementById('analyticsCurrent');
   const consensusEl = document.getElementById('analyticsConsensus');
   const grid = document.getElementById('analyticsStatsGrid');
@@ -444,6 +473,15 @@ function updateAnalyticsCurrent(stats) {
   consensusEl.innerHTML = level !== 'neutral'
     ? `<div class="consensus-badge-lg consensus-badge-${level}">${consensusBadgeText(level)}</div>`
     : '';
+
+  const nameEl = section.querySelector('.analytics-round-name') || (() => {
+    const el = document.createElement('p');
+    el.className = 'analytics-round-name';
+    section.insertBefore(el, consensusEl);
+    return el;
+  })();
+  nameEl.textContent = roundName || '';
+  nameEl.classList.toggle('hidden', !roundName);
 
   let html = '';
   if (stats.allSame) html += `<div class="stat-consensus">${t('room.stats.consensus')}</div>`;
@@ -685,6 +723,7 @@ function renderAll(state) {
   if (state.revealed) {
     document.getElementById('revealBtn').classList.add('hidden');
     document.getElementById('newRoundBtn').classList.remove('hidden');
+    document.getElementById('roundNameInput').disabled = true;
     setPickerDisabled(true);
   }
 }

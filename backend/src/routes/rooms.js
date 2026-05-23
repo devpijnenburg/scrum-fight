@@ -104,7 +104,7 @@ router.get('/:id', async (req, res) => {
 
 router.get('/:id/history', async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, votes, created_at
+    `SELECT id, votes, name, created_at
      FROM round_history
      WHERE room_id = $1
      ORDER BY created_at DESC

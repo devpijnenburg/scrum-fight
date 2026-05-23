@@ -33,6 +33,7 @@ function serializeRoom(room, mySocketId) {
     cardValues: ESTIMATION_METHODS[room.method]?.values ?? [],
     isGuest: room.isGuest,
     revealed: room.revealed,
+    roundName: room.roundName || '',
     players,
   };
 }
@@ -105,14 +106,15 @@ async function doReveal(io, room, roomId) {
   io.to(roomId).emit('cards-revealed', {
     players,
     stats: calculateStats(room.players),
+    roundName: room.roundName || '',
   });
 
   try {
     const votes = {};
     for (const [, p] of room.players) votes[p.name] = p.vote;
     const { rows: rhRows } = await db.query(
-      `INSERT INTO round_history (room_id, votes) VALUES ($1, $2) RETURNING id`,
-      [roomId, JSON.stringify(votes)]
+      `INSERT INTO round_history (room_id, votes, name) VALUES ($1, $2, $3) RETURNING id`,
+      [roomId, JSON.stringify(votes), room.roundName || null]
     );
     const roundId = rhRows[0].id;
 
@@ -221,6 +223,7 @@ module.exports = function setupSocket(io) {
           method: dbRoom.method,
           isGuest: dbRoom.is_guest,
           revealed: false,
+          roundName: '',
           players: new Map(),
         });
 
@@ -324,11 +327,22 @@ module.exports = function setupSocket(io) {
       }
 
       room.revealed = false;
+      room.roundName = '';
       for (const player of room.players.values()) player.vote = null;
 
       io.to(roomId).emit('round-reset');
 
       if (room.isGuest) resetGuestTimer(io, roomId);
+    });
+
+    // ── set-round-name ────────────────────────────────────────────────────────
+    socket.on('set-round-name', ({ name }) => {
+      const roomId = socket.data.roomId;
+      const room = activeRooms.get(roomId);
+      if (!room || room.revealed) return;
+
+      room.roundName = (name || '').trim().slice(0, 100);
+      socket.to(roomId).emit('round-name-set', { name: room.roundName });
     });
 
     // ── react ─────────────────────────────────────────────────────────────────

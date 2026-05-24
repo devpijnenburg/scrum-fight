@@ -22,7 +22,7 @@ const ESTIMATION_METHODS = {
     values: ['?', '1', '2', '3', '5', '8', '13', '21', '34', '☕'],
   },
   modified_fibonacci: {
-    label: 'Modified Fibonacci',
+    label: 'Fibonacci+',
     values: ['?', '0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100', '☕'],
   },
   tshirt: {

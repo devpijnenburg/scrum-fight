@@ -518,7 +518,7 @@ function consensusLevelFromVotes(votes) {
   if (!vals.length) return 'neutral';
   if (new Set(vals).size === 1) return 'full';
   const nums = vals
-    .filter((v) => !['?', '☕', '😊', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
+    .filter((v) => !['?', '☕', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
     .map((v) => (v === '½' ? 0.5 : parseFloat(v)))
     .filter((n) => !isNaN(n));
   if (!nums.length) return 'neutral';

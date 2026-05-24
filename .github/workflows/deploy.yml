@@ -1,23 +1,45 @@
-name: Deploy to production
+name: OTAP Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
 
 env:
   REGISTRY: ghcr.io
   OWNER: ${{ github.repository_owner }}
 
 jobs:
-  build-and-push:
-    name: Build & push Docker images
+  build:
+    name: Build & Push Docker images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_tag: ${{ steps.meta-backend.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Docker meta (backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-backend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Docker meta (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-frontend
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -34,9 +56,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-backend:latest
-            ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-backend:${{ github.sha }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -45,16 +65,66 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-frontend:latest
-            ${{ env.REGISTRY }}/${{ env.OWNER }}/scrum-fight-frontend:${{ github.sha }}
+          tags: ${{ steps.meta-frontend.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    name: Deploy to VM
-    runs-on: [self-hosted, proxmox]   # Proxmox runner heeft thuis-IP → bereikt murderbot.nl
-    needs: build-and-push
+  deploy-test:
+    name: Deploy to Test
+    runs-on: [self-hosted, proxmox]
+    needs: build
+    environment: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
+
+      - name: Copy test compose file to VM
+        run: |
+          scp -P 622 -i ~/.ssh/deploy_key \
+            docker-compose.test.yml \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
+
+      - name: Deploy test on VM
+        run: |
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
+          set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
+            -p scrum-fight-test \
+            -f ~/scrum-fight/docker-compose.test.yml \
+            --env-file ~/scrum-fight/.env.test \
+            pull
+          IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
+            -p scrum-fight-test \
+            -f ~/scrum-fight/docker-compose.test.yml \
+            --env-file ~/scrum-fight/.env.test \
+            up -d --remove-orphans
+          docker image prune -f
+          IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
+            -p scrum-fight-test \
+            -f ~/scrum-fight/docker-compose.test.yml \
+            --env-file ~/scrum-fight/.env.test \
+            ps
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: [self-hosted, proxmox]
+    needs: [build, deploy-test]
+    if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
@@ -69,13 +139,13 @@ jobs:
 
       - name: Copy compose file to VM
         run: |
-          scp -P 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
+          scp -P 622 -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
-      - name: Deploy on VM
+      - name: Deploy production on VM
         run: |
-          ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
+          ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
           echo "${{ secrets.GITHUB_TOKEN }}" | \

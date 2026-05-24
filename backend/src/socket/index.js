@@ -46,7 +46,7 @@ function calculateStats(players) {
   for (const v of votes) distribution[v] = (distribution[v] || 0) + 1;
 
   const numericVotes = votes
-    .filter((v) => v !== '?' && v !== '☕' && v !== '😊' && !['XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
+    .filter((v) => v !== '?' && v !== '☕' && !['XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
     .map((v) => (v === '½' ? 0.5 : parseFloat(v)))
     .filter((n) => !isNaN(n));
 

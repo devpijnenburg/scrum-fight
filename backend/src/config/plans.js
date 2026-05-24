@@ -18,20 +18,20 @@ const PLAN_LIMITS = {
 
 const ESTIMATION_METHODS = {
   fibonacci: {
-    label: 'Fibonacci 😊',
-    values: ['😊', '1', '2', '3', '5', '8', '13', '21', '34', '?', '☕'],
+    label: 'Fibonacci',
+    values: ['?', '1', '2', '3', '5', '8', '13', '21', '34', '☕'],
   },
   modified_fibonacci: {
-    label: 'Modified Fibonacci',
-    values: ['0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'],
+    label: 'Fibonacci+',
+    values: ['?', '0', '½', '1', '2', '3', '5', '8', '13', '20', '40', '100', '☕'],
   },
   tshirt: {
     label: 'T-shirt maten',
-    values: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?'],
+    values: ['?', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
   },
   powers_of_2: {
     label: 'Powers of 2',
-    values: ['1', '2', '4', '8', '16', '32', '64', '?', '☕'],
+    values: ['?', '1', '2', '4', '8', '16', '32', '64', '☕'],
   },
 };
 

@@ -159,8 +159,8 @@ function copyCode(id) {
 
 function methodLabel(method) {
   const map = {
-    fibonacci: 'Fibonacci 😊',
-    modified_fibonacci: 'Modified Fib',
+    fibonacci: 'Fibonacci',
+    modified_fibonacci: 'Fibonacci+',
     tshirt: 'T-shirt',
     powers_of_2: 'Powers of 2',
   };

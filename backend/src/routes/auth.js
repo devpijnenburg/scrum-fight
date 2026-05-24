@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const { authenticator } = require('otplib');
 const local = require('../auth/strategies/local');
 const google = require('../auth/strategies/google');
 const github = require('../auth/strategies/github');
 const { authMiddleware } = require('../auth/middleware');
+const { verify, sign } = require('../auth/jwt');
 const db = require('../config/database');
 
 // In-memory store for OAuth state nonces (maps state → { provider, timestamp })
@@ -67,11 +69,47 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, name, email, plan, oauth_provider, created_at FROM users WHERE id = $1`,
+    `SELECT id, name, email, plan, is_admin, totp_enabled, oauth_provider, created_at
+     FROM users WHERE id = $1`,
     [req.user.id]
   );
   if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden' });
   res.json(rows[0]);
+});
+
+router.post('/verify-totp', async (req, res) => {
+  const { preAuthToken, code } = req.body;
+  if (!preAuthToken || !code) {
+    return res.status(400).json({ error: 'Token en code zijn verplicht' });
+  }
+
+  let payload;
+  try {
+    payload = verify(preAuthToken);
+  } catch {
+    return res.status(401).json({ error: 'Ongeldig of verlopen token' });
+  }
+
+  if (!payload.preAuth) {
+    return res.status(401).json({ error: 'Ongeldig pre-auth token' });
+  }
+
+  const { rows } = await db.query(
+    'SELECT id, name, plan, is_admin, totp_secret, totp_enabled FROM users WHERE id = $1',
+    [payload.id]
+  );
+  const user = rows[0];
+  if (!user || !user.totp_enabled) {
+    return res.status(401).json({ error: 'Ongeldige aanvraag' });
+  }
+
+  const valid = authenticator.verify({ token: code, secret: user.totp_secret });
+  if (!valid) {
+    return res.status(401).json({ error: 'Ongeldige code' });
+  }
+
+  const token = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
+  res.json({ token });
 });
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
@@ -95,8 +133,12 @@ router.get('/google/callback', async (req, res) => {
   oauthStates.delete(state);
   try {
     const redirectUri = `${process.env.BASE_URL}/api/auth/google/callback`;
-    const { token } = await google.handleCallback(code, redirectUri);
-    res.redirect(`/dashboard.html?token=${token}`);
+    const result = await google.handleCallback(code, redirectUri);
+    if (result.requiresTotp) {
+      res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
+    } else {
+      res.redirect(`/dashboard.html?token=${result.token}`);
+    }
   } catch (err) {
     console.error('Google OAuth error:', err);
     res.redirect('/?error=oauth_failed');
@@ -124,8 +166,12 @@ router.get('/github/callback', async (req, res) => {
   oauthStates.delete(state);
   try {
     const redirectUri = `${process.env.BASE_URL}/api/auth/github/callback`;
-    const { token } = await github.handleCallback(code, redirectUri);
-    res.redirect(`/dashboard.html?token=${token}`);
+    const result = await github.handleCallback(code, redirectUri);
+    if (result.requiresTotp) {
+      res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
+    } else {
+      res.redirect(`/dashboard.html?token=${result.token}`);
+    }
   } catch (err) {
     console.error('GitHub OAuth error:', err);
     res.redirect('/?error=oauth_failed');

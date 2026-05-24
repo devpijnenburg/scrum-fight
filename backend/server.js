@@ -10,6 +10,8 @@ const pool = require('./src/config/database');
 const authRoutes = require('./src/routes/auth');
 const roomRoutes = require('./src/routes/rooms');
 const userRoutes = require('./src/routes/users');
+const adminRoutes = require('./src/routes/admin');
+const profileRoutes = require('./src/routes/profile');
 const setupSocket = require('./src/socket');
 require('./src/jobs/cleanup');
 
@@ -26,10 +28,17 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/profile', profileRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
-const MIGRATIONS = ['001_init.sql', '002_user_votes.sql'];
+const MIGRATIONS = [
+  '001_init.sql',
+  '002_user_votes.sql',
+  '003_round_name.sql',
+  '004_admin_organizations.sql',
+];
 
 async function runMigrations() {
   for (const file of MIGRATIONS) {

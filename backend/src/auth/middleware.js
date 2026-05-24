@@ -4,7 +4,7 @@ const db = require('../config/database');
 async function getUserFromToken(token) {
   const payload = verify(token);
   const { rows } = await db.query(
-    'SELECT id, name, plan FROM users WHERE id = $1',
+    'SELECT id, name, plan, is_admin, totp_enabled FROM users WHERE id = $1',
     [payload.id]
   );
   return rows[0] || null;

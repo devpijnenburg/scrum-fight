@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beheer — Scrum Fight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-dashboard">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+    <div class="navbar-actions">
+      <div id="navActions"></div>
+    </div>
+  </nav>
+
+  <main class="dashboard-main">
+    <div class="dashboard-header">
+      <h1>Beheerportaal</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="users">Gebruikers</button>
+      <button class="admin-tab" data-tab="organizations">Organisaties</button>
+    </div>
+
+    <!-- Users tab -->
+    <div id="tabUsers" class="admin-tab-content">
+      <div class="admin-toolbar">
+        <input id="userSearch" type="search" class="input admin-search" placeholder="Zoeken op naam of e-mail…" />
+        <span id="userCount" class="text-muted" style="font-size:.85rem"></span>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Naam</th>
+              <th>E-mail</th>
+              <th>Plan</th>
+              <th>Auth</th>
+              <th>2FA</th>
+              <th>Lid sinds</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="7" class="admin-table-empty">Laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="admin-pagination" id="userPagination"></div>
+    </div>
+
+    <!-- Organizations tab -->
+    <div id="tabOrganizations" class="admin-tab-content hidden">
+      <div class="admin-toolbar">
+        <span class="text-muted" id="orgCount" style="font-size:.85rem"></span>
+        <button class="btn btn-primary btn-sm" id="newOrgBtn">+ Nieuwe organisatie</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Naam</th>
+              <th>Plan</th>
+              <th>Leden</th>
+              <th>Eigenaar</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="orgTableBody">
+            <tr><td colspan="5" class="admin-table-empty">Laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Edit user modal -->
+  <div id="editUserModal" class="modal hidden">
+    <div class="modal-backdrop" id="editUserBackdrop"></div>
+    <div class="modal-card">
+      <h2>Gebruiker bewerken</h2>
+      <div class="form-group">
+        <label for="editUserName">Naam</label>
+        <input id="editUserName" type="text" class="input" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label for="editUserEmail">E-mailadres</label>
+        <input id="editUserEmail" type="email" class="input" />
+      </div>
+      <div class="form-group">
+        <label for="editUserPlan">Plan</label>
+        <select id="editUserPlan" class="input">
+          <option value="free">Free</option>
+          <option value="pro">Pro</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="admin-checkbox-label">
+          <input id="editUserAdmin" type="checkbox" />
+          Beheerdersrechten
+        </label>
+      </div>
+      <p id="editUserError" class="form-error hidden"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="editUserCancelBtn">Annuleren</button>
+        <button class="btn btn-primary" id="editUserSaveBtn">Opslaan →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New/edit org modal -->
+  <div id="orgModal" class="modal hidden">
+    <div class="modal-backdrop" id="orgModalBackdrop"></div>
+    <div class="modal-card">
+      <h2 id="orgModalTitle">Nieuwe organisatie</h2>
+      <div class="form-group">
+        <label for="orgName">Naam</label>
+        <input id="orgName" type="text" class="input" maxlength="255" />
+      </div>
+      <div class="form-group">
+        <label for="orgSlug">Slug (URL-vriendelijk)</label>
+        <input id="orgSlug" type="text" class="input" maxlength="100" placeholder="mijn-organisatie" />
+      </div>
+      <div class="form-group">
+        <label for="orgPlan">Plan</label>
+        <select id="orgPlan" class="input">
+          <option value="org_starter">Starter (max 20 leden)</option>
+          <option value="org_enterprise">Enterprise (max 100 leden)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="orgOwnerEmail">Eigenaar (e-mailadres, optioneel)</label>
+        <input id="orgOwnerEmail" type="email" class="input" placeholder="eigenaar@email.nl" />
+      </div>
+      <p id="orgModalError" class="form-error hidden"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="orgCancelBtn">Annuleren</button>
+        <button class="btn btn-primary" id="orgSaveBtn">Opslaan →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Members modal -->
+  <div id="membersModal" class="modal hidden">
+    <div class="modal-backdrop" id="membersModalBackdrop"></div>
+    <div class="modal-card" style="max-width:520px">
+      <h2 id="membersModalTitle">Leden beheren</h2>
+      <div id="membersList" style="margin-bottom:1rem;max-height:260px;overflow-y:auto"></div>
+      <div class="form-group">
+        <label for="memberEmail">Gebruiker toevoegen (e-mailadres)</label>
+        <div class="input-with-btn">
+          <input id="memberEmail" type="email" class="input" placeholder="naam@email.nl" />
+          <button class="btn btn-primary btn-sm" id="addMemberBtn">Toevoegen</button>
+        </div>
+      </div>
+      <p id="membersError" class="form-error hidden"></p>
+      <div class="modal-actions" style="margin-top:1rem">
+        <button class="btn btn-ghost" id="membersCancelBtn">Sluiten</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

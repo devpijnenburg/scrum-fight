@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiel — Scrum Fight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-dashboard">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+    <div class="navbar-actions">
+      <div id="navActions"></div>
+    </div>
+  </nav>
+
+  <main class="dashboard-main">
+    <div class="dashboard-header">
+      <div>
+        <h1>Mijn profiel</h1>
+        <p class="text-muted" id="profileSubtitle"></p>
+      </div>
+      <a href="/dashboard.html" class="btn btn-ghost">← Dashboard</a>
+    </div>
+
+    <!-- Profile info -->
+    <section class="profile-section">
+      <h2>Accountgegevens</h2>
+      <div class="profile-info-grid">
+        <div class="profile-info-item">
+          <span class="profile-info-label">Naam</span>
+          <span class="profile-info-value" id="profileName">—</span>
+        </div>
+        <div class="profile-info-item">
+          <span class="profile-info-label">E-mail</span>
+          <span class="profile-info-value" id="profileEmail">—</span>
+        </div>
+        <div class="profile-info-item">
+          <span class="profile-info-label">Authenticatie</span>
+          <span class="profile-info-value" id="profileAuth">—</span>
+        </div>
+        <div class="profile-info-item">
+          <span class="profile-info-label">Plan</span>
+          <span class="profile-info-value" id="profilePlan">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2FA section -->
+    <section class="profile-section" id="totpSection">
+      <h2>Twee-factor authenticatie (2FA)</h2>
+
+      <!-- Status: disabled -->
+      <div id="totpDisabled">
+        <p class="text-muted" style="margin-bottom:1rem">
+          Beveilig je account met een authenticator-app zoals Google Authenticator, Authy of 1Password.
+        </p>
+        <button id="totpSetupBtn" class="btn btn-primary">2FA instellen</button>
+      </div>
+
+      <!-- Setup flow -->
+      <div id="totpSetup" class="hidden">
+        <p class="text-muted" style="margin-bottom:1rem">
+          Scan de QR-code met je authenticator-app en voer daarna de 6-cijferige code in om te bevestigen.
+        </p>
+        <div class="totp-setup-body">
+          <img id="totpQr" class="totp-qr" src="" alt="QR code" />
+          <div class="totp-setup-right">
+            <p class="text-muted" style="font-size:.8rem;margin-bottom:.4rem">Handmatige code:</p>
+            <code id="totpSecret" class="totp-secret"></code>
+            <div class="form-group" style="margin-top:1rem">
+              <label for="totpEnableCode">Verificatiecode</label>
+              <input id="totpEnableCode" type="text" inputmode="numeric" pattern="[0-9]*"
+                     maxlength="6" class="input input-code" placeholder="000000" autocomplete="one-time-code" />
+            </div>
+            <div style="display:flex;gap:.6rem;margin-top:.8rem">
+              <button id="totpEnableBtn" class="btn btn-primary">Activeren →</button>
+              <button id="totpSetupCancelBtn" class="btn btn-ghost">Annuleren</button>
+            </div>
+            <p id="totpEnableError" class="form-error hidden"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status: enabled -->
+      <div id="totpEnabled" class="hidden">
+        <div class="totp-status totp-status-active">
+          <span>✓ 2FA is actief</span>
+        </div>
+        <p class="text-muted" style="margin:1rem 0">
+          Je account is beveiligd met twee-factor authenticatie.
+        </p>
+        <button id="totpDisableBtn" class="btn btn-ghost">2FA uitschakelen</button>
+      </div>
+
+      <!-- Disable confirm -->
+      <div id="totpDisableConfirm" class="hidden">
+        <p class="text-muted" style="margin-bottom:1rem">
+          Voer je huidige verificatiecode in om 2FA uit te schakelen.
+        </p>
+        <div class="form-group">
+          <label for="totpDisableCode">Verificatiecode</label>
+          <input id="totpDisableCode" type="text" inputmode="numeric" pattern="[0-9]*"
+                 maxlength="6" class="input input-code" placeholder="000000" autocomplete="one-time-code" />
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:.8rem">
+          <button id="totpDisableConfirmBtn" class="btn btn-ghost">Uitschakelen</button>
+          <button id="totpDisableCancelBtn" class="btn btn-ghost">Annuleren</button>
+        </div>
+        <p id="totpDisableError" class="form-error hidden"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/profile.js"></script>
+</body>
+</html>

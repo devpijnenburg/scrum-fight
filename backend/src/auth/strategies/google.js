@@ -42,7 +42,8 @@ async function handleCallback(code, redirectUri) {
   const profile = await infoRes.json();
 
   const { rows: existing } = await db.query(
-    `SELECT id, name, email, plan FROM users WHERE oauth_provider = 'google' AND oauth_id = $1`,
+    `SELECT id, name, email, plan, is_admin, totp_enabled FROM users
+     WHERE oauth_provider = 'google' AND oauth_id = $1`,
     [profile.sub]
   );
 
@@ -58,13 +59,21 @@ async function handleCallback(code, redirectUri) {
     const { rows } = await db.query(
       `INSERT INTO users (name, email, oauth_provider, oauth_id)
        VALUES ($1, $2, 'google', $3)
-       RETURNING id, name, email, plan`,
+       RETURNING id, name, email, plan, is_admin, totp_enabled`,
       [profile.name, profile.email, profile.sub]
     );
     user = rows[0];
   }
 
-  return { user, token: sign({ id: user.id, name: user.name, plan: user.plan }) };
+  if (user.totp_enabled) {
+    const preAuthToken = sign({ id: user.id, preAuth: true }, { expiresIn: '5m' });
+    return { user, preAuthToken, requiresTotp: true };
+  }
+
+  return {
+    user,
+    token: sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin }),
+  };
 }
 
 module.exports = { isConfigured, getAuthUrl, handleCallback };

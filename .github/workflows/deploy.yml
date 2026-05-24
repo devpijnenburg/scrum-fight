@@ -95,19 +95,15 @@ jobs:
             docker-compose.test.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
-      - name: Bootstrap .env.test if missing
+      - name: Ensure .env.test exists with correct overrides
         run: |
           ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
-          if [ ! -f ~/scrum-fight/.env.test ]; then
-            cp ~/scrum-fight/.env ~/scrum-fight/.env.test
-            sed -i 's/^POSTGRES_DB=.*/POSTGRES_DB=scrumfight_test/' ~/scrum-fight/.env.test
-            grep -q '^FRONTEND_TEST_PORT=' ~/scrum-fight/.env.test \
-              || echo 'FRONTEND_TEST_PORT=8081' >> ~/scrum-fight/.env.test
-            echo "Created .env.test from .env with test overrides"
-          else
-            echo ".env.test already exists, skipping bootstrap"
-          fi
+          [ -f ~/scrum-fight/.env.test ] || cp ~/scrum-fight/.env ~/scrum-fight/.env.test
+          sed -i 's/^POSTGRES_DB=.*/POSTGRES_DB=scrumfight_test/' ~/scrum-fight/.env.test
+          grep -q '^FRONTEND_TEST_PORT=' ~/scrum-fight/.env.test \
+            && sed -i 's/^FRONTEND_TEST_PORT=.*/FRONTEND_TEST_PORT=8082/' ~/scrum-fight/.env.test \
+            || echo 'FRONTEND_TEST_PORT=8082' >> ~/scrum-fight/.env.test
           EOF
 
       - name: Deploy test on VM

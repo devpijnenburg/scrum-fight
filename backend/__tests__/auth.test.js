@@ -6,12 +6,10 @@ jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('$2a$12$hashed'),
   compare: jest.fn(),
 }));
-jest.mock('otplib', () => ({
-  authenticator: {
-    generateSecret: jest.fn().mockReturnValue('TESTSECRET'),
-    keyuri: jest.fn().mockReturnValue('otpauth://totp/test'),
-    verify: jest.fn(),
-  },
+jest.mock('speakeasy', () => ({
+  generateSecret: jest.fn().mockReturnValue({ base32: 'TESTSECRET' }),
+  otpauthURL: jest.fn().mockReturnValue('otpauth://totp/test'),
+  totp: { verify: jest.fn() },
 }));
 jest.mock('qrcode', () => ({
   toDataURL: jest.fn().mockResolvedValue('data:image/png;base64,test'),

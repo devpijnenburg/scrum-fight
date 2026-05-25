@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticator } = require('otplib');
+const speakeasy = require('speakeasy');
 const local = require('../auth/strategies/local');
 const google = require('../auth/strategies/google');
 const github = require('../auth/strategies/github');
@@ -103,7 +103,7 @@ router.post('/verify-totp', async (req, res) => {
     return res.status(401).json({ error: 'Ongeldige aanvraag' });
   }
 
-  const valid = authenticator.verify({ token: code, secret: user.totp_secret });
+  const valid = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
   if (!valid) {
     return res.status(401).json({ error: 'Ongeldige code' });
   }

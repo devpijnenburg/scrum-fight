@@ -1,0 +1,48 @@
+name: Set admin user (eenmalig)
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'E-mailadres van de gebruiker'
+        required: true
+        default: 'scrumfight@pijnenburg.pro'
+      environment:
+        description: 'Omgeving'
+        required: true
+        default: 'test'
+        type: choice
+        options: [test, production]
+
+jobs:
+  set-admin:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Set admin via psql
+        run: |
+          ENV_FILE=".env${{ inputs.environment == 'test' && '.test' || '' }}"
+          DB_CONTAINER="scrum-fight${{ inputs.environment == 'test' && '-test' || '' }}-db"
+
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl << EOF
+          source ~/scrum-fight/${ENV_FILE}
+          DB_NAME=${{ inputs.environment == 'test' && 'scrumfight_test' || '\$POSTGRES_DB' }}
+          RESULT=\$(docker exec ${DB_CONTAINER} psql -U \$POSTGRES_USER -d \$DB_NAME -t -c \
+            "UPDATE users SET is_admin = true WHERE email = '${{ inputs.email }}' RETURNING email, is_admin;")
+          echo "Resultaat: \$RESULT"
+          if [ -z "\$(echo \$RESULT | tr -d '[:space:]')" ]; then
+            echo "FOUT: gebruiker '${{ inputs.email }}' niet gevonden."
+            exit 1
+          fi
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

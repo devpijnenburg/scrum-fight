@@ -2198,3 +2198,38 @@ kbd {
   margin-bottom: .5rem;
   line-height: 1.5;
 }
+
+/* ── Plan limit banner (room page) ──────────────────────────────────────────── */
+.plan-limit-banner {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: #fff8e6;
+  border-bottom: 2px solid #f5a623;
+  padding: .65rem 1.25rem;
+  font-size: .88rem;
+  line-height: 1.4;
+}
+[data-theme="dark"] .plan-limit-banner {
+  background: #2a2010;
+  border-bottom-color: #c8871a;
+}
+.plan-limit-icon { flex-shrink: 0; font-size: 1rem; }
+.plan-limit-text { flex: 1; }
+.plan-limit-link {
+  color: var(--primary);
+  text-decoration: underline;
+  white-space: nowrap;
+  margin-left: .25rem;
+}
+.plan-limit-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: .9rem;
+  padding: .2rem .4rem;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+.plan-limit-close:hover { background: rgba(0,0,0,.08); }

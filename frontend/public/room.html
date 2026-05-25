@@ -86,6 +86,17 @@
     </div>
   </header>
 
+  <!-- Plan limit banner — shown when room was created over the plan limit -->
+  <div id="planLimitBanner" class="plan-limit-banner hidden" role="alert">
+    <span class="plan-limit-icon">⚠️</span>
+    <span class="plan-limit-text">
+      <strong id="planLimitMsg"></strong>
+      Deze kamer wordt <strong>niet opgeslagen</strong>.
+      <a href="/dashboard.html" class="plan-limit-link">Verwijder een kamer of upgrade je plan →</a>
+    </span>
+    <button class="plan-limit-close" id="planLimitClose" aria-label="Sluiten">✕</button>
+  </div>
+
   <main class="room-main">
     <section class="room-info-bar" aria-label="Room info">
       <span id="methodBadge" class="badge"></span>

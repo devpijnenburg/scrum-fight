@@ -58,8 +58,8 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'E-mail en wachtwoord zijn verplicht' });
   }
   try {
-    const { user, token } = await local.login(email, password);
-    res.json({ user, token });
+    const result = await local.login(email, password);
+    res.json(result);
   } catch (err) {
     res.status(401).json({ error: err.message });
   }

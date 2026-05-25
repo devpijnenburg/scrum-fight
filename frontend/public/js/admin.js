@@ -24,6 +24,7 @@ let userPage = 0;
 let userSearch = '';
 let userTotal = 0;
 const USER_LIMIT = 20;
+const userMap = new Map();
 
 function debounce(fn, ms) {
   let t;
@@ -57,6 +58,7 @@ function renderUserTable(users) {
     tbody.innerHTML = '<tr><td colspan="7" class="admin-table-empty">Geen gebruikers gevonden.</td></tr>';
     return;
   }
+  users.forEach((u) => userMap.set(u.id, u));
   tbody.innerHTML = users.map((u) => `
     <tr>
       <td>${escapeHtml(u.name)}${u.is_admin ? ' <span class="admin-badge">admin</span>' : ''}</td>
@@ -65,7 +67,7 @@ function renderUserTable(users) {
       <td>${u.oauth_provider ? escapeHtml(u.oauth_provider) : 'e-mail'}</td>
       <td>${u.totp_enabled ? '✓' : '—'}</td>
       <td>${new Date(u.created_at).toLocaleDateString('nl-NL')}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openEditUser(${JSON.stringify(JSON.stringify(u))})">Bewerken</button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openEditUser('${u.id}')">Bewerken</button></td>
     </tr>
   `).join('');
 }
@@ -90,8 +92,9 @@ function goUserPage(page) {
 
 let editingUserId = null;
 
-function openEditUser(jsonStr) {
-  const u = JSON.parse(jsonStr);
+function openEditUser(id) {
+  const u = userMap.get(id);
+  if (!u) return;
   editingUserId = u.id;
   document.getElementById('editUserName').value = u.name;
   document.getElementById('editUserEmail').value = u.email || '';
@@ -135,6 +138,7 @@ document.getElementById('editUserSaveBtn').addEventListener('click', async () =>
 let orgList = [];
 let editingOrgId = null;
 let membersOrgId = null;
+const orgMap = new Map();
 
 async function loadOrgs() {
   const tbody = document.getElementById('orgTableBody');
@@ -154,6 +158,7 @@ function renderOrgTable(orgs) {
     tbody.innerHTML = '<tr><td colspan="5" class="admin-table-empty">Geen organisaties gevonden.</td></tr>';
     return;
   }
+  orgs.forEach((o) => orgMap.set(o.id, o));
   tbody.innerHTML = orgs.map((o) => `
     <tr>
       <td>${escapeHtml(o.name)} <small class="text-muted">${escapeHtml(o.slug)}</small></td>
@@ -161,7 +166,7 @@ function renderOrgTable(orgs) {
       <td>${o.member_count} / ${o.max_members}</td>
       <td>${o.owner_name ? escapeHtml(o.owner_name) : '—'}</td>
       <td class="admin-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openOrgModal(${JSON.stringify(JSON.stringify(o))})">Bewerken</button>
+        <button class="btn btn-ghost btn-sm" onclick="openOrgModal('${o.id}')">Bewerken</button>
         <button class="btn btn-ghost btn-sm" onclick="openMembers('${o.id}', ${JSON.stringify(o.name)})">Leden</button>
         <button class="btn btn-ghost btn-sm admin-del" onclick="deleteOrg('${o.id}')">Verwijderen</button>
       </td>
@@ -171,8 +176,8 @@ function renderOrgTable(orgs) {
 
 document.getElementById('newOrgBtn').addEventListener('click', () => openOrgModal());
 
-function openOrgModal(jsonStr) {
-  const o = jsonStr ? JSON.parse(jsonStr) : null;
+function openOrgModal(id) {
+  const o = id ? orgMap.get(id) : null;
   editingOrgId = o?.id || null;
   document.getElementById('orgModalTitle').textContent = o ? 'Organisatie bewerken' : 'Nieuwe organisatie';
   document.getElementById('orgName').value = o?.name || '';

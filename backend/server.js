@@ -31,7 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
 
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
 const MIGRATIONS = [
   '001_init.sql',

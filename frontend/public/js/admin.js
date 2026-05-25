@@ -136,9 +136,29 @@ document.getElementById('editUserSaveBtn').addEventListener('click', async () =>
 // ── Organizations ─────────────────────────────────────────────────────────────
 
 let orgList = [];
+let orgSearch = '';
 let editingOrgId = null;
 let membersOrgId = null;
 const orgMap = new Map();
+
+function filterOrgs(orgs, search) {
+  if (!search) return orgs;
+  const q = search.toLowerCase();
+  return orgs.filter((o) =>
+    o.name.toLowerCase().includes(q) ||
+    o.slug.toLowerCase().includes(q) ||
+    (o.owner_name && o.owner_name.toLowerCase().includes(q))
+  );
+}
+
+function applyOrgFilter() {
+  renderOrgTable(filterOrgs(orgList, orgSearch));
+}
+
+document.getElementById('orgSearch').addEventListener('input', debounce((e) => {
+  orgSearch = e.target.value.trim();
+  applyOrgFilter();
+}, 300));
 
 async function loadOrgs() {
   const tbody = document.getElementById('orgTableBody');
@@ -146,7 +166,7 @@ async function loadOrgs() {
   try {
     orgList = await apiFetch('/admin/organizations');
     document.getElementById('orgCount').textContent = `${orgList.length} organisatie${orgList.length !== 1 ? 's' : ''}`;
-    renderOrgTable(orgList);
+    applyOrgFilter();
   } catch (ex) {
     tbody.innerHTML = `<tr><td colspan="5" class="admin-table-empty">${escapeHtml(ex.message)}</td></tr>`;
   }
@@ -296,6 +316,17 @@ async function removeMember(userId) {
   } catch (ex) {
     alert(ex.message);
   }
+}
+
+// Expose internals for unit tests (Node.js / Jest only)
+/* istanbul ignore next */
+if (typeof module !== 'undefined') {
+  module.exports = {
+    filterOrgs,
+    openEditUser, closeEditUser, renderUserTable,
+    openOrgModal,  closeOrgModal,  renderOrgTable,
+    applyOrgFilter, loadOrgs, loadUsers,
+  };
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

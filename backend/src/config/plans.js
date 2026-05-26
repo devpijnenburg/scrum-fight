@@ -12,7 +12,19 @@ const PLAN_LIMITS = {
   premium: {
     maxRooms: Infinity,
     maxParticipants: Infinity,
-    retentionDays: null, // no automatic deletion
+    retentionDays: null,
+  },
+  org_starter: {
+    maxRooms: 20,
+    maxParticipants: 15,
+    retentionDays: 30,
+    orgMaxMembers: 20,
+  },
+  org_enterprise: {
+    maxRooms: Infinity,
+    maxParticipants: Infinity,
+    retentionDays: null,
+    orgMaxMembers: 100,
   },
 };
 

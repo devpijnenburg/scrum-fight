@@ -121,6 +121,7 @@ socket.on('connect', () => {
   resolveAndJoin();
   initRoomAuth();
   initAdBanner();
+  initPlanLimitBanner();
 });
 
 socket.on('room-state', (state) => {
@@ -644,6 +645,18 @@ function initAdBanner() {
   const user = getCurrentUser();
   const isPaid = user && (user.plan === 'pro' || user.plan === 'premium');
   document.getElementById('adBanner').classList.toggle('hidden', isPaid);
+}
+
+function initPlanLimitBanner() {
+  const warning = sessionStorage.getItem('planLimitWarning');
+  if (!warning) return;
+  sessionStorage.removeItem('planLimitWarning');
+  document.getElementById('planLimitMsg').textContent = warning + ' ';
+  const banner = document.getElementById('planLimitBanner');
+  banner.classList.remove('hidden');
+  document.getElementById('planLimitClose').addEventListener('click', () => {
+    banner.classList.add('hidden');
+  });
 }
 
 // ── Settings (account users only) ────────────────────────────────────────────

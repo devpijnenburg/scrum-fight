@@ -61,9 +61,17 @@ class ProfileMenu extends HTMLElement {
           <a href="/dashboard.html" class="profile-menu-item">
             <span>🚪</span><span data-i18n="nav.myrooms">Mijn kamers</span>
           </a>
+          <a href="/profile.html" class="profile-menu-item">
+            <span>🔐</span><span>Profiel &amp; 2FA</span>
+          </a>
           <button class="profile-menu-item _pm-settings" type="button">
             <span>⚙️</span><span data-i18n="room.settings.toggle_title">Instellingen</span>
           </button>
+          ${user?.is_admin ? `
+          <a href="/admin.html" class="profile-menu-item">
+            <span>⚙️</span><span>Beheerportaal</span>
+          </a>
+          ` : ''}
           <div class="profile-menu-divider"></div>
           <button class="profile-menu-item nav-logout-btn _pm-logout" type="button">
             <span>↪️</span><span data-i18n="nav.logout">Uitloggen</span>

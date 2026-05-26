@@ -40,6 +40,7 @@ router.post('/', optionalAuth, async (req, res) => {
 
   let ownerId = null;
   let isGuest = true;
+  let planLimitWarning = null;
 
   if (req.user) {
     ownerId = req.user.id;
@@ -54,9 +55,10 @@ router.post('/', optionalAuth, async (req, res) => {
         [ownerId]
       );
       if (parseInt(rows[0].count, 10) >= limits.maxRooms) {
-        return res.status(403).json({
-          error: `Maximaal aantal kamers bereikt voor het ${plan}-plan (${limits.maxRooms}).`,
-        });
+        // Allow creation as a temporary (non-saved) room instead of blocking
+        isGuest = true;
+        ownerId = null;
+        planLimitWarning = `Maximaal aantal kamers bereikt voor het ${plan}-plan (${limits.maxRooms}).`;
       }
     }
   }
@@ -69,7 +71,9 @@ router.post('/', optionalAuth, async (req, res) => {
        RETURNING id, name, method, is_guest`,
       [id, name.trim().slice(0, 100), ownerId, method, isGuest]
     );
-    res.status(201).json(rows[0]);
+    const room = rows[0];
+    if (planLimitWarning) room.planLimitWarning = planLimitWarning;
+    res.status(201).json(room);
   } catch (err) {
     console.error('Create room error:', err);
     res.status(500).json({ error: 'Kon kamer niet aanmaken' });

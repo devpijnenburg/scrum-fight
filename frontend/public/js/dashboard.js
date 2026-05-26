@@ -126,6 +126,7 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
       method: 'POST',
       body: JSON.stringify({ name, method }),
     });
+    if (room.planLimitWarning) sessionStorage.setItem('planLimitWarning', room.planLimitWarning);
     closeModal();
     window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {

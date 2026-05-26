@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Inloggen — Scrum Fight</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="page-auth">
@@ -63,6 +61,19 @@
         <p id="registerError" class="form-error hidden"></p>
       </form>
 
+      <!-- TOTP step (hidden by default) -->
+      <div id="totpStep" class="hidden">
+        <p class="totp-step-hint">Voer de 6-cijferige code in van je authenticator-app.</p>
+        <div class="form-group">
+          <label for="totpCode">Verificatiecode</label>
+          <input id="totpCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                 class="input input-code" placeholder="000000" autocomplete="one-time-code" />
+        </div>
+        <button id="totpSubmitBtn" class="btn btn-primary btn-full" style="margin-top:.8rem">Verifiëren →</button>
+        <p id="totpError" class="form-error hidden"></p>
+        <button id="totpBackBtn" class="btn btn-ghost btn-full" style="margin-top:.5rem">← Terug</button>
+      </div>
+
       <!-- OAuth divider -->
       <div class="oauth-divider"><span data-i18n="login.oauth.divider">of ga verder met</span></div>
 
@@ -112,21 +123,69 @@
       document.querySelector('[data-tab="register"]').click();
     }
 
+    let _preAuthToken = null;
+
+    function showTotpStep(preAuthToken) {
+      _preAuthToken = preAuthToken;
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.querySelector('.auth-tabs').classList.add('hidden');
+      document.querySelector('.oauth-divider').classList.add('hidden');
+      document.querySelector('.oauth-buttons').classList.add('hidden');
+      document.getElementById('totpStep').classList.remove('hidden');
+      document.getElementById('totpCode').focus();
+    }
+
+    document.getElementById('totpBackBtn').addEventListener('click', () => {
+      _preAuthToken = null;
+      document.getElementById('totpStep').classList.add('hidden');
+      document.getElementById('totpError').classList.add('hidden');
+      document.querySelector('.auth-tabs').classList.remove('hidden');
+      document.querySelector('.oauth-divider').classList.remove('hidden');
+      document.querySelector('.oauth-buttons').classList.remove('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+    });
+
+    document.getElementById('totpSubmitBtn').addEventListener('click', async () => {
+      const err = document.getElementById('totpError');
+      err.classList.add('hidden');
+      const code = document.getElementById('totpCode').value.trim();
+      try {
+        const { token } = await apiFetch('/auth/verify-totp', {
+          method: 'POST',
+          body: JSON.stringify({ preAuthToken: _preAuthToken, code }),
+        });
+        localStorage.setItem('token', token);
+        window.location.href = '/dashboard.html';
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('totpCode').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('totpSubmitBtn').click();
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const err = document.getElementById('loginError');
       err.classList.add('hidden');
       try {
-        const { user, token } = await apiFetch('/auth/login', {
+        const result = await apiFetch('/auth/login', {
           method: 'POST',
           body: JSON.stringify({
             email: document.getElementById('loginEmail').value,
             password: document.getElementById('loginPassword').value,
           }),
         });
-        localStorage.setItem('token', token);
-        localStorage.setItem('userName', user.name);
-        window.location.href = '/dashboard.html';
+        if (result.requiresTotp) {
+          showTotpStep(result.preAuthToken);
+        } else {
+          localStorage.setItem('token', result.token);
+          localStorage.setItem('userName', result.user.name);
+          window.location.href = '/dashboard.html';
+        }
       } catch (ex) {
         err.textContent = ex.message;
         err.classList.remove('hidden');

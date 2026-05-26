@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2FA Verificatie — Scrum Fight</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-auth">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <h2 style="margin-bottom:1rem;text-align:center">Twee-factor verificatie</h2>
+      <p class="totp-step-hint">Voer de 6-cijferige code in van je authenticator-app.</p>
+      <div class="form-group" style="margin-top:1rem">
+        <label for="totpCode">Verificatiecode</label>
+        <input id="totpCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               class="input input-code" placeholder="000000" autocomplete="one-time-code" />
+      </div>
+      <button id="totpSubmitBtn" class="btn btn-primary btn-full" style="margin-top:.8rem">Verifiëren →</button>
+      <p id="totpError" class="form-error hidden"></p>
+      <a href="/login.html" class="btn btn-ghost btn-full" style="margin-top:.5rem;justify-content:center">← Terug naar inloggen</a>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const preAuthToken = params.get('preAuthToken');
+    if (!preAuthToken) window.location.href = '/login.html';
+
+    document.getElementById('totpCode').focus();
+
+    document.getElementById('totpSubmitBtn').addEventListener('click', async () => {
+      const err = document.getElementById('totpError');
+      err.classList.add('hidden');
+      const code = document.getElementById('totpCode').value.trim();
+      try {
+        const { token } = await apiFetch('/auth/verify-totp', {
+          method: 'POST',
+          body: JSON.stringify({ preAuthToken, code }),
+        });
+        localStorage.setItem('token', token);
+        window.location.href = '/dashboard.html';
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('totpCode').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('totpSubmitBtn').click();
+    });
+  </script>
+</body>
+</html>

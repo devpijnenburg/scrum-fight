@@ -54,4 +54,25 @@ router.post('/totp/disable', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
+router.get('/emoticon', authMiddleware, async (req, res) => {
+  const { rows } = await db.query('SELECT emoticon FROM users WHERE id = $1', [req.user.id]);
+  res.json({ emoticon: rows[0]?.emoticon || '⚔️' });
+});
+
+router.put('/emoticon', authMiddleware, async (req, res) => {
+  const { emoticon } = req.body;
+  if (!emoticon || typeof emoticon !== 'string' || emoticon.trim() === '') {
+    return res.status(400).json({ error: 'Emoticon is verplicht' });
+  }
+  const trimmed = emoticon.trim();
+  if ([...trimmed].length > 8) {
+    return res.status(400).json({ error: 'Ongeldige emoticon' });
+  }
+  await db.query(
+    'UPDATE users SET emoticon = $1, updated_at = NOW() WHERE id = $2',
+    [trimmed, req.user.id]
+  );
+  res.json({ ok: true, emoticon: trimmed });
+});
+
 module.exports = router;

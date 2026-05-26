@@ -132,10 +132,10 @@ socket.on('room-state', (state) => {
   renderAll(state);
 });
 
-socket.on('player-joined', ({ socketId, name }) => {
+socket.on('player-joined', ({ socketId, name, emoticon }) => {
   if (!roomState) return;
   const votingInProgress = !roomState.revealed && roomState.players.some((p) => p.hasVoted);
-  roomState.players.push({ socketId, name, hasVoted: false, vote: null, joinedMidRound: votingInProgress });
+  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, joinedMidRound: votingInProgress });
   renderTable(roomState);
   updatePlayerCount(roomState.players.length);
   updateVoteStatus();
@@ -777,7 +777,7 @@ function renderTable(state) {
     const card = createCardEl(player, state.revealed, isMe);
     const nameTag = document.createElement('div');
     nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}`;
-    nameTag.textContent = player.name;
+    nameTag.textContent = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
 
     seat.appendChild(card);
     seat.appendChild(nameTag);

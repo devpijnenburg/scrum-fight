@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Profiel — Scrum Fight</title>
+  <title>Profiel &amp; Instellingen — Scrum Fight</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="page-dashboard">
@@ -18,7 +18,7 @@
   <main class="dashboard-main">
     <div class="dashboard-header">
       <div>
-        <h1>Mijn profiel</h1>
+        <h1>🪪 Profiel &amp; Instellingen</h1>
         <p class="text-muted" id="profileSubtitle"></p>
       </div>
       <a href="/dashboard.html" class="btn btn-ghost">← Dashboard</a>
@@ -47,9 +47,50 @@
       </div>
     </section>
 
+    <!-- Emoticon picker -->
+    <section class="profile-section">
+      <h2>🎭 Jouw emoticon</h2>
+      <p class="text-muted" style="margin-bottom:1rem">
+        Kies de emoticon die vóór je naam verschijnt in rooms. Alleen zichtbaar voor ingelogde leden.
+      </p>
+      <div class="emoticon-preview" id="emoticonPreview">
+        <span id="emoticonPreviewIcon">⚔️</span>
+        <strong id="emoticonPreviewName">Jouw naam</strong>
+      </div>
+      <div class="emoticon-tabs" id="emoticonTabs"></div>
+      <div class="emoticon-grid" id="emoticonGrid"></div>
+      <p id="emoticonStatus" class="form-error hidden" style="margin-top:.5rem"></p>
+    </section>
+
+    <!-- Preferences (merged settings) -->
+    <section class="profile-section">
+      <h2>⚙️ Voorkeuren</h2>
+      <div class="settings-row" style="margin-bottom:1rem">
+        <span class="settings-label">Analyse automatisch openen bij reveal</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settingAnalyticsAuto" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <label class="settings-label" for="settingDefaultMethod">Favoriete schattingsmethode</label>
+        <select id="settingDefaultMethod" class="input" style="width:auto;min-width:160px">
+          <option value="">Geen voorkeur</option>
+          <option value="fibonacci">Fibonacci 😊</option>
+          <option value="modified_fibonacci">Modified Fibonacci</option>
+          <option value="tshirt">T-shirt maten</option>
+          <option value="powers_of_2">Powers of 2</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1.2rem">
+        <button id="saveSettingsBtn" class="btn btn-primary btn-sm">Opslaan</button>
+      </div>
+      <p id="settingsSaveStatus" class="hidden" style="text-align:right;font-size:.85rem;margin-top:.5rem;color:var(--success)">✓ Opgeslagen</p>
+    </section>
+
     <!-- 2FA section -->
     <section class="profile-section" id="totpSection">
-      <h2>Twee-factor authenticatie (2FA)</h2>
+      <h2>🔐 Twee-factor authenticatie (2FA)</h2>
 
       <!-- Status: disabled -->
       <div id="totpDisabled">

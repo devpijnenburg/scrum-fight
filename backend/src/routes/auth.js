@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, name, email, plan, is_admin, totp_enabled, oauth_provider, created_at
+    `SELECT id, name, email, plan, is_admin, totp_enabled, oauth_provider, emoticon, created_at
      FROM users WHERE id = $1`,
     [req.user.id]
   );

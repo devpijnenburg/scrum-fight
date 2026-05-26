@@ -19,6 +19,7 @@ function serializeRoom(room, mySocketId) {
     players.push({
       socketId,
       name: p.name,
+      emoticon: p.emoticon || '',
       userId: p.userId,
       hasVoted: p.vote !== null,
       vote: room.revealed ? p.vote : null,
@@ -158,17 +159,19 @@ module.exports = function setupSocket(io) {
       // Resolve player identity
       let userId = null;
       let name = (playerName || '').trim().slice(0, 50);
+      let emoticon = '';
 
       if (token) {
         try {
           const payload = verify(token);
           const { rows } = await db.query(
-            'SELECT id, name FROM users WHERE id = $1',
+            'SELECT id, name, emoticon FROM users WHERE id = $1',
             [payload.id]
           );
           if (rows.length) {
             userId = rows[0].id;
             name = rows[0].name;
+            emoticon = rows[0].emoticon || '⚔️';
           }
         } catch {
           // invalid token — fall back to provided name
@@ -233,7 +236,7 @@ module.exports = function setupSocket(io) {
       }
 
       const room = activeRooms.get(normalizedId);
-      room.players.set(socket.id, { name, userId, vote: null });
+      room.players.set(socket.id, { name, userId, emoticon, vote: null });
 
       socket.join(normalizedId);
       socket.data.roomId = normalizedId;
@@ -245,6 +248,7 @@ module.exports = function setupSocket(io) {
       socket.to(normalizedId).emit('player-joined', {
         socketId: socket.id,
         name,
+        emoticon,
         hasVoted: false,
       });
 

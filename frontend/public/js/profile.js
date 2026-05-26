@@ -3,7 +3,51 @@ if (!user) window.location.href = '/login.html';
 
 updateNavbar();
 
+// ── Emoji categories ──────────────────────────────────────────────────────────
+
+const EMOJI_CATEGORIES = [
+  {
+    label: '😀 Smileys',
+    emojis: ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','☹','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠','💩','🤡','👹','👺','👻','👽','👾','🤖'],
+  },
+  {
+    label: '👋 Mensen',
+    emojis: ['👋','🤚','🖐','✋','🖖','🤙','👌','🤌','🤏','✌','🤞','🤟','🤘','👈','👉','👆','👇','☝','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍','💅','💪','🦾','🦵','🦶','👂','🦻','👃','🧠','🦷','🦴','👀','👁','👅','💋','👶','🧒','👦','👧','🧑','👱','👨','🧔','👩','🧓','👴','👵','🙍','🙎','🙅','🙆','💁','🙋','🧏','🙇','🤦','🤷','💆','💇','🚶','🧍','🧎','🏃','💃','🕺','🧘','🛀'],
+  },
+  {
+    label: '🐶 Dieren',
+    emojis: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦗','🦟','🦂','🐢','🐍','🦎','🐊','🦖','🦕','🐉','🐲','🦭','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🦬','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩','🕊','🐇','🦝','🦨','🦡','🦫','🦦','🦥','🐁','🐀','🐿','🦔','🐾'],
+  },
+  {
+    label: '🌿 Natuur',
+    emojis: ['🌵','🎄','🌲','🌳','🌴','🪵','🌱','🌿','☘','🍀','🎍','🪴','🎋','🍃','🍂','🍁','🍄','🌾','💐','🌷','🌹','🥀','🌺','🌸','🌼','🌻','🌞','🌛','🌜','🌚','🌕','🌙','⭐','🌟','💫','✨','☄','🌈','⛅','❄','☃','⛄','🌬','🌀','🌊','🔥','💧','🌍','🌎','🌏','🌋','⛰','🏔'],
+  },
+  {
+    label: '🍎 Eten',
+    emojis: ['🍎','🍊','🍋','🍌','🍍','🥭','🍑','🍒','🍓','🫐','🥝','🍅','🫒','🥥','🥑','🍆','🥕','🌽','🌶','🥒','🥬','🥦','🧄','🧅','🍄','🌰','🥜','🍞','🥐','🥖','🥨','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🌭','🍔','🍟','🍕','🌮','🌯','🥙','🥚','🍳','🥘','🍲','🥗','🍿','🍱','🍣','🍤','🍙','🍚','🍛','🍜','🍝','🍡','🥟','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🍫','🍬','🍭','🍯','🥛','☕','🍵','🧃','🥤','🧋','🍶','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧊'],
+  },
+  {
+    label: '⚽ Sport',
+    emojis: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🏓','🏸','⛳','🏹','🎣','🤿','🎿','🛷','🥌','🎯','🪀','🪁','🎮','🕹','🎰','🎲','♟','🧩','🏆','🥇','🥈','🥉','🎖','🏅','🎗','🎫','🎟','🎭','🎨','🎪','🎤','🎧','🎼','🎹','🎷','🎺','🎸','🎻','🥁','🎵','🎶','🎬','🎥'],
+  },
+  {
+    label: '✈️ Reizen',
+    emojis: ['🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🛵','🚲','🛴','🛹','🛼','⚓','⛵','🚤','🛥','🛳','⛴','🚢','✈','🛩','🚁','🛸','🛰','🪂','💺','🌐','🗺','🧭','🏕','🏖','🏜','🏝','🏞','🏟','🏛','🏗','🏠','🏡','🏢','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','⛩','🕍','⛲','🌁','🌃','🏙','🌄','🌅','🌆','🌇','🌉','🌌','🎇','🎆'],
+  },
+  {
+    label: '⚔️ Objecten',
+    emojis: ['⌚','📱','💻','⌨','🖥','📷','📸','📹','🎥','📡','🔋','🔌','💡','🔦','🕯','💰','💵','💳','🔮','💎','🔑','🗝','🔨','🪓','⛏','⚒','🛠','🗡','⚔','🛡','🔧','🔩','🪛','⚙','🔗','⛓','🧲','🪜','🧰','🔭','🔬','💊','💉','🩹','🩺','🏷','📩','📧','💌','📦','📫','✏','✒','📝','📌','📍','✂','🔒','🔓','🔐','🎃','🎉','🎊','🎈','🎀','🎁','🪄','🧸','🖼','🧵','🧶','🪞','🪟','🛋','🪑','🚿','🛁','🧹','🧺','🧻','🧼','🧽','🛒'],
+  },
+  {
+    label: '❤️ Symbolen',
+    emojis: ['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣','💕','💞','💓','💗','💖','💘','💝','💟','☮','✝','☪','🕉','☸','✡','🔯','🛐','♻','✅','❌','☑','✔','🔰','💯','🔱','⚜','♾','🆘','🆒','🆕','🅰','🅱','🅾','🅿','⭕','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🏁','🚩','🎌','🏴','🏳','💤','⚠','♿','🔃','🔄'],
+  },
+];
+
+// ── Profile data ──────────────────────────────────────────────────────────────
+
 let _totpSecret = null;
+let _currentEmoticon = '⚔️';
 
 async function loadProfile() {
   const data = await apiFetch('/auth/me');
@@ -15,7 +59,98 @@ async function loadProfile() {
     : 'E-mail / wachtwoord';
   document.getElementById('profilePlan').textContent = data.plan.toUpperCase();
   setTotpState(data.totp_enabled);
+
+  _currentEmoticon = data.emoticon || '⚔️';
+  document.getElementById('emoticonPreviewIcon').textContent = _currentEmoticon;
+  document.getElementById('emoticonPreviewName').textContent = data.name;
+  updateEmoticonSelection(_currentEmoticon);
 }
+
+// ── Emoticon picker ───────────────────────────────────────────────────────────
+
+let _activeCategory = 0;
+
+function buildEmoticonPicker() {
+  const tabsEl = document.getElementById('emoticonTabs');
+  const gridEl = document.getElementById('emoticonGrid');
+
+  EMOJI_CATEGORIES.forEach((cat, idx) => {
+    const tab = document.createElement('button');
+    tab.className = `emoticon-tab${idx === 0 ? ' active' : ''}`;
+    tab.textContent = cat.label.split(' ')[0];
+    tab.title = cat.label;
+    tab.addEventListener('click', () => {
+      _activeCategory = idx;
+      tabsEl.querySelectorAll('.emoticon-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+      renderEmoticonGrid(idx);
+    });
+    tabsEl.appendChild(tab);
+  });
+
+  renderEmoticonGrid(0);
+}
+
+function renderEmoticonGrid(catIdx) {
+  const gridEl = document.getElementById('emoticonGrid');
+  gridEl.innerHTML = '';
+  EMOJI_CATEGORIES[catIdx].emojis.forEach((emoji) => {
+    const btn = document.createElement('button');
+    btn.className = `emoticon-btn${emoji === _currentEmoticon ? ' selected' : ''}`;
+    btn.textContent = emoji;
+    btn.title = emoji;
+    btn.addEventListener('click', () => selectEmoticon(emoji));
+    gridEl.appendChild(btn);
+  });
+}
+
+function updateEmoticonSelection(emoticon) {
+  document.querySelectorAll('.emoticon-btn').forEach((btn) => {
+    btn.classList.toggle('selected', btn.textContent === emoticon);
+  });
+}
+
+async function selectEmoticon(emoji) {
+  _currentEmoticon = emoji;
+  document.getElementById('emoticonPreviewIcon').textContent = emoji;
+  updateEmoticonSelection(emoji);
+
+  const statusEl = document.getElementById('emoticonStatus');
+  statusEl.classList.add('hidden');
+  try {
+    await apiFetch('/profile/emoticon', {
+      method: 'PUT',
+      body: JSON.stringify({ emoticon: emoji }),
+    });
+  } catch (ex) {
+    statusEl.textContent = 'Fout bij opslaan: ' + ex.message;
+    statusEl.classList.remove('hidden');
+  }
+}
+
+// ── Settings (merged) ─────────────────────────────────────────────────────────
+
+const SETTINGS_KEY = 'sfSettings';
+
+function loadSettingsIntoForm() {
+  let settings = {};
+  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { /* ignore */ }
+  document.getElementById('settingAnalyticsAuto').checked = settings.analyticsAutoOpen !== false;
+  document.getElementById('settingDefaultMethod').value   = settings.defaultMethod || '';
+}
+
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  let settings = {};
+  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { /* ignore */ }
+  settings.analyticsAutoOpen = document.getElementById('settingAnalyticsAuto').checked;
+  settings.defaultMethod     = document.getElementById('settingDefaultMethod').value;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
+  const statusEl = document.getElementById('settingsSaveStatus');
+  statusEl.classList.remove('hidden');
+  setTimeout(() => statusEl.classList.add('hidden'), 2000);
+});
+
+// ── 2FA ───────────────────────────────────────────────────────────────────────
 
 function setTotpState(enabled) {
   document.getElementById('totpDisabled').classList.toggle('hidden', enabled);
@@ -95,4 +230,8 @@ document.getElementById('totpDisableCode').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('totpDisableConfirmBtn').click();
 });
 
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+buildEmoticonPicker();
+loadSettingsIntoForm();
 loadProfile();

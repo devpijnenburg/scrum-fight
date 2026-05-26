@@ -27,18 +27,8 @@ function initFooterAuth() {
   if (el) el.classList.add('hidden');
 }
 
-// Update navbar for logged-in state — injects the shared <profile-menu> component
-function updateNavbar() {
-  const user = getCurrentUser();
-  const navActions = document.getElementById('navActions');
-  if (!navActions) return;
-
-  if (user) {
-    const outerLang = document.getElementById('navLang');
-    if (outerLang) outerLang.classList.add('hidden');
-    navActions.innerHTML = '<profile-menu></profile-menu>';
-  }
-}
+// Update navbar for logged-in state — no-op, handled by <site-nav> component
+function updateNavbar() {}
 
 document.addEventListener('DOMContentLoaded', initFooterAuth);
 

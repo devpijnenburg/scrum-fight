@@ -2204,20 +2204,19 @@ kbd {
   display: flex;
   align-items: center;
   gap: .6rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: .4rem 1.25rem;
-  font-size: .8rem;
-  color: var(--text-muted);
+  background: rgba(251, 191, 36, .12);
+  border-bottom: 1px solid rgba(251, 191, 36, .25);
+  padding: .55rem 1.25rem;
+  font-size: .83rem;
+  color: #e2b84b;
   line-height: 1.4;
 }
-.plan-limit-icon { flex-shrink: 0; font-size: .85rem; opacity: .7; }
-.plan-limit-text { flex: 1; }
+.plan-limit-icon { flex-shrink: 0; font-size: .9rem; }
+.plan-limit-text { flex: 1; color: #cbd5e1; }
 .plan-limit-link {
-  color: var(--primary);
+  color: #fbbf24;
   text-decoration: none;
   margin-left: .2rem;
-  opacity: .85;
 }
 .plan-limit-link:hover { text-decoration: underline; }
 .plan-limit-close {

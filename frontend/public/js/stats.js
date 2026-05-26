@@ -2,9 +2,11 @@
 
 // ── Chart defaults (dark theme) ───────────────────────────────────────────────
 
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.borderColor = '#334155';
-Chart.defaults.font.family = 'Nunito, sans-serif';
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = '#334155';
+  Chart.defaults.font.family = 'Nunito, sans-serif';
+}
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
@@ -213,6 +215,8 @@ const BADGE_GROUPS = [
     ],
   },
 ];
+
+const BADGES = BADGE_GROUPS.flatMap((g) => g.badges);
 
 // ── SVG shield generator ──────────────────────────────────────────────────────
 
@@ -655,11 +659,13 @@ async function loadStats() {
     renderBadges(data);
     showBadgeToasts(unlockedIds);
 
-    // Charts
-    buildDistChart(data.distribution);
-    buildActivityChart(data.activity);
+    // Charts (guard against CDN failure)
+    if (typeof Chart !== 'undefined') {
+      buildDistChart(data.distribution);
+      buildActivityChart(data.activity);
+      buildHoursChart(data.byHour);
+    }
     buildHeatmap(data.activity);
-    buildHoursChart(data.byHour);
 
   } catch (err) {
     document.getElementById('statsLoading').textContent = t('stats.error');

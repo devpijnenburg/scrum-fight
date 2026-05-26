@@ -64,9 +64,6 @@ class ProfileMenu extends HTMLElement {
           <a href="/profile.html" class="profile-menu-item">
             <span>🪪</span><span>Profiel &amp; Instellingen</span>
           </a>
-          <button class="profile-menu-item _pm-settings" type="button">
-            <span>⚙️</span><span data-i18n="room.settings.toggle_title">Instellingen</span>
-          </button>
           ${user?.is_admin ? `
           <a href="/admin.html" class="profile-menu-item">
             <span>🛡️</span><span>Beheerportaal</span>
@@ -111,11 +108,6 @@ class ProfileMenu extends HTMLElement {
 
     // Prevent outside-click from closing when clicking inside the menu
     menu.addEventListener('click', (e) => e.stopPropagation());
-
-    this.querySelector('._pm-settings')?.addEventListener('click', () => {
-      this.close();
-      if (typeof openSettingsModal === 'function') openSettingsModal();
-    });
 
     this.querySelector('._pm-logout')?.addEventListener('click', () => {
       if (typeof logout === 'function') logout();

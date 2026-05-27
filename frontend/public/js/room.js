@@ -189,6 +189,7 @@ socket.on('cards-revealed', ({ players, stats, roundName }) => {
   document.getElementById('revealBtn').classList.add('hidden');
   document.getElementById('newRoundBtn').classList.remove('hidden');
   document.getElementById('reactionBar').classList.remove('hidden');
+  setReactionBarEmojis(consensusLevel(stats));
   setPickerDisabled(true);
   document.getElementById('roundNameInput').disabled = true;
   document.getElementById('voteStatus').textContent = t('room.revealed');
@@ -533,6 +534,20 @@ function consensusBadgeText(level) {
   return '';
 }
 
+function setReactionBarEmojis(level) {
+  const sets = {
+    full:    ['🎉', '🏆', '🥳', '🙌', '⭐'],
+    close:   ['👏', '💪', '🎯', '😊', '🤝'],
+    spread:  ['🤔', '💬', '🤷', '😅', '🧐'],
+    neutral: ['🔥', '🤯', '😬', '☕', '💭'],
+  };
+  const emojis = sets[level] || sets.neutral;
+  document.querySelectorAll('.reaction-btn').forEach((btn, i) => {
+    btn.dataset.emoji = emojis[i];
+    btn.textContent = emojis[i];
+  });
+}
+
 function consensusBadgeHtml(level) {
   if (level === 'neutral') return '';
   return `<span class="consensus-badge-sm consensus-badge-sm-${level}">${consensusBadgeText(level)}</span>`;
@@ -742,6 +757,7 @@ function renderAll(state) {
 
     if (state.stats) {
       showConsensusInline(state.stats);
+      setReactionBarEmojis(consensusLevel(state.stats));
       updateAnalyticsCurrent(state.stats, state.roundName || '');
       const settings = loadSettings();
       if (settings.analyticsAutoOpen !== false) openAnalyticsPanel();

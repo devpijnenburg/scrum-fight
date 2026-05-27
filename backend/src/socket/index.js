@@ -356,7 +356,11 @@ module.exports = function setupSocket(io) {
       const room = activeRooms.get(roomId);
       if (!room || !room.revealed) return;
 
-      const ALLOWED = ['🔥', '🤯', '😬', '👏', '🎉'];
+      const ALLOWED = [
+        '🔥', '🤯', '😬', '👏', '🎉',
+        '🏆', '🥳', '🙌', '⭐', '💪', '🎯', '😊', '🤝',
+        '🤔', '💬', '🤷', '😅', '🧐', '☕', '💭',
+      ];
       if (!ALLOWED.includes(emoji)) return;
 
       const player = room.players.get(socket.id);

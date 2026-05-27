@@ -858,7 +858,7 @@ profile-menu { display: contents; }
 /* Revealed without a vote */
 .card-no-vote {
   background: var(--surface-2) !important;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
 }
 
 .card-back-face {

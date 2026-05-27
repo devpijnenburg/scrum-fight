@@ -132,10 +132,10 @@ socket.on('room-state', (state) => {
   renderAll(state);
 });
 
-socket.on('player-joined', ({ socketId, name }) => {
+socket.on('player-joined', ({ socketId, name, emoticon }) => {
   if (!roomState) return;
   const votingInProgress = !roomState.revealed && roomState.players.some((p) => p.hasVoted);
-  roomState.players.push({ socketId, name, hasVoted: false, vote: null, joinedMidRound: votingInProgress });
+  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, joinedMidRound: votingInProgress });
   renderTable(roomState);
   updatePlayerCount(roomState.players.length);
   updateVoteStatus();
@@ -737,7 +737,15 @@ function renderAll(state) {
     document.getElementById('revealBtn').classList.add('hidden');
     document.getElementById('newRoundBtn').classList.remove('hidden');
     document.getElementById('roundNameInput').disabled = true;
+    document.getElementById('reactionBar').classList.remove('hidden');
     setPickerDisabled(true);
+
+    if (state.stats) {
+      showConsensusInline(state.stats);
+      updateAnalyticsCurrent(state.stats, state.roundName || '');
+      const settings = loadSettings();
+      if (settings.analyticsAutoOpen !== false) openAnalyticsPanel();
+    }
   }
 }
 
@@ -777,7 +785,7 @@ function renderTable(state) {
     const card = createCardEl(player, state.revealed, isMe);
     const nameTag = document.createElement('div');
     nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}`;
-    nameTag.textContent = player.name;
+    nameTag.textContent = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
 
     seat.appendChild(card);
     seat.appendChild(nameTag);
@@ -801,23 +809,28 @@ function createCardEl(player, revealed, isMe) {
   card.className = 'card';
 
   const back = document.createElement('div');
-  back.className = 'card-face card-back-face';
-  back.textContent = player.hasVoted ? '🂠' : '';
+  back.className = `card-face card-back-face${player.hasVoted ? '' : ' card-unvoted'}`;
+  back.textContent = player.hasVoted ? '🂠' : '?';
 
   const front = document.createElement('div');
   front.className = 'card-face card-front-face';
-  front.setAttribute('data-value', player.vote || '');
 
-  const value = player.vote || '';
-  front.innerHTML = `
-    <span class="card-corner card-corner-tl">${value}</span>
-    <span class="card-value">${value}</span>
-    <span class="card-corner card-corner-br">${value}</span>
-  `;
+  if (revealed && !player.hasVoted) {
+    front.classList.add('card-no-vote');
+    front.innerHTML = '<span class="card-value">—</span>';
+  } else {
+    const value = player.vote || '';
+    front.setAttribute('data-value', value);
+    front.innerHTML = `
+      <span class="card-corner card-corner-tl">${value}</span>
+      <span class="card-value">${value}</span>
+      <span class="card-corner card-corner-br">${value}</span>
+    `;
+  }
 
   card.appendChild(back);
   card.appendChild(front);
-  if (revealed && player.hasVoted) card.classList.add('flipped');
+  if (revealed) card.classList.add('flipped');
 
   container.appendChild(card);
   return container;

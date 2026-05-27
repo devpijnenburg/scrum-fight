@@ -1,10 +1,11 @@
-// Web Component — profile dropdown, shared across all pages.
-// Uses light DOM so styles.css applies without extra work.
+// Single navbar file — defines <profile-menu> and <site-nav>.
+// Include this on every page instead of profile-menu.js.
 //
-// On room page: call el.setName(name) to show the button for guests too.
-// On other pages: only renders when getCurrentUser() returns a user.
-//
-// Dispatches 'profile-auth-request' (bubbles) when guest clicks login button.
+// Usage:
+//   <site-nav></site-nav>              — brand + profile if logged in, lang switcher if not
+//   <site-nav show-cta></site-nav>     — same + login/register buttons when not logged in
+
+// ── ProfileMenu ───────────────────────────────────────────────────────────────
 
 class ProfileMenu extends HTMLElement {
   connectedCallback() {
@@ -18,13 +19,11 @@ class ProfileMenu extends HTMLElement {
     document.removeEventListener('click', this._boundOutsideClick);
   }
 
-  // Called by room.js after the player joins (works for guests too)
   setName(name) {
     this._name = name;
     this._render();
   }
 
-  // Re-reads auth state and re-renders (e.g. after in-room login)
   refresh() {
     this._render();
   }
@@ -106,7 +105,6 @@ class ProfileMenu extends HTMLElement {
       btn.setAttribute('aria-expanded', String(!isOpen));
     });
 
-    // Prevent outside-click from closing when clicking inside the menu
     menu.addEventListener('click', (e) => e.stopPropagation());
 
     this.querySelector('._pm-logout')?.addEventListener('click', () => {
@@ -121,3 +119,39 @@ class ProfileMenu extends HTMLElement {
 }
 
 customElements.define('profile-menu', ProfileMenu);
+
+// ── SiteNav ───────────────────────────────────────────────────────────────────
+
+class SiteNav extends HTMLElement {
+  connectedCallback() {
+    this._render();
+  }
+
+  _render() {
+    const user    = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const showCta = this.hasAttribute('show-cta');
+
+    this.innerHTML = `
+      <nav class="navbar">
+        <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+        <div class="navbar-actions">
+          ${user
+            ? '<profile-menu></profile-menu>'
+            : `<div class="lang-switcher _nav-lang"></div>
+               ${showCta
+                 ? `<a href="/login.html" class="btn btn-ghost" data-i18n="nav.login">Inloggen</a>
+                    <a href="/login.html#register" class="btn btn-primary btn-sm" data-i18n="nav.register">Registreren</a>`
+                 : ''}`
+          }
+        </div>
+      </nav>
+    `;
+
+    if (typeof buildLangDropdown === 'function') {
+      this.querySelectorAll('._nav-lang').forEach(buildLangDropdown);
+    }
+    if (typeof applyTranslations === 'function') applyTranslations();
+  }
+}
+
+customElements.define('site-nav', SiteNav);

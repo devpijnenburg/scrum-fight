@@ -840,6 +840,27 @@ profile-menu { display: contents; }
 }
 
 /* Card back (face down) */
+/* Not voted yet — pulsing placeholder */
+.card-unvoted {
+  background: var(--surface) !important;
+  border: 2px dashed var(--border) !important;
+  color: var(--text-muted) !important;
+  font-size: 1.2rem;
+  font-weight: 700;
+  animation: cardWaiting 2s ease-in-out infinite;
+}
+
+@keyframes cardWaiting {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* Revealed without a vote */
+.card-no-vote {
+  background: var(--surface-2) !important;
+  color: var(--text-muted);
+}
+
 .card-back-face {
   background: linear-gradient(135deg, var(--card-back-a), var(--card-back-b));
   border: 1px solid rgba(255,255,255,.15);

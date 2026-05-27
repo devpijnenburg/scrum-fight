@@ -801,23 +801,28 @@ function createCardEl(player, revealed, isMe) {
   card.className = 'card';
 
   const back = document.createElement('div');
-  back.className = 'card-face card-back-face';
-  back.textContent = player.hasVoted ? '🂠' : '';
+  back.className = `card-face card-back-face${player.hasVoted ? '' : ' card-unvoted'}`;
+  back.textContent = player.hasVoted ? '🂠' : '?';
 
   const front = document.createElement('div');
   front.className = 'card-face card-front-face';
-  front.setAttribute('data-value', player.vote || '');
 
-  const value = player.vote || '';
-  front.innerHTML = `
-    <span class="card-corner card-corner-tl">${value}</span>
-    <span class="card-value">${value}</span>
-    <span class="card-corner card-corner-br">${value}</span>
-  `;
+  if (revealed && !player.hasVoted) {
+    front.classList.add('card-no-vote');
+    front.innerHTML = '<span class="card-value">—</span>';
+  } else {
+    const value = player.vote || '';
+    front.setAttribute('data-value', value);
+    front.innerHTML = `
+      <span class="card-corner card-corner-tl">${value}</span>
+      <span class="card-value">${value}</span>
+      <span class="card-corner card-corner-br">${value}</span>
+    `;
+  }
 
   card.appendChild(back);
   card.appendChild(front);
-  if (revealed && player.hasVoted) card.classList.add('flipped');
+  if (revealed) card.classList.add('flipped');
 
   container.appendChild(card);
   return container;

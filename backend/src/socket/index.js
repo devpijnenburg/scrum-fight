@@ -36,6 +36,7 @@ function serializeRoom(room, mySocketId) {
     revealed: room.revealed,
     roundName: room.roundName || '',
     players,
+    stats: room.revealed ? calculateStats(room.players) : null,
   };
 }
 

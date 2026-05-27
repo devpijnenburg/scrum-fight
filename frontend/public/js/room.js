@@ -737,7 +737,15 @@ function renderAll(state) {
     document.getElementById('revealBtn').classList.add('hidden');
     document.getElementById('newRoundBtn').classList.remove('hidden');
     document.getElementById('roundNameInput').disabled = true;
+    document.getElementById('reactionBar').classList.remove('hidden');
     setPickerDisabled(true);
+
+    if (state.stats) {
+      showConsensusInline(state.stats);
+      updateAnalyticsCurrent(state.stats, state.roundName || '');
+      const settings = loadSettings();
+      if (settings.analyticsAutoOpen !== false) openAnalyticsPanel();
+    }
   }
 }
 

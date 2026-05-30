@@ -122,7 +122,12 @@ jobs:
             -p scrum-fight-test \
             -f ~/scrum-fight/docker-compose.test.yml \
             --env-file ~/scrum-fight/.env.test \
-            up -d --remove-orphans
+            down --remove-orphans
+          IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
+            -p scrum-fight-test \
+            -f ~/scrum-fight/docker-compose.test.yml \
+            --env-file ~/scrum-fight/.env.test \
+            up -d
           docker image prune -f
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
             -p scrum-fight-test \
@@ -172,7 +177,11 @@ jobs:
           docker compose \
             -f ~/scrum-fight/docker-compose.prod.yml \
             --env-file ~/scrum-fight/.env \
-            up -d --remove-orphans
+            down --remove-orphans
+          docker compose \
+            -f ~/scrum-fight/docker-compose.prod.yml \
+            --env-file ~/scrum-fight/.env \
+            up -d
           docker image prune -f
           docker compose \
             -f ~/scrum-fight/docker-compose.prod.yml \

@@ -83,6 +83,11 @@ router.post('/', optionalAuth, async (req, res) => {
 // ── List authenticated user's rooms ──────────────────────────────────────────
 
 router.get('/', authMiddleware, async (req, res) => {
+  // Query plan from DB — JWT may be stale after admin changes plan
+  const { rows: userRows } = await db.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
+  const plan = userRows[0]?.plan ?? 'free';
+  const maxRooms = PLAN_LIMITS[plan]?.maxRooms ?? 3;
+
   const { rows } = await db.query(
     `SELECT id, name, method, last_active, created_at
      FROM rooms
@@ -90,7 +95,13 @@ router.get('/', authMiddleware, async (req, res) => {
      ORDER BY last_active DESC`,
     [req.user.id]
   );
-  res.json(rows);
+
+  const rooms = rows.map((r, i) => ({
+    ...r,
+    over_limit: maxRooms !== Infinity && i >= maxRooms,
+  }));
+
+  res.json({ rooms, maxRooms: maxRooms === Infinity ? null : maxRooms });
 });
 
 // ── Get single room ───────────────────────────────────────────────────────────

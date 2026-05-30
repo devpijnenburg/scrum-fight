@@ -460,9 +460,37 @@ select.input { cursor: pointer; }
   transition: border-color .15s;
 }
 .room-item:hover { border-color: var(--primary); }
-.room-item-name { font-weight: 800; font-size: 1rem; }
+.room-item-name { font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .room-item-meta { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .room-item-actions { display: flex; gap: .5rem; margin-top: .4rem; }
+
+.room-item-over-limit {
+  opacity: 0.55;
+  border-color: var(--border);
+  filter: grayscale(0.4);
+}
+.room-item-over-limit:hover { border-color: var(--border); }
+
+.room-over-limit-badge {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.plan-limit-notice {
+  background: color-mix(in srgb, var(--warning, #f59e0b) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--warning, #f59e0b) 40%, transparent);
+  color: var(--text);
+  border-radius: .6rem;
+  padding: .75rem 1rem;
+  font-size: .9rem;
+  margin-bottom: 1rem;
+}
 
 /* ── Plan cards ─────────────────────────────────────────────────────────────── */
 .plan-cards {

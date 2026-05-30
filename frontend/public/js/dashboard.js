@@ -51,17 +51,32 @@ document.getElementById('modalRandomBtn').addEventListener('click', () => {
 
 // ── Load rooms ────────────────────────────────────────────────────────────────
 
+let _overLimitCount = 0;
+
 async function loadRooms() {
   const list = document.getElementById('roomList');
+  const notice = document.getElementById('planLimitNotice');
   try {
-    const rooms = await apiFetch('/rooms');
+    const { rooms, maxRooms } = await apiFetch('/rooms');
+    _overLimitCount = rooms.filter((r) => r.over_limit).length;
+
+    if (_overLimitCount > 0 && maxRooms !== null) {
+      notice.innerHTML = `⚠️ Je hebt ${rooms.length} kamer${rooms.length !== 1 ? 's' : ''}, maar je huidige abonnement staat er maximaal ${maxRooms} toe. Verwijder ${_overLimitCount} kamer${_overLimitCount !== 1 ? 's' : ''} om weer nieuwe kamers op te slaan.`;
+      notice.classList.remove('hidden');
+    } else {
+      notice.classList.add('hidden');
+    }
+
     if (!rooms.length) {
       list.innerHTML = `<p class="room-list-empty">${t('dashboard.rooms.empty')}</p>`;
       return;
     }
     list.innerHTML = rooms.map((r) => `
-      <div class="room-item fade-in" data-id="${r.id}">
-        <div class="room-item-name">${escapeHtml(r.name)}</div>
+      <div class="room-item fade-in${r.over_limit ? ' room-item-over-limit' : ''}" data-id="${r.id}">
+        <div class="room-item-name">
+          ${escapeHtml(r.name)}
+          ${r.over_limit ? '<span class="room-over-limit-badge">Boven limiet</span>' : ''}
+        </div>
         <div class="room-item-meta">
           <span class="badge">${methodLabel(r.method)}</span>
           <span class="text-muted">${r.id}</span>
@@ -98,6 +113,13 @@ loadRooms();
 
 document.getElementById('newRoomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();
+  const errEl = document.getElementById('modalError');
+  if (_overLimitCount > 0) {
+    errEl.textContent = 'Je hebt meer kamers dan je abonnement toestaat. Verwijder eerst kamers voordat je nieuwe aanmaakt.';
+    errEl.classList.remove('hidden');
+  } else {
+    errEl.classList.add('hidden');
+  }
   document.getElementById('newRoomModal').classList.remove('hidden');
 });
 
@@ -114,6 +136,12 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
   const method = document.getElementById('modalMethod').value;
   const errEl = document.getElementById('modalError');
   errEl.classList.add('hidden');
+
+  if (_overLimitCount > 0) {
+    errEl.textContent = 'Je hebt meer kamers dan je abonnement toestaat. Verwijder eerst kamers voordat je nieuwe aanmaakt.';
+    errEl.classList.remove('hidden');
+    return;
+  }
 
   if (!name) {
     errEl.textContent = t('dashboard.modal.error');

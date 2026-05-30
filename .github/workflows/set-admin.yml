@@ -27,14 +27,18 @@ jobs:
 
       - name: Set admin via psql
         run: |
+          IS_TEST="${{ inputs.environment == 'test' }}"
           ENV_FILE=".env${{ inputs.environment == 'test' && '.test' || '' }}"
-          DB_CONTAINER="scrum-fight${{ inputs.environment == 'test' && '-test' || '' }}-db"
+          COMPOSE_FILE="docker-compose${{ inputs.environment == 'test' && '.test' || '.prod' }}.yml"
+          PROJECT="scrum-fight${{ inputs.environment == 'test' && '-test' || '' }}"
+          DB_NAME="${{ inputs.environment == 'test' && 'scrumfight_test' || '' }}"
 
           ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << EOF
           source ~/scrum-fight/${ENV_FILE}
-          DB_NAME=${{ inputs.environment == 'test' && 'scrumfight_test' || '\$POSTGRES_DB' }}
-          RESULT=\$(docker exec ${DB_CONTAINER} psql -U \$POSTGRES_USER -d \$DB_NAME -t -c \
+          RESOLVED_DB="${DB_NAME:-\$POSTGRES_DB}"
+          RESULT=\$(docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -t -c \
             "UPDATE users SET is_admin = true WHERE email = '${{ inputs.email }}' RETURNING email, is_admin;")
           echo "Resultaat: \$RESULT"
           if [ -z "\$(echo \$RESULT | tr -d '[:space:]')" ]; then

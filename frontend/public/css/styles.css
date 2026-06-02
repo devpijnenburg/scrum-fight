@@ -883,10 +883,12 @@ profile-menu { display: contents; }
   50%       { opacity: 0.45; }
 }
 
-/* Revealed without a vote */
+/* Revealed without a vote — ghost outline, no solid fill */
 .card-no-vote {
-  background: var(--surface-2) !important;
-  color: var(--text-muted) !important;
+  background: rgba(100, 116, 139, 0.1) !important;
+  border: 2px dashed rgba(148, 163, 184, 0.4) !important;
+  box-shadow: none !important;
+  color: rgba(148, 163, 184, 0.45) !important;
 }
 
 .card-back-face {

@@ -506,9 +506,23 @@ function updateAnalyticsCurrent(stats, roundName) {
 
 // ── Consensus helpers ─────────────────────────────────────────────────────────
 
+function _consensusSpecialLevel(dist, totalVoters) {
+  if (totalVoters < 1) return null;
+  const modeCount = Math.max(...Object.values(dist));
+  if (modeCount / totalVoters >= 0.8) return 'near';
+  const threshold = Math.max(2, Math.round(totalVoters * 0.35));
+  if ((dist['☕'] || 0) >= threshold) return 'coffee';
+  if ((dist['?']  || 0) >= threshold) return 'question';
+  return null;
+}
+
 function consensusLevel(stats) {
   if (!stats) return 'neutral';
   if (stats.allSame) return 'full';
+  const dist = stats.distribution || {};
+  const totalVoters = Object.values(dist).reduce((a, b) => a + b, 0);
+  const special = _consensusSpecialLevel(dist, totalVoters);
+  if (special) return special;
   if (stats.max !== undefined && stats.min !== undefined && stats.max - stats.min <= 2) return 'close';
   if (stats.max !== undefined) return 'spread';
   return 'neutral';
@@ -518,6 +532,10 @@ function consensusLevelFromVotes(votes) {
   const vals = Object.values(votes || {}).filter(Boolean);
   if (!vals.length) return 'neutral';
   if (new Set(vals).size === 1) return 'full';
+  const dist = {};
+  vals.forEach((v) => { dist[v] = (dist[v] || 0) + 1; });
+  const special = _consensusSpecialLevel(dist, vals.length);
+  if (special) return special;
   const nums = vals
     .filter((v) => !['?', '☕', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].includes(v))
     .map((v) => (v === '½' ? 0.5 : parseFloat(v)))
@@ -527,18 +545,24 @@ function consensusLevelFromVotes(votes) {
 }
 
 function consensusBadgeText(level) {
-  if (level === 'full')   return t('room.analytics.consensus_full');
-  if (level === 'close')  return t('room.analytics.consensus_close');
-  if (level === 'spread') return t('room.analytics.consensus_spread');
+  if (level === 'full')     return t('room.analytics.consensus_full');
+  if (level === 'near')     return t('room.analytics.consensus_near');
+  if (level === 'coffee')   return t('room.analytics.consensus_coffee');
+  if (level === 'question') return t('room.analytics.consensus_question');
+  if (level === 'close')    return t('room.analytics.consensus_close');
+  if (level === 'spread')   return t('room.analytics.consensus_spread');
   return '';
 }
 
 function setReactionBarEmojis(level) {
   const sets = {
-    full:    ['🎉', '🏆', '🥳', '🙌', '⭐'],
-    close:   ['👏', '💪', '🎯', '😊', '🤝'],
-    spread:  ['🤔', '💬', '🤷', '😅', '🧐'],
-    neutral: ['🔥', '🤯', '😬', '☕', '💭'],
+    full:     ['🚀', '🎉', '🏆', '🥳', '🙌'],
+    near:     ['⭐', '🎯', '👏', '💪', '🤝'],
+    coffee:   ['☕', '😴', '💤', '😪', '🛋️'],
+    question: ['🤯', '🤔', '🧐', '💭', '❓'],
+    close:    ['👍', '😊', '🎲', '💡', '👀'],
+    spread:   ['🤷', '😅', '💬', '⚠️', '🌊'],
+    neutral:  ['🔥', '😬', '☕', '💭', '🎲'],
   };
   const emojis = sets[level] || sets.neutral;
   document.querySelectorAll('.reaction-btn').forEach((btn, i) => {

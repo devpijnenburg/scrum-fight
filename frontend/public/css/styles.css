@@ -1243,9 +1243,12 @@ profile-menu { display: contents; }
   font-weight: 700;
   white-space: nowrap;
 }
-.consensus-badge-full  { background: rgba(34,197,94,.18);  border: 1px solid var(--success); color: var(--success); }
-.consensus-badge-close { background: rgba(245,158,11,.18); border: 1px solid var(--warning); color: var(--warning); }
-.consensus-badge-spread{ background: rgba(239,68,68,.18);  border: 1px solid var(--error);   color: var(--error); }
+.consensus-badge-full     { background: rgba(34,197,94,.18);   border: 1px solid var(--success); color: var(--success); }
+.consensus-badge-near     { background: rgba(20,184,166,.18);  border: 1px solid #14b8a6;        color: #14b8a6; }
+.consensus-badge-coffee   { background: rgba(180,83,9,.18);    border: 1px solid #b45309;        color: #b45309; }
+.consensus-badge-question { background: rgba(124,58,237,.18);  border: 1px solid #7c3aed;        color: #7c3aed; }
+.consensus-badge-close    { background: rgba(245,158,11,.18);  border: 1px solid var(--warning); color: var(--warning); }
+.consensus-badge-spread   { background: rgba(239,68,68,.18);   border: 1px solid var(--error);   color: var(--error); }
 
 /* ── Analytics tab trigger ───────────────────────────────────────────────────── */
 .analytics-tab {
@@ -1483,9 +1486,12 @@ profile-menu { display: contents; }
   padding: .1rem .5rem;
   border-radius: 99px;
 }
-.consensus-badge-sm-full   { background: rgba(34,197,94,.18);  color: var(--success); }
-.consensus-badge-sm-close  { background: rgba(245,158,11,.18); color: var(--warning); }
-.consensus-badge-sm-spread { background: rgba(239,68,68,.18);  color: var(--error); }
+.consensus-badge-sm-full     { background: rgba(34,197,94,.18);  color: var(--success); }
+.consensus-badge-sm-near     { background: rgba(20,184,166,.18); color: #14b8a6; }
+.consensus-badge-sm-coffee   { background: rgba(180,83,9,.18);   color: #b45309; }
+.consensus-badge-sm-question { background: rgba(124,58,237,.18); color: #7c3aed; }
+.consensus-badge-sm-close    { background: rgba(245,158,11,.18); color: var(--warning); }
+.consensus-badge-sm-spread   { background: rgba(239,68,68,.18);  color: var(--error); }
 
 .history-round-votes {
   display: flex;

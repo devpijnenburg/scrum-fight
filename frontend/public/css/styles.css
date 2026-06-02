@@ -1176,6 +1176,10 @@ profile-menu { display: contents; }
   padding: .9rem 1.5rem;
   margin-top: auto;
 }
+.site-footer .lang-menu {
+  top: auto;
+  bottom: calc(100% + .4rem);
+}
 .footer-inner {
   max-width: 900px;
   margin: 0 auto;

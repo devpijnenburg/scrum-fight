@@ -134,8 +134,7 @@ socket.on('room-state', (state) => {
 
 socket.on('player-joined', ({ socketId, name, emoticon }) => {
   if (!roomState) return;
-  const votingInProgress = !roomState.revealed && roomState.players.some((p) => p.hasVoted);
-  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, joinedMidRound: votingInProgress });
+  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, joinedMidRound: roomState.revealed });
   renderTable(roomState);
   updatePlayerCount(roomState.players.length);
   updateVoteStatus();

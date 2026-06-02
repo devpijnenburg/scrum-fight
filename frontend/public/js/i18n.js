@@ -131,7 +131,7 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacybeleid',
     'footer.terms': 'Algemene voorwaarden',
-    'footer.copy': '© 2025 Scrum Fight',
+    'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Inloggen',
     'footer.register': 'Registreren',
 
@@ -387,7 +387,7 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms & Conditions',
-    'footer.copy': '© 2025 Scrum Fight',
+    'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Log in',
     'footer.register': 'Sign up',
 

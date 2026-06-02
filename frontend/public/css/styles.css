@@ -856,7 +856,7 @@ profile-menu { display: contents; }
 
 .card.flipped { transform: rotateY(180deg); }
 
-.card-mid-round .card { opacity: .35; }
+.card-mid-round .card:not(.flipped) { opacity: .35; }
 
 .card-face {
   position: absolute;

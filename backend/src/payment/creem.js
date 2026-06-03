@@ -4,17 +4,17 @@ const db = require('../config/database');
 
 const PERSONAL_PLANS = ['pro', 'premium'];
 
-function polarPost(path, body) {
+function creemPost(path, body) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const req = https.request(
       {
-        hostname: 'api.polar.sh',
+        hostname: 'api.creem.io',
         path: `/v1${path}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.POLAR_ACCESS_TOKEN}`,
+          'x-api-key': process.env.CREEM_API_KEY,
           'Content-Length': Buffer.byteLength(data),
         },
       },
@@ -25,12 +25,12 @@ function polarPost(path, body) {
           try {
             const parsed = JSON.parse(buf);
             if (res.statusCode >= 400) {
-              reject(new Error(`Polar API fout (${res.statusCode}): ${JSON.stringify(parsed)}`));
+              reject(new Error(`Creem API fout (${res.statusCode}): ${JSON.stringify(parsed)}`));
             } else {
               resolve(parsed);
             }
           } catch {
-            reject(new Error(`Ongeldige Polar API respons: ${buf}`));
+            reject(new Error(`Ongeldige Creem API respons: ${buf}`));
           }
         });
       }
@@ -41,34 +41,34 @@ function polarPost(path, body) {
   });
 }
 
-class PolarPaymentAdapter extends PaymentAdapter {
+class CreemPaymentAdapter extends PaymentAdapter {
   _productIdForPlan(plan) {
     const map = {
-      pro: process.env.POLAR_PRO_PRODUCT_ID,
-      premium: process.env.POLAR_PREMIUM_PRODUCT_ID,
+      pro: process.env.CREEM_PRO_PRODUCT_ID,
+      premium: process.env.CREEM_PREMIUM_PRODUCT_ID,
     };
     return map[plan] || null;
   }
 
   planForProductId(productId) {
-    if (productId === process.env.POLAR_PRO_PRODUCT_ID) return 'pro';
-    if (productId === process.env.POLAR_PREMIUM_PRODUCT_ID) return 'premium';
+    if (productId === process.env.CREEM_PRO_PRODUCT_ID) return 'pro';
+    if (productId === process.env.CREEM_PREMIUM_PRODUCT_ID) return 'premium';
     return null;
   }
 
   async createCheckout(userId, plan, baseUrl) {
     const productId = this._productIdForPlan(plan);
-    if (!productId) throw new Error(`Geen Polar-product geconfigureerd voor plan: ${plan}`);
+    if (!productId) throw new Error(`Geen Creem-product geconfigureerd voor plan: ${plan}`);
 
-    const result = await polarPost('/checkouts/custom/', {
+    const result = await creemPost('/checkouts', {
       product_id: productId,
       success_url: `${baseUrl}/dashboard.html?payment=success`,
+      reference_id: userId,
       metadata: { userId, plan },
-      customer_external_id: userId,
     });
 
-    if (!result.url) throw new Error('Polar gaf geen checkout-URL terug');
-    return result.url;
+    if (!result.checkout_url) throw new Error('Creem gaf geen checkout-URL terug');
+    return result.checkout_url;
   }
 
   async upgradePlan(userId, plan) {
@@ -86,22 +86,22 @@ class PolarPaymentAdapter extends PaymentAdapter {
     return rows[0]?.plan ?? 'free';
   }
 
-  async saveSubscription(userId, polarSubscriptionId, polarCustomerId, plan) {
+  async saveSubscription(userId, creemSubscriptionId, creemCustomerId, plan) {
     await db.query(
-      `INSERT INTO polar_subscriptions (user_id, polar_subscription_id, polar_customer_id, plan, status)
+      `INSERT INTO creem_subscriptions (user_id, creem_subscription_id, creem_customer_id, plan, status)
        VALUES ($1, $2, $3, $4, 'active')
-       ON CONFLICT (polar_subscription_id) DO UPDATE
+       ON CONFLICT (creem_subscription_id) DO UPDATE
          SET status = 'active', updated_at = NOW()`,
-      [userId, polarSubscriptionId, polarCustomerId, plan]
+      [userId, creemSubscriptionId, creemCustomerId, plan]
     );
   }
 
-  async revokeSubscription(polarSubscriptionId) {
+  async revokeSubscription(creemSubscriptionId) {
     const { rows } = await db.query(
-      `UPDATE polar_subscriptions SET status = 'revoked', updated_at = NOW()
-       WHERE polar_subscription_id = $1
+      `UPDATE creem_subscriptions SET status = 'revoked', updated_at = NOW()
+       WHERE creem_subscription_id = $1
        RETURNING user_id`,
-      [polarSubscriptionId]
+      [creemSubscriptionId]
     );
     if (rows.length) {
       await this.upgradePlan(rows[0].user_id, 'free');
@@ -109,4 +109,4 @@ class PolarPaymentAdapter extends PaymentAdapter {
   }
 }
 
-module.exports = new PolarPaymentAdapter();
+module.exports = new CreemPaymentAdapter();

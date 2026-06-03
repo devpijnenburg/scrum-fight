@@ -50,7 +50,7 @@ const MIGRATIONS = [
   '003_round_name.sql',
   '004_admin_organizations.sql',
   '005_emoticon.sql',
-  '006_polar_subscriptions.sql',
+  '006_creem_subscriptions.sql',
 ];
 
 async function runMigrations() {

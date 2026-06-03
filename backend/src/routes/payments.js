@@ -2,18 +2,15 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const { authMiddleware } = require('../auth/middleware');
-const polarAdapter = require('../payment/polar');
+const creemAdapter = require('../payment/creem');
 
-function isPolarConfigured() {
-  return !!(
-    process.env.POLAR_ACCESS_TOKEN &&
-    process.env.POLAR_WEBHOOK_SECRET
-  );
+function isCreemConfigured() {
+  return !!(process.env.CREEM_API_KEY && process.env.CREEM_WEBHOOK_SECRET);
 }
 
 // POST /api/payments/checkout
 router.post('/checkout', authMiddleware, async (req, res) => {
-  if (!isPolarConfigured()) {
+  if (!isCreemConfigured()) {
     return res.status(503).json({ error: 'Betalingen zijn momenteel niet geconfigureerd' });
   }
 
@@ -25,7 +22,7 @@ router.post('/checkout', authMiddleware, async (req, res) => {
   const baseUrl = (process.env.BASE_URL || 'http://localhost').replace(/\/$/, '');
 
   try {
-    const url = await polarAdapter.createCheckout(req.user.id, plan, baseUrl);
+    const url = await creemAdapter.createCheckout(req.user.id, plan, baseUrl);
     res.json({ url });
   } catch (err) {
     console.error('[payments] Checkout error:', err.message);
@@ -34,39 +31,25 @@ router.post('/checkout', authMiddleware, async (req, res) => {
 });
 
 // POST /api/payments/webhook
-// express.raw() is applied in server.js before this route so req.rawBody is available
+// req.rawBody is set by the express.json() verify callback in server.js
 router.post('/webhook', async (req, res) => {
-  const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
+  const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return res.status(503).json({ error: 'Webhook niet geconfigureerd' });
   }
 
-  const msgId = req.headers['webhook-id'];
-  const msgTimestamp = req.headers['webhook-timestamp'];
-  const msgSignature = req.headers['webhook-signature'];
-
-  if (!msgId || !msgTimestamp || !msgSignature) {
-    return res.status(400).json({ error: 'Ontbrekende webhook headers' });
-  }
-
-  // Reject replays older than 5 minutes
-  const ageMs = Math.abs(Date.now() - parseInt(msgTimestamp, 10) * 1000);
-  if (ageMs > 5 * 60 * 1000) {
-    return res.status(400).json({ error: 'Webhook tijdstempel verlopen' });
+  const signature = req.headers['creem-signature'];
+  if (!signature) {
+    return res.status(400).json({ error: 'Ontbrekende creem-signature header' });
   }
 
   const rawBody = req.rawBody || '';
-  const signedContent = `${msgId}.${msgTimestamp}.${rawBody}`;
-
-  // Secret is base64-encoded after optional 'whsec_' prefix
-  const secretBytes = Buffer.from(webhookSecret.replace(/^whsec_/, ''), 'base64');
   const computedSig = crypto
-    .createHmac('sha256', secretBytes)
-    .update(signedContent)
-    .digest('base64');
+    .createHmac('sha256', webhookSecret)
+    .update(rawBody)
+    .digest('hex');
 
-  const receivedSigs = msgSignature.split(' ').map((s) => s.replace(/^v1,/, ''));
-  if (!receivedSigs.some((sig) => sig === computedSig)) {
+  if (computedSig !== signature) {
     return res.status(403).json({ error: 'Ongeldige webhook handtekening' });
   }
 
@@ -87,49 +70,51 @@ router.post('/webhook', async (req, res) => {
 });
 
 async function handleEvent(event) {
-  const { type, data } = event;
+  // Creem sends eventType or webhookEventType
+  const type = event.eventType ?? event.webhookEventType ?? event.event_type;
+  const data = event.object ?? event.data ?? event;
+
+  // Resolve user ID from referenceId, or from metadata
+  const userId = data.referenceId ?? data.reference_id ?? data.metadata?.userId;
+  // Product ID for plan mapping
+  const productId = data.product?.id ?? data.productId;
+  // Resolve plan: prefer product→plan mapping, fall back to metadata
+  const plan =
+    (productId && creemAdapter.planForProductId(productId)) ??
+    data.metadata?.plan;
 
   switch (type) {
-    case 'order.created': {
-      // One-time purchase
-      const userId = data.metadata?.userId ?? data.customer?.externalId;
-      const plan =
-        polarAdapter.planForProductId(data.productId) ??
-        data.metadata?.plan;
-
+    case 'checkout.completed': {
       if (userId && plan) {
-        await polarAdapter.upgradePlan(userId, plan);
-        console.log(`[payments] Plan geactiveerd via order: user=${userId} plan=${plan}`);
+        await creemAdapter.upgradePlan(userId, plan);
+        console.log(`[payments] Plan geactiveerd via checkout: user=${userId} plan=${plan}`);
       }
       break;
     }
 
     case 'subscription.active': {
-      // Subscription activated or renewed
-      const userId = data.metadata?.userId ?? data.customer?.externalId;
-      const plan =
-        polarAdapter.planForProductId(data.productId) ??
-        data.metadata?.plan;
-
       if (userId && plan) {
-        await polarAdapter.upgradePlan(userId, plan);
-        await polarAdapter.saveSubscription(userId, data.id, data.customerId, plan);
+        const subId = data.id;
+        const customerId = data.customer?.id;
+        await creemAdapter.upgradePlan(userId, plan);
+        if (subId) await creemAdapter.saveSubscription(userId, subId, customerId, plan);
         console.log(`[payments] Abonnement geactiveerd: user=${userId} plan=${plan}`);
       }
       break;
     }
 
-    case 'subscription.revoked': {
-      // Subscription expired or cancelled — downgrade to free
-      if (data.id) {
-        await polarAdapter.revokeSubscription(data.id);
-        console.log(`[payments] Abonnement ingetrokken: id=${data.id}`);
+    case 'subscription.canceled':
+    case 'subscription.expired': {
+      const subId = data.id;
+      if (subId) {
+        await creemAdapter.revokeSubscription(subId);
+        console.log(`[payments] Abonnement beëindigd: id=${subId}`);
       }
       break;
     }
 
     default:
-      // Other events (subscription.canceled, etc.) require no action
+      // subscription.paid, subscription.trialing, etc. require no plan changes
       break;
   }
 }

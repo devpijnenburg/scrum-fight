@@ -107,12 +107,12 @@ jobs:
           sed -i '/^CREEM_\|^BASE_URL=/d' ~/scrum-fight/.env.test
           printf '%s\n' \
             'BASE_URL=${{ secrets.TEST_BASE_URL }}' \
-            'CREEM_API_KEY=${{ secrets.CREEM_TEST_API_KEY }}' \
+            'CREEM_API_KEY=${{ secrets.CREEM_API_KEY }}' \
             'CREEM_WEBHOOK_SECRET=${{ secrets.CREEM_TEST_WEBHOOK_SECRET }}' \
-            'CREEM_PRO_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_TEST_PRO_MONTHLY_PRODUCT_ID }}' \
-            'CREEM_PRO_YEARLY_PRODUCT_ID=${{ secrets.CREEM_TEST_PRO_YEARLY_PRODUCT_ID }}' \
-            'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_TEST_PREMIUM_MONTHLY_PRODUCT_ID }}' \
-            'CREEM_PREMIUM_YEARLY_PRODUCT_ID=${{ secrets.CREEM_TEST_PREMIUM_YEARLY_PRODUCT_ID }}' \
+            'CREEM_PRO_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_PRO_MONTHLY_PRODUCT_ID }}' \
+            'CREEM_PRO_YEARLY_PRODUCT_ID=${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}' \
+            'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}' \
+            'CREEM_PREMIUM_YEARLY_PRODUCT_ID=${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}' \
             >> ~/scrum-fight/.env.test
           EOF
 

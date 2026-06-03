@@ -30,9 +30,16 @@ function initFooterAuth() {
   if (user) {
     const el = document.getElementById('footerAuth');
     if (el) el.classList.add('hidden');
-    if (subLink) subLink.href = '/dashboard.html#abonnement';
+
+    // Free users: show upgrade options on dashboard
+    // Paid users: show subscription status on profile
+    const subDest = user.plan && user.plan !== 'free'
+      ? '/profile.html#abonnement'
+      : '/dashboard.html#abonnement';
+
+    if (subLink) subLink.href = subDest;
     if (supportLink) {
-      supportLink.href = '/dashboard.html#abonnement';
+      supportLink.href = subDest;
       supportLink.textContent = 'Bekijk abonnementen';
     }
   } else {

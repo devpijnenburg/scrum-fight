@@ -92,10 +92,14 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
 })();
 
-// Only show plan upgrade section for free users
+// Only show plan upgrade section for free users;
+// if a paid user lands on #abonnement, redirect to profile
 if (user.plan !== 'free') {
   const planInfoSection = document.querySelector('.plan-info');
   if (planInfoSection) planInfoSection.classList.add('hidden');
+  if (location.hash === '#abonnement') {
+    window.location.replace('/profile.html#abonnement');
+  }
 }
 
 document.getElementById('modalRoomName').value = generateRoomName();

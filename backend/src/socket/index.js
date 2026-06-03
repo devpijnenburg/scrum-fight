@@ -11,6 +11,21 @@ const guestTimers = new Map();
 // roomId → [timer, timer, timer] — active countdown timers
 const countdownTimers = new Map();
 
+// userId (string) → Set<socketId> — for pushing plan updates to the right browser tab
+const userSockets = new Map();
+
+// Called from the payments webhook handler after a plan upgrade is persisted to DB.
+// Pushes a plan:updated event to all open browser tabs of that user.
+let _io = null;
+function notifyPlanUpdate(userId, plan) {
+  if (!_io) return;
+  const socketIds = userSockets.get(String(userId));
+  if (!socketIds || !socketIds.size) return;
+  for (const sid of socketIds) {
+    _io.to(sid).emit('plan:updated', { plan });
+  }
+}
+
 const GUEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 function serializeRoom(room, mySocketId) {
@@ -151,8 +166,23 @@ async function deleteGuestRoom(io, roomId) {
   }
 }
 
-module.exports = function setupSocket(io) {
+function setupSocket(io) {
+  _io = io;
+
   io.on('connection', (socket) => {
+
+    // ── register-user ─────────────────────────────────────────────────────────
+    // Called by subscription.html after Creem redirect so the server can push
+    // plan:updated the moment the webhook is processed.
+    socket.on('register-user', ({ token }) => {
+      try {
+        const payload = verify(token);
+        const uid = String(payload.id);
+        socket.data.userId = uid;
+        if (!userSockets.has(uid)) userSockets.set(uid, new Set());
+        userSockets.get(uid).add(socket.id);
+      } catch { /* invalid token — ignore */ }
+    });
 
     // ── join-room ─────────────────────────────────────────────────────────────
     socket.on('join-room', async ({ roomId, playerName, token }) => {
@@ -395,6 +425,15 @@ module.exports = function setupSocket(io) {
 
     // ── disconnect ────────────────────────────────────────────────────────────
     socket.on('disconnect', async () => {
+      // Clean up user socket registration
+      if (socket.data.userId) {
+        const sids = userSockets.get(socket.data.userId);
+        if (sids) {
+          sids.delete(socket.id);
+          if (!sids.size) userSockets.delete(socket.data.userId);
+        }
+      }
+
       const roomId = socket.data.roomId;
       if (!roomId) return;
 
@@ -409,4 +448,7 @@ module.exports = function setupSocket(io) {
       // Guest rooms remain available until their inactivity timer expires.
     });
   });
-};
+}
+
+setupSocket.notifyPlanUpdate = notifyPlanUpdate;
+module.exports = setupSocket;

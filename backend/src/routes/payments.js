@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const router = express.Router();
 const { authMiddleware } = require('../auth/middleware');
 const creemAdapter = require('../payment/creem');
+const { notifyPlanUpdate } = require('../socket');
 
 function isCreemConfigured() {
   return !!(process.env.CREEM_API_KEY && process.env.CREEM_WEBHOOK_SECRET);
@@ -91,6 +92,7 @@ async function handleEvent(event) {
     case 'checkout.completed': {
       if (userId && plan) {
         await creemAdapter.upgradePlan(userId, plan);
+        notifyPlanUpdate(userId, plan);
         console.log(`[payments] Plan geactiveerd via checkout: user=${userId} plan=${plan}`);
       }
       break;
@@ -102,6 +104,7 @@ async function handleEvent(event) {
         const customerId = data.customer?.id;
         await creemAdapter.upgradePlan(userId, plan);
         if (subId) await creemAdapter.saveSubscription(userId, subId, customerId, plan);
+        notifyPlanUpdate(userId, plan);
         console.log(`[payments] Abonnement geactiveerd: user=${userId} plan=${plan}`);
       }
       break;

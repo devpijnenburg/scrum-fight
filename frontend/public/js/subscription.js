@@ -65,17 +65,14 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   const timeout  = document.getElementById('payProcTimeout');
 
   function showSuccess() {
-    // Stop spinner, show animated checkmark
     spinner.classList.add('hidden');
     check.classList.remove('hidden');
 
-    // Step 2 → done
     step2.classList.remove('pay-proc-step--active');
     step2.classList.add('pay-proc-step--done');
     dot2.classList.remove('pay-proc-dot--active');
     dot2.classList.add('pay-proc-dot--done');
 
-    // Step 3 → done
     step3.classList.remove('pay-proc-step--pending');
     step3.classList.add('pay-proc-step--done');
     dot3.classList.add('pay-proc-dot--done');
@@ -84,8 +81,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     title.classList.add('pay-proc-title--success');
     subtitle.textContent = 'Welkom als supporter — heel erg bedankt. 🙏';
 
-    // Fade out overlay after a short pause, then reveal updated plan page.
-    // setTimeout matches the CSS fade-out duration — more reliable than animationend
+    // setTimeout matches CSS fade-out duration — more reliable than animationend
     // (animationend bubbles from child elements and could fire too early).
     setTimeout(() => {
       overlay.classList.add('pay-proc--fade-out');
@@ -104,18 +100,49 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     timeout.classList.remove('hidden');
   }
 
+  let done = false;
+
+  function onPlanConfirmed(token) {
+    if (done) return;
+    done = true;
+    clearInterval(interval);
+    socket.disconnect();
+    if (token) localStorage.setItem('token', token);
+    showSuccess();
+  }
+
+  // ── WebSocket — instant notification when webhook is processed ────────────
+  // Falls back to polling below for the race condition where the webhook fires
+  // before this socket has a chance to register.
+  const socket = io({ transports: ['websocket'] });
+  const storedToken = localStorage.getItem('token');
+  if (storedToken) {
+    socket.emit('register-user', { token: storedToken });
+  }
+
+  socket.on('plan:updated', async () => {
+    try {
+      const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
+      onPlanConfirmed(token);
+    } catch {
+      onPlanConfirmed(null);
+    }
+  });
+
+  // ── Polling fallback ──────────────────────────────────────────────────────
+  // Covers the race condition: webhook may arrive and be processed before the
+  // socket above finishes connecting and emitting register-user.
   let attempts = 0;
   const maxAttempts = 15; // 30 seconds
 
   const interval = setInterval(async () => {
+    if (done) return;
     attempts++;
     try {
       const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.plan !== 'free') {
-        clearInterval(interval);
-        localStorage.setItem('token', token);
-        showSuccess();
+        onPlanConfirmed(token);
         return;
       }
       localStorage.setItem('token', token);
@@ -125,6 +152,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
 
     if (attempts >= maxAttempts) {
       clearInterval(interval);
+      socket.disconnect();
       showTimeout();
     }
   }, 2000);

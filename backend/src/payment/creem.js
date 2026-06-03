@@ -71,14 +71,13 @@ class CreemPaymentAdapter extends PaymentAdapter {
     if (!productId) throw new Error(`Geen Creem-product geconfigureerd voor plan: ${plan} (${billing})`);
 
     const result = await creemPost('/checkouts', {
-      product_id: productId,
-      success_url: `${baseUrl}/dashboard.html?payment=success`,
-      reference_id: userId,
+      productId,
+      successUrl: `${baseUrl}/dashboard.html?payment=success`,
       metadata: { userId, plan, billing },
     });
 
-    if (!result.checkout_url) throw new Error('Creem gaf geen checkout-URL terug');
-    return result.checkout_url;
+    if (!result.checkoutUrl) throw new Error('Creem gaf geen checkout-URL terug');
+    return result.checkoutUrl;
   }
 
   async upgradePlan(userId, plan) {

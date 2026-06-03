@@ -77,8 +77,8 @@ async function handleEvent(event) {
   const type = event.eventType ?? event.webhookEventType ?? event.event_type;
   const data = event.object ?? event.data ?? event;
 
-  // Resolve user ID from referenceId, or from metadata
-  const userId = data.referenceId ?? data.reference_id ?? data.metadata?.userId;
+  // Resolve user ID from metadata (set during checkout creation)
+  const userId = data.metadata?.userId ?? data.requestId;
   // Product ID for plan mapping
   const productId = data.product?.id ?? data.productId;
   // Resolve plan: prefer product→plan mapping, fall back to metadata

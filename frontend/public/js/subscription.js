@@ -42,18 +42,68 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   });
 });
 
-// Handle redirect back from Creem after successful payment
+// ── Payment processing overlay ────────────────────────────────────────────────
+
 (function handlePaymentReturn() {
   if (urlParams.get('payment') !== 'success') return;
   history.replaceState({}, '', '/subscription.html');
 
-  const banner = document.getElementById('paymentBanner');
-  banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
-  banner.textContent = '✓ Betaling ontvangen! Je abonnement wordt bijgewerkt — even geduld…';
-  banner.classList.remove('hidden');
+  // Show overlay, hide main page content
+  const overlay = document.getElementById('paymentProcessing');
+  const main    = document.getElementById('subscriptionMain');
+  overlay.classList.remove('hidden');
+  main.classList.add('hidden');
+
+  const title    = document.getElementById('payProcTitle');
+  const subtitle = document.getElementById('payProcSubtitle');
+  const step2    = document.getElementById('payProcStep2');
+  const dot2     = document.getElementById('payProcDot2');
+  const step3    = document.getElementById('payProcStep3');
+  const dot3     = document.getElementById('payProcDot3');
+  const spinner  = document.getElementById('payProcSpinner');
+  const check    = document.getElementById('payProcCheck');
+  const timeout  = document.getElementById('payProcTimeout');
+
+  function showSuccess() {
+    // Stop spinner, show animated checkmark
+    spinner.classList.add('hidden');
+    check.classList.remove('hidden');
+
+    // Step 2 → done
+    step2.classList.remove('pay-proc-step--active');
+    step2.classList.add('pay-proc-step--done');
+    dot2.classList.remove('pay-proc-dot--active');
+    dot2.classList.add('pay-proc-dot--done');
+
+    // Step 3 → done
+    step3.classList.remove('pay-proc-step--pending');
+    step3.classList.add('pay-proc-step--done');
+    dot3.classList.add('pay-proc-dot--done');
+
+    title.textContent = 'Plan bijgewerkt!';
+    title.classList.add('pay-proc-title--success');
+    subtitle.textContent = 'Welkom als supporter — heel erg bedankt. 🙏';
+
+    // Fade out overlay after a short pause, then reveal updated plan page
+    setTimeout(() => {
+      overlay.classList.add('pay-proc--fade-out');
+      overlay.addEventListener('animationend', () => {
+        overlay.classList.add('hidden');
+        main.classList.remove('hidden');
+        initPlanState();
+      }, { once: true });
+    }, 1800);
+  }
+
+  function showTimeout() {
+    spinner.style.opacity = '.3';
+    title.textContent = 'Duurt wat langer…';
+    subtitle.textContent = '';
+    timeout.classList.remove('hidden');
+  }
 
   let attempts = 0;
-  const maxAttempts = 15; // 30 seconds total
+  const maxAttempts = 15; // 30 seconds
 
   const interval = setInterval(async () => {
     attempts++;
@@ -63,9 +113,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
       if (payload.plan !== 'free') {
         clearInterval(interval);
         localStorage.setItem('token', token);
-        banner.textContent =
-          '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏';
-        window.location.reload();
+        showSuccess();
         return;
       }
       localStorage.setItem('token', token);
@@ -75,34 +123,27 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
 
     if (attempts >= maxAttempts) {
       clearInterval(interval);
-      banner.style.cssText = '';
-      banner.className = 'plan-limit-notice';
-      banner.innerHTML =
-        'ℹ️ Je betaling is geregistreerd. Het kan soms even duren voordat je abonnement is bijgewerkt. ' +
-        '<button class="btn btn-primary btn-sm" style="margin-left:.75rem" ' +
-        'onclick="location.reload()">Vernieuwen</button>';
+      showTimeout();
     }
   }, 2000);
 })();
 
-// Mark current plan and highlight pre-selected plan from URL.
-// Also refreshes the JWT when the DB plan differs from the stored token
-// (e.g. after a webhook-based upgrade that happened while the user was away).
+// ── Plan state ────────────────────────────────────────────────────────────────
+
+// Refreshes the JWT when DB plan differs from the stored token, marks the
+// active plan card, and highlights the pre-selected plan from the URL.
 async function initPlanState() {
   try {
     const data = await apiFetch('/auth/me');
     const currentPlan = data.plan;
 
-    // If DB plan differs from the JWT, silently refresh the token so all
-    // other pages (dashboard, navbar) pick up the new plan too.
+    // Silently refresh JWT if it's stale
     const jwtPlan = getCurrentUser()?.plan;
     if (jwtPlan && jwtPlan !== currentPlan) {
       try {
         const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
         localStorage.setItem('token', token);
-      } catch {
-        // non-fatal
-      }
+      } catch { /* non-fatal */ }
     }
 
     // Show supporter note for paid users
@@ -127,14 +168,12 @@ async function initPlanState() {
 
     document.querySelectorAll('.plan-card').forEach((card) => {
       const plan = card.dataset.plan;
-
       if (plan === currentPlan) {
         card.setAttribute('data-active', 'true');
         const btn = card.querySelector('.plan-upgrade-btn');
         if (btn) btn.remove();
         return;
       }
-
       if (PLAN_RANK[plan] <= PLAN_RANK[currentPlan]) {
         const btn = card.querySelector('.plan-upgrade-btn');
         if (btn) btn.remove();
@@ -150,9 +189,11 @@ async function initPlanState() {
         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
-  } catch {
-    // Fail silently — page still usable
-  }
+  } catch { /* Fail silently — page still usable */ }
 }
 
-initPlanState();
+// Only run initPlanState now if we're NOT in payment-return mode
+// (in that case it's called after the overlay fades out)
+if (urlParams.get('payment') !== 'success') {
+  initPlanState();
+}

@@ -10,7 +10,49 @@
 
   <site-nav></site-nav>
 
-  <main class="dashboard-main">
+  <!-- Payment processing overlay — shown after Creem redirect -->
+  <div id="paymentProcessing" class="pay-proc hidden" role="status" aria-live="polite">
+    <div class="pay-proc-inner">
+
+      <!-- Spinner / success graphic -->
+      <div class="pay-proc-graphic">
+        <div class="pay-proc-spinner" id="payProcSpinner">
+          <div class="pay-proc-spinner-icon" id="payProcIcon">💳</div>
+        </div>
+        <svg class="pay-proc-check hidden" id="payProcCheck" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="pay-proc-check-circle" cx="26" cy="26" r="23"/>
+          <path class="pay-proc-check-path" d="M14 27l8 8 16-19"/>
+        </svg>
+      </div>
+
+      <h2 class="pay-proc-title" id="payProcTitle">Betaling wordt verwerkt</h2>
+      <p class="pay-proc-subtitle" id="payProcSubtitle">Even geduld — dit duurt normaal maar een paar seconden</p>
+
+      <!-- Step indicators -->
+      <div class="pay-proc-steps">
+        <div class="pay-proc-step pay-proc-step--done">
+          <div class="pay-proc-dot pay-proc-dot--done"></div>
+          <span>Betaling ontvangen</span>
+        </div>
+        <div class="pay-proc-step pay-proc-step--active" id="payProcStep2">
+          <div class="pay-proc-dot pay-proc-dot--active" id="payProcDot2"></div>
+          <span>Plan wordt bijgewerkt</span>
+        </div>
+        <div class="pay-proc-step pay-proc-step--pending" id="payProcStep3">
+          <div class="pay-proc-dot" id="payProcDot3"></div>
+          <span>Alles klaar!</span>
+        </div>
+      </div>
+
+      <div class="pay-proc-timeout hidden" id="payProcTimeout">
+        <p>Je betaling is geregistreerd. Het plan kan soms iets langer op zich laten wachten.</p>
+        <button class="btn btn-primary" onclick="location.reload()">Vernieuwen</button>
+      </div>
+
+    </div>
+  </div>
+
+  <main class="dashboard-main" id="subscriptionMain">
     <div class="dashboard-header">
       <div>
         <h1>💳 Abonnement kiezen</h1>

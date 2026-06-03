@@ -492,6 +492,192 @@ select.input { cursor: pointer; }
   margin-bottom: 1rem;
 }
 
+/* ── Payment processing overlay ─────────────────────────────────────────────── */
+.pay-proc {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: pay-fade-in .25s ease;
+}
+.pay-proc.pay-proc--fade-out {
+  animation: pay-fade-out .5s ease forwards;
+}
+@keyframes pay-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pay-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.pay-proc-inner {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  animation: pay-slide-up .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pay-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinner */
+.pay-proc-graphic {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 2rem;
+}
+.pay-proc-spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.pay-proc-spinner::before,
+.pay-proc-spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+.pay-proc-spinner::before {
+  inset: 0;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: pay-spin-cw 1.1s linear infinite;
+}
+.pay-proc-spinner::after {
+  inset: 11px;
+  border: 2.5px solid var(--border);
+  border-bottom-color: var(--secondary);
+  animation: pay-spin-ccw 1.7s linear infinite;
+}
+.pay-proc-spinner-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  animation: pay-icon-pulse 2s ease-in-out infinite;
+}
+@keyframes pay-spin-cw  { to { transform: rotate(360deg); } }
+@keyframes pay-spin-ccw { to { transform: rotate(-360deg); } }
+@keyframes pay-icon-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .7; transform: scale(.9); }
+}
+
+/* Checkmark (success state) */
+.pay-proc-check {
+  position: absolute;
+  inset: 0;
+  width: 96px;
+  height: 96px;
+}
+.pay-proc-check-circle {
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 2;
+  stroke-dasharray: 145;
+  stroke-dashoffset: 145;
+  animation: pay-stroke .55s ease forwards;
+}
+.pay-proc-check-path {
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 52;
+  stroke-dashoffset: 52;
+  animation: pay-stroke .4s .5s ease forwards;
+}
+@keyframes pay-stroke { to { stroke-dashoffset: 0; } }
+
+/* Text */
+.pay-proc-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: .4rem;
+}
+.pay-proc-subtitle {
+  color: var(--text-muted);
+  font-size: .9rem;
+  margin-bottom: 1.75rem;
+}
+.pay-proc-title--success { color: var(--success); }
+
+/* Steps */
+.pay-proc-steps {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  text-align: left;
+  margin-bottom: 1.25rem;
+}
+.pay-proc-step {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-size: .9rem;
+  color: var(--text-muted);
+}
+.pay-proc-step--done   { color: var(--success); font-weight: 600; }
+.pay-proc-step--active { color: var(--text);    font-weight: 600; }
+.pay-proc-step--pending { color: var(--text-muted); }
+
+.pay-proc-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+.pay-proc-dot--done {
+  background: var(--success);
+  border-color: var(--success);
+  position: relative;
+}
+.pay-proc-dot--done::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  font-weight: 900;
+  color: #fff;
+}
+.pay-proc-dot--active {
+  border-color: var(--primary);
+  position: relative;
+  animation: pay-dot-pulse 1.2s ease-in-out infinite;
+}
+.pay-proc-dot--active::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+@keyframes pay-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); }
+  50%       { box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 0%, transparent); }
+}
+
+/* Timeout message */
+.pay-proc-timeout {
+  font-size: .875rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.pay-proc-timeout p { margin-bottom: .85rem; }
+
 /* ── Plan cards ─────────────────────────────────────────────────────────────── */
 .plan-cards {
   display: grid;

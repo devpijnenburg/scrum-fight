@@ -531,6 +531,26 @@ select.input { cursor: pointer; }
   text-transform: uppercase;
 }
 
+/* ── Room plan badge ────────────────────────────────────────────────────────── */
+.room-plan-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.room-plan-badge--pro {
+  background: color-mix(in srgb, var(--secondary) 18%, transparent);
+  color: var(--secondary);
+  border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
+}
+.room-plan-badge--premium {
+  background: color-mix(in srgb, var(--table-gold) 15%, transparent);
+  color: var(--table-gold);
+  border: 1px solid color-mix(in srgb, var(--table-gold) 35%, transparent);
+}
+
 /* ── Billing toggle ─────────────────────────────────────────────────────────── */
 .billing-toggle {
   display: inline-flex;

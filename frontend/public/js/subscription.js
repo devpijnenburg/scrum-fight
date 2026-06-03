@@ -84,14 +84,16 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     title.classList.add('pay-proc-title--success');
     subtitle.textContent = 'Welkom als supporter — heel erg bedankt. 🙏';
 
-    // Fade out overlay after a short pause, then reveal updated plan page
+    // Fade out overlay after a short pause, then reveal updated plan page.
+    // setTimeout matches the CSS fade-out duration — more reliable than animationend
+    // (animationend bubbles from child elements and could fire too early).
     setTimeout(() => {
       overlay.classList.add('pay-proc--fade-out');
-      overlay.addEventListener('animationend', () => {
+      setTimeout(() => {
         overlay.classList.add('hidden');
         main.classList.remove('hidden');
         initPlanState();
-      }, { once: true });
+      }, 520);
     }, 1800);
   }
 

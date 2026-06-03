@@ -47,6 +47,7 @@ router.post('/verify', authMiddleware, async (req, res) => {
 
   // Fast path: DB already updated (e.g., webhook did arrive, or previous verify call succeeded)
   const dbPlan = await creemAdapter.getUserPlan(req.user.id);
+  console.log(`[payments] Verify: user=${req.user.id} dbPlan=${dbPlan} checkoutId=${req.body?.checkoutId ?? null}`);
   if (dbPlan !== 'free') {
     const { rows } = await db.query(
       'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
@@ -54,6 +55,7 @@ router.post('/verify', authMiddleware, async (req, res) => {
     );
     const u = rows[0];
     const token = sign({ id: u.id, name: u.name, plan: u.plan, is_admin: u.is_admin });
+    console.log(`[payments] Verify: plan al bijgewerkt → token teruggestuurd plan=${dbPlan}`);
     return res.json({ plan: dbPlan, token });
   }
 

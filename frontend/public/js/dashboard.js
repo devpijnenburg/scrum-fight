@@ -77,7 +77,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   });
 });
 
-// Show payment success banner after redirect back from Polar
+// After redirect back from Creem: refresh token so the new plan is shown immediately
 (function handlePaymentReturn() {
   const params = new URLSearchParams(location.search);
   if (params.get('payment') !== 'success') return;
@@ -88,8 +88,30 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
   banner.textContent =
     '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏 ' +
-    'Je abonnement wordt binnen enkele seconden bijgewerkt.';
+    'Je abonnement wordt bijgewerkt…';
   document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
+
+  // Poll for plan update: webhook may arrive slightly after the redirect
+  let attempts = 0;
+  const maxAttempts = 10;
+  const interval = setInterval(async () => {
+    attempts++;
+    try {
+      const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
+      localStorage.setItem('token', token);
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.plan !== 'free' || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (payload.plan !== 'free') {
+          banner.textContent =
+            '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏';
+          window.location.reload();
+        }
+      }
+    } catch {
+      if (attempts >= maxAttempts) clearInterval(interval);
+    }
+  }, 2000);
 })();
 
 // Only show plan upgrade section for free users;

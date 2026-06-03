@@ -185,4 +185,20 @@ router.get('/github/callback', async (req, res) => {
   }
 });
 
+// POST /api/auth/refresh — issue a fresh token with current plan from DB
+router.post('/refresh', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden' });
+    const u = rows[0];
+    const token = sign({ id: u.id, name: u.name, plan: u.plan, is_admin: u.is_admin });
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ error: 'Kon token niet vernieuwen' });
+  }
+});
+
 module.exports = router;

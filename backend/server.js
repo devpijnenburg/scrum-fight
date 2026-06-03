@@ -12,6 +12,7 @@ const roomRoutes = require('./src/routes/rooms');
 const userRoutes = require('./src/routes/users');
 const adminRoutes = require('./src/routes/admin');
 const profileRoutes = require('./src/routes/profile');
+const paymentsRoutes = require('./src/routes/payments');
 const setupSocket = require('./src/socket');
 require('./src/jobs/cleanup');
 
@@ -23,13 +24,23 @@ const io = new Server(httpServer, {
 });
 
 app.use(cors());
-app.use(express.json());
+// Preserve raw body on webhook requests for HMAC signature verification
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      if (req.path === '/api/payments/webhook') {
+        req.rawBody = buf.toString('utf8');
+      }
+    },
+  })
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/payments', paymentsRoutes);
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
@@ -39,6 +50,7 @@ const MIGRATIONS = [
   '003_round_name.sql',
   '004_admin_organizations.sql',
   '005_emoticon.sql',
+  '006_polar_subscriptions.sql',
 ];
 
 async function runMigrations() {

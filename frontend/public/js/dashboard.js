@@ -44,6 +44,42 @@ document.querySelectorAll('.plan-card').forEach((card) => {
   }
 });
 
+// Wire upgrade buttons to Polar.sh checkout
+document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const plan = btn.dataset.target;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Laden…';
+    try {
+      const { url } = await apiFetch('/payments/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ plan }),
+      });
+      window.location.href = url;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+      alert(err.message || 'Kon de betaalpagina niet openen. Probeer het later opnieuw.');
+    }
+  });
+});
+
+// Show payment success banner after redirect back from Polar
+(function handlePaymentReturn() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('payment') !== 'success') return;
+  history.replaceState({}, '', '/dashboard.html');
+
+  const banner = document.createElement('div');
+  banner.className = 'plan-limit-notice';
+  banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
+  banner.textContent =
+    '✓ Betaling ontvangen! Je abonnement wordt binnen enkele seconden bijgewerkt. ' +
+    'Ververs de pagina als je plan nog niet is aangepast.';
+  document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
+})();
+
 document.getElementById('modalRoomName').value = generateRoomName();
 document.getElementById('modalRandomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();

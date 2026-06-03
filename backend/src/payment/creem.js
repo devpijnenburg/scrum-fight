@@ -42,29 +42,39 @@ function creemPost(path, body) {
 }
 
 class CreemPaymentAdapter extends PaymentAdapter {
-  _productIdForPlan(plan) {
+  _productIdForPlan(plan, billing = 'monthly') {
     const map = {
-      pro: process.env.CREEM_PRO_PRODUCT_ID,
-      premium: process.env.CREEM_PREMIUM_PRODUCT_ID,
+      pro: {
+        monthly: process.env.CREEM_PRO_MONTHLY_PRODUCT_ID,
+        yearly:  process.env.CREEM_PRO_YEARLY_PRODUCT_ID,
+      },
+      premium: {
+        monthly: process.env.CREEM_PREMIUM_MONTHLY_PRODUCT_ID,
+        yearly:  process.env.CREEM_PREMIUM_YEARLY_PRODUCT_ID,
+      },
     };
-    return map[plan] || null;
+    return map[plan]?.[billing] || null;
   }
 
   planForProductId(productId) {
-    if (productId === process.env.CREEM_PRO_PRODUCT_ID) return 'pro';
-    if (productId === process.env.CREEM_PREMIUM_PRODUCT_ID) return 'premium';
-    return null;
+    const ids = {
+      [process.env.CREEM_PRO_MONTHLY_PRODUCT_ID]:      'pro',
+      [process.env.CREEM_PRO_YEARLY_PRODUCT_ID]:       'pro',
+      [process.env.CREEM_PREMIUM_MONTHLY_PRODUCT_ID]:  'premium',
+      [process.env.CREEM_PREMIUM_YEARLY_PRODUCT_ID]:   'premium',
+    };
+    return ids[productId] || null;
   }
 
-  async createCheckout(userId, plan, baseUrl) {
-    const productId = this._productIdForPlan(plan);
-    if (!productId) throw new Error(`Geen Creem-product geconfigureerd voor plan: ${plan}`);
+  async createCheckout(userId, plan, billing = 'monthly', baseUrl) {
+    const productId = this._productIdForPlan(plan, billing);
+    if (!productId) throw new Error(`Geen Creem-product geconfigureerd voor plan: ${plan} (${billing})`);
 
     const result = await creemPost('/checkouts', {
       product_id: productId,
       success_url: `${baseUrl}/dashboard.html?payment=success`,
       reference_id: userId,
-      metadata: { userId, plan },
+      metadata: { userId, plan, billing },
     });
 
     if (!result.checkout_url) throw new Error('Creem gaf geen checkout-URL terug');

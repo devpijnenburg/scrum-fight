@@ -44,7 +44,19 @@ document.querySelectorAll('.plan-card').forEach((card) => {
   }
 });
 
-// Wire upgrade buttons to Polar.sh checkout
+// Billing period toggle (default: yearly)
+let _billing = 'yearly';
+
+document.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    _billing = btn.dataset.billing;
+    document.querySelectorAll('.billing-toggle-btn').forEach((b) =>
+      b.classList.toggle('billing-toggle-btn--active', b.dataset.billing === _billing)
+    );
+  });
+});
+
+// Wire upgrade buttons to Creem checkout
 document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   btn.addEventListener('click', async () => {
     const plan = btn.dataset.target;
@@ -54,7 +66,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     try {
       const { url } = await apiFetch('/payments/checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, billing: _billing }),
       });
       window.location.href = url;
     } catch (err) {

@@ -70,6 +70,8 @@ const PROFILE_PLANS = [
 
 const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
 
+let _profileBilling = 'yearly';
+
 function renderSubscriptionSection(currentPlan, subscriptionDate) {
   // Status line
   const statusEl = document.getElementById('subscriptionStatus');
@@ -82,9 +84,20 @@ function renderSubscriptionSection(currentPlan, subscriptionDate) {
     statusEl.innerHTML = '';
   }
 
-  // Plan cards
+  // Billing toggle (only relevant for upgrade options)
+  const hasUpgradeOptions = PLAN_RANK[currentPlan] < PLAN_RANK['premium'];
   const cardsEl = document.getElementById('subscriptionPlanCards');
-  cardsEl.innerHTML = PROFILE_PLANS.map((plan) => {
+
+  const toggleHtml = hasUpgradeOptions ? `
+    <div class="billing-toggle" id="profileBillingToggle" style="margin-bottom:1rem">
+      <button class="billing-toggle-btn" data-billing="monthly">Maandelijks</button>
+      <button class="billing-toggle-btn billing-toggle-btn--active" data-billing="yearly">
+        Jaarlijks <span class="billing-save-badge">Bespaar ~17%</span>
+      </button>
+    </div>` : '';
+
+  // Plan cards
+  const cardsHtml = PROFILE_PLANS.map((plan) => {
     const isActive = plan.key === currentPlan;
     const canUpgrade = !isActive && PLAN_RANK[plan.key] > PLAN_RANK[currentPlan] && plan.key !== 'free';
     return `
@@ -98,6 +111,18 @@ function renderSubscriptionSection(currentPlan, subscriptionDate) {
       </div>`;
   }).join('');
 
+  cardsEl.innerHTML = toggleHtml + `<div class="plan-cards">${cardsHtml}</div>`;
+
+  // Wire billing toggle
+  cardsEl.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      _profileBilling = btn.dataset.billing;
+      cardsEl.querySelectorAll('.billing-toggle-btn').forEach((b) =>
+        b.classList.toggle('billing-toggle-btn--active', b.dataset.billing === _profileBilling)
+      );
+    });
+  });
+
   // Wire upgrade buttons
   cardsEl.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -108,7 +133,7 @@ function renderSubscriptionSection(currentPlan, subscriptionDate) {
       try {
         const { url } = await apiFetch('/payments/checkout', {
           method: 'POST',
-          body: JSON.stringify({ plan }),
+          body: JSON.stringify({ plan, billing: _profileBilling }),
         });
         window.location.href = url;
       } catch (err) {

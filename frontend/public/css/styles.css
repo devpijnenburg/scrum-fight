@@ -531,6 +531,47 @@ select.input { cursor: pointer; }
   text-transform: uppercase;
 }
 
+/* ── Billing toggle ─────────────────────────────────────────────────────────── */
+.billing-toggle {
+  display: inline-flex;
+  gap: .25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .25rem;
+  margin-bottom: 1.25rem;
+}
+.billing-toggle-btn {
+  background: none;
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .9rem;
+  font-size: .85rem;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.billing-toggle-btn--active {
+  background: var(--primary);
+  color: #fff;
+}
+.billing-save-badge {
+  background: color-mix(in srgb, var(--success) 25%, transparent);
+  color: var(--success);
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .1rem .4rem;
+  border-radius: 999px;
+}
+.billing-toggle-btn--active .billing-save-badge {
+  background: color-mix(in srgb, #fff 20%, transparent);
+  color: #fff;
+}
+
 /* ── Room header ────────────────────────────────────────────────────────────── */
 .page-room { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 

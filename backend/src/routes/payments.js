@@ -14,15 +14,18 @@ router.post('/checkout', authMiddleware, async (req, res) => {
     return res.status(503).json({ error: 'Betalingen zijn momenteel niet geconfigureerd' });
   }
 
-  const { plan } = req.body;
+  const { plan, billing = 'yearly' } = req.body;
   if (!['pro', 'premium'].includes(plan)) {
     return res.status(400).json({ error: 'Ongeldig plan. Kies pro of premium.' });
+  }
+  if (!['monthly', 'yearly'].includes(billing)) {
+    return res.status(400).json({ error: 'Ongeldige factureringsperiode. Kies monthly of yearly.' });
   }
 
   const baseUrl = (process.env.BASE_URL || 'http://localhost').replace(/\/$/, '');
 
   try {
-    const url = await creemAdapter.createCheckout(req.user.id, plan, baseUrl);
+    const url = await creemAdapter.createCheckout(req.user.id, plan, billing, baseUrl);
     res.json({ url });
   } catch (err) {
     console.error('[payments] Checkout error:', err.message);

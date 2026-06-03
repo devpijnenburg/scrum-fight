@@ -60,6 +60,12 @@
     <!-- Plan info -->
     <section class="plan-info">
       <h2 data-i18n="dashboard.plan.title">Abonnement</h2>
+      <div class="billing-toggle" id="billingToggle">
+        <button class="billing-toggle-btn" data-billing="monthly">Maandelijks</button>
+        <button class="billing-toggle-btn billing-toggle-btn--active" data-billing="yearly">
+          Jaarlijks <span class="billing-save-badge">Bespaar ~17%</span>
+        </button>
+      </div>
       <div class="plan-cards" id="planCards">
         <div class="plan-card" data-plan="free">
           <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>

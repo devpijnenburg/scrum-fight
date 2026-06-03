@@ -87,8 +87,8 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   banner.className = 'plan-limit-notice';
   banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
   banner.textContent =
-    '✓ Betaling ontvangen! Je abonnement wordt binnen enkele seconden bijgewerkt. ' +
-    'Ververs de pagina als je plan nog niet is aangepast.';
+    '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏 ' +
+    'Je abonnement wordt binnen enkele seconden bijgewerkt.';
   document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
 })();
 

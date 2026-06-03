@@ -75,11 +75,19 @@ let _profileBilling = 'yearly';
 function renderSubscriptionSection(currentPlan, subscriptionDate) {
   // Status line
   const statusEl = document.getElementById('subscriptionStatus');
-  if (subscriptionDate && currentPlan !== 'free') {
-    const dateStr = new Date(subscriptionDate).toLocaleDateString('nl-NL', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
-    statusEl.innerHTML = `<p class="text-muted" style="font-size:.9rem">Laatste betaling: <strong style="color:var(--text)">${dateStr}</strong></p>`;
+  if (currentPlan !== 'free') {
+    const dateStr = subscriptionDate
+      ? new Date(subscriptionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
+    statusEl.innerHTML = `
+      <div class="supporter-note">
+        <span class="supporter-note-icon">🙏</span>
+        <div>
+          <strong>Bedankt dat je Scrum Fight steunt!</strong>
+          <p>Jouw abonnement helpt de server- en ontwikkelkosten te dekken. Dat wordt enorm gewaardeerd.</p>
+          ${dateStr ? `<p class="text-muted" style="font-size:.85rem;margin-top:.25rem">Laatste betaling: ${dateStr}</p>` : ''}
+        </div>
+      </div>`;
   } else {
     statusEl.innerHTML = '';
   }

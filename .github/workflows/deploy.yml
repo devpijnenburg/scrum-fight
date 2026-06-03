@@ -173,6 +173,23 @@ jobs:
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
+      - name: Ensure .env exists with correct overrides
+        run: |
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
+          [ -f ~/scrum-fight/.env ] || touch ~/scrum-fight/.env
+          sed -i '/^CREEM_\|^BASE_URL=/d' ~/scrum-fight/.env
+          printf '%s\n' \
+            'BASE_URL=${{ secrets.PROD_BASE_URL }}' \
+            'CREEM_API_KEY=${{ secrets.CREEM_API_KEY }}' \
+            'CREEM_WEBHOOK_SECRET=${{ secrets.CREEM_WEBHOOK_SECRET }}' \
+            'CREEM_PRO_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_PRO_MONTHLY_PRODUCT_ID }}' \
+            'CREEM_PRO_YEARLY_PRODUCT_ID=${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}' \
+            'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}' \
+            'CREEM_PREMIUM_YEARLY_PRODUCT_ID=${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}' \
+            >> ~/scrum-fight/.env
+          EOF
+
       - name: Deploy production on VM
         run: |
           ssh -p 622 -i ~/.ssh/deploy_key \

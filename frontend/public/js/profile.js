@@ -53,17 +53,17 @@ const PROFILE_PLANS = [
   {
     key: 'free',
     name: 'Free',
-    features: ['3 kamers', '5 deelnemers', '30 dagen bewaard'],
+    features: ['Sla 3 kamers op', '5 deelnemers', '30 dagen bewaard'],
   },
   {
     key: 'pro',
     name: 'Pro',
-    features: ['20 kamers', '15 deelnemers', '30 dagen bewaard'],
+    features: ['Sla 20 kamers op', '15 deelnemers', '30 dagen bewaard'],
   },
   {
     key: 'premium',
     name: 'Premium',
-    features: ['Onbeperkt kamers', 'Onbeperkt deelnemers', 'Kamers nooit verwijderd'],
+    features: ['Sla onbeperkt kamers op', 'Onbeperkt deelnemers', 'Kamers nooit verwijderd'],
     premium: true,
   },
 ];

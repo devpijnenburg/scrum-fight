@@ -51,6 +51,7 @@ const MIGRATIONS = [
   '004_admin_organizations.sql',
   '005_emoticon.sql',
   '006_creem_subscriptions.sql',
+  '007_subscription_period.sql',
 ];
 
 async function runMigrations() {

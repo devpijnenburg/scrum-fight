@@ -116,13 +116,22 @@ class CreemPaymentAdapter extends PaymentAdapter {
     return rows[0]?.plan ?? 'free';
   }
 
-  async saveSubscription(userId, creemSubscriptionId, creemCustomerId, plan) {
+  async saveSubscription(userId, creemSubscriptionId, creemCustomerId, plan, periodEndDate = null) {
     await db.query(
-      `INSERT INTO creem_subscriptions (user_id, creem_subscription_id, creem_customer_id, plan, status)
-       VALUES ($1, $2, $3, $4, 'active')
+      `INSERT INTO creem_subscriptions (user_id, creem_subscription_id, creem_customer_id, plan, status, current_period_end_date)
+       VALUES ($1, $2, $3, $4, 'active', $5)
        ON CONFLICT (creem_subscription_id) DO UPDATE
-         SET status = 'active', updated_at = NOW()`,
-      [userId, creemSubscriptionId, creemCustomerId, plan]
+         SET status = 'active', current_period_end_date = COALESCE($5, creem_subscriptions.current_period_end_date), updated_at = NOW()`,
+      [userId, creemSubscriptionId, creemCustomerId, plan, periodEndDate]
+    );
+  }
+
+  async updateSubscriptionPeriod(creemSubscriptionId, periodEndDate) {
+    await db.query(
+      `UPDATE creem_subscriptions
+         SET current_period_end_date = $1, updated_at = NOW()
+       WHERE creem_subscription_id = $2`,
+      [periodEndDate, creemSubscriptionId]
     );
   }
 

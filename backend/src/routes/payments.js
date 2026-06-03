@@ -191,12 +191,25 @@ async function handleEvent(event) {
       if (userId && plan) {
         const subId = data.id;
         const customerId = data.customer?.id;
+        const periodEndDate = data.current_period_end_date ?? null;
         await creemAdapter.upgradePlan(userId, plan);
-        if (subId) await creemAdapter.saveSubscription(userId, subId, customerId, plan);
+        if (subId) await creemAdapter.saveSubscription(userId, subId, customerId, plan, periodEndDate);
         notifyPlanUpdate(userId, plan);
-        console.log(`[payments] Abonnement geactiveerd: user=${userId} plan=${plan}`);
+        console.log(`[payments] Abonnement geactiveerd: user=${userId} plan=${plan} periodEnd=${periodEndDate}`);
       } else {
         console.warn(`[payments] subscription.active maar userId="${userId}" plan="${plan}" ontbreekt`);
+      }
+      break;
+    }
+
+    case 'subscription.paid': {
+      const subId = data.id;
+      const periodEndDate = data.current_period_end_date ?? null;
+      if (subId && periodEndDate) {
+        await creemAdapter.updateSubscriptionPeriod(subId, periodEndDate);
+        console.log(`[payments] Abonnement verlengd: id=${subId} periodEnd=${periodEndDate}`);
+      } else {
+        console.warn(`[payments] subscription.paid maar subId="${subId}" periodEnd="${periodEndDate}" ontbreekt`);
       }
       break;
     }

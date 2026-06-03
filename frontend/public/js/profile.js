@@ -70,44 +70,53 @@ const PROFILE_PLANS = [
 
 const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
 
-function renderSubscriptionSection(currentPlan, subscriptionDate) {
-  // Status line
+function renderSubscriptionSection(currentPlan, subscriptionDate, periodEndDate) {
   const statusEl = document.getElementById('subscriptionStatus');
+  const cardsEl  = document.getElementById('subscriptionPlanCards');
+
   if (currentPlan !== 'free') {
-    const dateStr = subscriptionDate
-      ? new Date(subscriptionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
-      : null;
+    const planNames = { pro: 'Pro', premium: 'Premium' };
+    const planName  = planNames[currentPlan] ?? currentPlan;
+
+    let renewalLine = '';
+    if (periodEndDate) {
+      const renewDate = new Date(periodEndDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+      renewalLine = `<p class="text-muted" style="margin-top:.3rem">Verlengt automatisch op ${renewDate}</p>`;
+    } else if (subscriptionDate) {
+      const lastDate = new Date(subscriptionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+      renewalLine = `<p class="text-muted" style="margin-top:.3rem">Laatste betaling: ${lastDate}</p>`;
+    }
+
     statusEl.innerHTML = `
       <div class="supporter-note">
         <span class="supporter-note-icon">🙏</span>
-        <div>
-          <strong>Bedankt dat je Scrum Fight steunt!</strong>
-          <p>Jouw abonnement helpt de server- en ontwikkelkosten te dekken. Dat wordt enorm gewaardeerd.</p>
-          ${dateStr ? `<p class="text-muted" style="font-size:.85rem;margin-top:.25rem">Laatste betaling: ${dateStr}</p>` : ''}
+        <div style="flex:1">
+          <strong>Actief abonnement: ${planName}</strong>
+          <p>Bedankt dat je Scrum Fight steunt! Jouw abonnement helpt de server- en ontwikkelkosten te dekken.</p>
+          ${renewalLine}
+          <a href="/subscription.html" class="btn btn-ghost btn-sm" style="margin-top:.65rem;display:inline-block">Abonnement beheren</a>
         </div>
       </div>`;
+    cardsEl.innerHTML = '';
   } else {
     statusEl.innerHTML = '';
+
+    const cardsHtml = PROFILE_PLANS.map((plan) => {
+      const isActive   = plan.key === currentPlan;
+      const canUpgrade = !isActive && PLAN_RANK[plan.key] > PLAN_RANK[currentPlan] && plan.key !== 'free';
+      return `
+        <div class="plan-card${plan.premium ? ' plan-card-premium' : ''}" data-plan="${plan.key}"${isActive ? ' data-active="true"' : ''}>
+          ${plan.premium ? '<div class="plan-badge">⭐ Premium</div>' : ''}
+          <div class="plan-name">${plan.name}</div>
+          <ul class="plan-features">
+            ${plan.features.map((f) => `<li>✓ ${f}</li>`).join('')}
+          </ul>
+          ${canUpgrade ? `<a href="/subscription.html?plan=${plan.key}" class="btn btn-primary btn-sm">Upgraden</a>` : ''}
+        </div>`;
+    }).join('');
+
+    cardsEl.innerHTML = `<div class="plan-cards">${cardsHtml}</div>`;
   }
-
-  const cardsEl = document.getElementById('subscriptionPlanCards');
-
-  // Plan cards — upgrade buttons link to dedicated subscription page
-  const cardsHtml = PROFILE_PLANS.map((plan) => {
-    const isActive = plan.key === currentPlan;
-    const canUpgrade = !isActive && PLAN_RANK[plan.key] > PLAN_RANK[currentPlan] && plan.key !== 'free';
-    return `
-      <div class="plan-card${plan.premium ? ' plan-card-premium' : ''}" data-plan="${plan.key}"${isActive ? ' data-active="true"' : ''}>
-        ${plan.premium ? '<div class="plan-badge">⭐ Premium</div>' : ''}
-        <div class="plan-name">${plan.name}</div>
-        <ul class="plan-features">
-          ${plan.features.map((f) => `<li>✓ ${f}</li>`).join('')}
-        </ul>
-        ${canUpgrade ? `<a href="/subscription.html?plan=${plan.key}" class="btn btn-primary btn-sm">Upgraden</a>` : ''}
-      </div>`;
-  }).join('');
-
-  cardsEl.innerHTML = `<div class="plan-cards">${cardsHtml}</div>`;
 }
 
 async function loadProfile() {
@@ -121,7 +130,7 @@ async function loadProfile() {
   document.getElementById('profilePlan').textContent = data.plan.toUpperCase();
   setTotpState(data.totp_enabled);
 
-  renderSubscriptionSection(data.plan, data.subscription_date);
+  renderSubscriptionSection(data.plan, data.subscription_date, data.current_period_end_date);
 
   _currentEmoticon = data.emoticon || '⚔️';
   document.getElementById('emoticonPreviewIcon').textContent = _currentEmoticon;

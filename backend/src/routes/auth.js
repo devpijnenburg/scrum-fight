@@ -70,10 +70,10 @@ router.post('/login', async (req, res) => {
 router.get('/me', authMiddleware, async (req, res) => {
   const { rows } = await db.query(
     `SELECT u.id, u.name, u.email, u.plan, u.is_admin, u.totp_enabled, u.oauth_provider, u.emoticon, u.created_at,
-            cs.updated_at AS subscription_date
+            cs.updated_at AS subscription_date, cs.current_period_end_date
      FROM users u
      LEFT JOIN LATERAL (
-       SELECT updated_at FROM creem_subscriptions
+       SELECT updated_at, current_period_end_date FROM creem_subscriptions
        WHERE user_id = u.id
        ORDER BY updated_at DESC LIMIT 1
      ) cs ON true

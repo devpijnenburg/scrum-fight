@@ -531,6 +531,26 @@ select.input { cursor: pointer; }
   text-transform: uppercase;
 }
 
+.plan-card[data-selected="true"] {
+  border-color: var(--secondary);
+  border-width: 2px;
+  position: relative;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--secondary) 20%, transparent);
+}
+.plan-card[data-selected="true"]::after {
+  content: '← Jouw keuze';
+  position: absolute;
+  top: -1px; right: -1px;
+  background: var(--secondary);
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 0 calc(var(--radius) - 1px) 0 var(--radius);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 /* ── Support notes ──────────────────────────────────────────────────────────── */
 .landing-support-note {
   text-align: center;

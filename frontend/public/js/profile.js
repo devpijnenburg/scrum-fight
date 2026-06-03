@@ -70,8 +70,6 @@ const PROFILE_PLANS = [
 
 const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
 
-let _profileBilling = 'yearly';
-
 function renderSubscriptionSection(currentPlan, subscriptionDate) {
   // Status line
   const statusEl = document.getElementById('subscriptionStatus');
@@ -92,19 +90,9 @@ function renderSubscriptionSection(currentPlan, subscriptionDate) {
     statusEl.innerHTML = '';
   }
 
-  // Billing toggle (only relevant for upgrade options)
-  const hasUpgradeOptions = PLAN_RANK[currentPlan] < PLAN_RANK['premium'];
   const cardsEl = document.getElementById('subscriptionPlanCards');
 
-  const toggleHtml = hasUpgradeOptions ? `
-    <div class="billing-toggle" id="profileBillingToggle" style="margin-bottom:1rem">
-      <button class="billing-toggle-btn" data-billing="monthly">Maandelijks</button>
-      <button class="billing-toggle-btn billing-toggle-btn--active" data-billing="yearly">
-        Jaarlijks <span class="billing-save-badge">Bespaar ~17%</span>
-      </button>
-    </div>` : '';
-
-  // Plan cards
+  // Plan cards — upgrade buttons link to dedicated subscription page
   const cardsHtml = PROFILE_PLANS.map((plan) => {
     const isActive = plan.key === currentPlan;
     const canUpgrade = !isActive && PLAN_RANK[plan.key] > PLAN_RANK[currentPlan] && plan.key !== 'free';
@@ -115,42 +103,11 @@ function renderSubscriptionSection(currentPlan, subscriptionDate) {
         <ul class="plan-features">
           ${plan.features.map((f) => `<li>✓ ${f}</li>`).join('')}
         </ul>
-        ${canUpgrade ? `<button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="${plan.key}">Upgraden</button>` : ''}
+        ${canUpgrade ? `<a href="/subscription.html?plan=${plan.key}" class="btn btn-primary btn-sm">Upgraden</a>` : ''}
       </div>`;
   }).join('');
 
-  cardsEl.innerHTML = toggleHtml + `<div class="plan-cards">${cardsHtml}</div>`;
-
-  // Wire billing toggle
-  cardsEl.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      _profileBilling = btn.dataset.billing;
-      cardsEl.querySelectorAll('.billing-toggle-btn').forEach((b) =>
-        b.classList.toggle('billing-toggle-btn--active', b.dataset.billing === _profileBilling)
-      );
-    });
-  });
-
-  // Wire upgrade buttons
-  cardsEl.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const plan = btn.dataset.target;
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Laden…';
-      try {
-        const { url } = await apiFetch('/payments/checkout', {
-          method: 'POST',
-          body: JSON.stringify({ plan, billing: _profileBilling }),
-        });
-        window.location.href = url;
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = originalText;
-        alert(err.message || 'Kon de betaalpagina niet openen. Probeer het later opnieuw.');
-      }
-    });
-  });
+  cardsEl.innerHTML = `<div class="plan-cards">${cardsHtml}</div>`;
 }
 
 async function loadProfile() {

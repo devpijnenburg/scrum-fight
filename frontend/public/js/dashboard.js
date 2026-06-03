@@ -39,88 +39,18 @@ document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { p
 document.querySelectorAll('.plan-card').forEach((card) => {
   if (card.dataset.plan === user.plan) {
     card.setAttribute('data-active', 'true');
-    const btn = card.querySelector('.plan-upgrade-btn');
+    const btn = card.querySelector('.btn');
     if (btn) btn.remove();
   }
 });
 
-// Billing period toggle (default: yearly)
-let _billing = 'yearly';
-
-document.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    _billing = btn.dataset.billing;
-    document.querySelectorAll('.billing-toggle-btn').forEach((b) =>
-      b.classList.toggle('billing-toggle-btn--active', b.dataset.billing === _billing)
-    );
-  });
-});
-
-// Wire upgrade buttons to Creem checkout
-document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
-  btn.addEventListener('click', async () => {
-    const plan = btn.dataset.target;
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Laden…';
-    try {
-      const { url } = await apiFetch('/payments/checkout', {
-        method: 'POST',
-        body: JSON.stringify({ plan, billing: _billing }),
-      });
-      window.location.href = url;
-    } catch (err) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-      alert(err.message || 'Kon de betaalpagina niet openen. Probeer het later opnieuw.');
-    }
-  });
-});
-
-// After redirect back from Creem: refresh token so the new plan is shown immediately
-(function handlePaymentReturn() {
-  const params = new URLSearchParams(location.search);
-  if (params.get('payment') !== 'success') return;
-  history.replaceState({}, '', '/dashboard.html');
-
-  const banner = document.createElement('div');
-  banner.className = 'plan-limit-notice';
-  banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
-  banner.textContent =
-    '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏 ' +
-    'Je abonnement wordt bijgewerkt…';
-  document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
-
-  // Poll for plan update: webhook may arrive slightly after the redirect
-  let attempts = 0;
-  const maxAttempts = 10;
-  const interval = setInterval(async () => {
-    attempts++;
-    try {
-      const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
-      localStorage.setItem('token', token);
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.plan !== 'free' || attempts >= maxAttempts) {
-        clearInterval(interval);
-        if (payload.plan !== 'free') {
-          banner.textContent =
-            '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏';
-          window.location.reload();
-        }
-      }
-    } catch {
-      if (attempts >= maxAttempts) clearInterval(interval);
-    }
-  }, 2000);
-})();
-
 // Only show plan upgrade section for free users;
-// if a paid user lands on #abonnement, redirect to profile
+// if a paid user lands on #abonnement, redirect to subscription page
 if (user.plan !== 'free') {
   const planInfoSection = document.querySelector('.plan-info');
   if (planInfoSection) planInfoSection.classList.add('hidden');
   if (location.hash === '#abonnement') {
-    window.location.replace('/profile.html#abonnement');
+    window.location.replace('/subscription.html');
   }
 }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — Scrum Fight</title>
+  <title>Abonnement — Scrum Fight</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="page-dashboard">
@@ -13,53 +13,24 @@
   <main class="dashboard-main">
     <div class="dashboard-header">
       <div>
-        <h1 id="dashboardTitle">Welkom terug!</h1>
-        <p class="text-muted" id="planBadge"></p>
+        <h1>💳 Abonnement kiezen</h1>
+        <p class="text-muted" id="subscriptionSubtitle">Kies het plan dat bij jou past</p>
       </div>
-      <button class="btn btn-primary" id="newRoomBtn" data-i18n="dashboard.newroom">+ Nieuwe kamer</button>
+      <a href="/dashboard.html" class="btn btn-ghost">← Dashboard</a>
     </div>
 
-    <!-- New room modal -->
-    <div id="newRoomModal" class="modal hidden">
-      <div class="modal-backdrop" id="modalBackdrop"></div>
-      <div class="modal-card">
-        <h2 data-i18n="dashboard.modal.title">Nieuwe kamer aanmaken</h2>
-        <div class="form-group">
-          <label for="modalRoomName" data-i18n="dashboard.modal.roomname">Kamernaam</label>
-          <div class="input-with-btn">
-            <input id="modalRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
-            <button id="modalRandomBtn" class="btn btn-ghost btn-icon" title="Willekeurige naam">🎲</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="modalMethod" data-i18n="dashboard.modal.method">Schattingsmethode</label>
-          <select id="modalMethod" class="input">
-            <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci</option>
-            <option value="modified_fibonacci" selected data-i18n="landing.create.method.modified_fibonacci">Fibonacci+</option>
-            <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
-            <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
-          </select>
-        </div>
-        <p id="modalError" class="form-error hidden"></p>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" id="modalCancelBtn" data-i18n="dashboard.modal.cancel">Annuleren</button>
-          <button class="btn btn-primary" id="modalCreateBtn" data-i18n="dashboard.modal.create">Aanmaken →</button>
-        </div>
-      </div>
-    </div>
+    <section class="plan-info">
+      <div id="paymentBanner" class="plan-limit-notice hidden"></div>
 
-    <!-- Room list -->
-    <section class="dashboard-rooms">
-      <h2 data-i18n="dashboard.rooms.title">Mijn kamers</h2>
-      <div id="planLimitNotice" class="plan-limit-notice hidden"></div>
-      <div id="roomList" class="room-list">
-        <div class="room-list-loading">Kamers laden…</div>
-      </div>
-    </section>
+      <div id="supporterNote" class="hidden" style="margin-bottom:1.25rem"></div>
 
-    <!-- Plan info -->
-    <section class="plan-info" id="abonnement">
-      <h2 data-i18n="dashboard.plan.title">Abonnement</h2>
+      <div class="billing-toggle" id="billingToggle">
+        <button class="billing-toggle-btn" data-billing="monthly">Maandelijks</button>
+        <button class="billing-toggle-btn billing-toggle-btn--active" data-billing="yearly">
+          Jaarlijks <span class="billing-save-badge">Bespaar ~17%</span>
+        </button>
+      </div>
+
       <div class="plan-cards" id="planCards">
         <div class="plan-card" data-plan="free">
           <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>
@@ -76,7 +47,7 @@
             <li data-i18n="dashboard.plan.players_15">✓ 15 deelnemers</li>
             <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
           </ul>
-          <a href="/subscription.html?plan=pro" class="btn btn-primary btn-sm" data-i18n="dashboard.plan.upgrade">Upgraden</a>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="pro" data-i18n="dashboard.plan.upgrade">Upgraden</button>
         </div>
         <div class="plan-card plan-card-premium" data-plan="premium">
           <div class="plan-badge">⭐ Premium</div>
@@ -86,9 +57,10 @@
             <li data-i18n="dashboard.plan.players_unlimited">✓ Onbeperkt deelnemers</li>
             <li data-i18n="dashboard.plan.never_deleted">✓ Kamers nooit verwijderd</li>
           </ul>
-          <a href="/subscription.html?plan=premium" class="btn btn-primary btn-sm" data-i18n="dashboard.plan.upgrade">Upgraden</a>
+          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="premium" data-i18n="dashboard.plan.upgrade">Upgraden</button>
         </div>
       </div>
+
       <p class="plan-support-note">
         Scrum Fight wordt gemaakt en onderhouden door één persoon. Een Pro of Premium abonnement helpt de server- en ontwikkelkosten te dekken — geen grote bedragen, maar genoeg om de rekeningen te betalen. Dankjewel dat je het overweegt. 🙏
       </p>
@@ -117,6 +89,6 @@
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/navbar.js"></script>
-  <script src="/js/dashboard.js"></script>
+  <script src="/js/subscription.js"></script>
 </body>
 </html>

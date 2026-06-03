@@ -21,7 +21,7 @@ function logout() {
 }
 
 // Hide footer auth links when already logged in;
-// point subscription link to dashboard for logged-in users
+// point subscription link to dedicated subscription page for logged-in users
 function initFooterAuth() {
   const user = getCurrentUser();
   const subLink = document.getElementById('footerSubscriptionLink');
@@ -31,15 +31,9 @@ function initFooterAuth() {
     const el = document.getElementById('footerAuth');
     if (el) el.classList.add('hidden');
 
-    // Free users: show upgrade options on dashboard
-    // Paid users: show subscription status on profile
-    const subDest = user.plan && user.plan !== 'free'
-      ? '/profile.html#abonnement'
-      : '/dashboard.html#abonnement';
-
-    if (subLink) subLink.href = subDest;
+    if (subLink) subLink.href = '/subscription.html';
     if (supportLink) {
-      supportLink.href = subDest;
+      supportLink.href = '/subscription.html';
       supportLink.textContent = 'Bekijk abonnementen';
     }
   } else {

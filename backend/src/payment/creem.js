@@ -72,7 +72,7 @@ class CreemPaymentAdapter extends PaymentAdapter {
 
     const result = await creemPost('/checkouts', {
       product_id: productId,
-      success_url: `${baseUrl}/dashboard.html?payment=success`,
+      success_url: `${baseUrl}/subscription.html?payment=success`,
       metadata: { userId, plan, billing },
     });
 

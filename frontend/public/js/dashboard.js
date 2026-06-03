@@ -80,6 +80,12 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   document.querySelector('.dashboard-header').insertAdjacentElement('afterend', banner);
 })();
 
+// Only show plan upgrade section for free users
+if (user.plan !== 'free') {
+  const planInfoSection = document.querySelector('.plan-info');
+  if (planInfoSection) planInfoSection.classList.add('hidden');
+}
+
 document.getElementById('modalRoomName').value = generateRoomName();
 document.getElementById('modalRandomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();

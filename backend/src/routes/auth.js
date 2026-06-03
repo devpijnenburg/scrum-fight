@@ -69,8 +69,15 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, name, email, plan, is_admin, totp_enabled, oauth_provider, emoticon, created_at
-     FROM users WHERE id = $1`,
+    `SELECT u.id, u.name, u.email, u.plan, u.is_admin, u.totp_enabled, u.oauth_provider, u.emoticon, u.created_at,
+            cs.updated_at AS subscription_date
+     FROM users u
+     LEFT JOIN LATERAL (
+       SELECT updated_at FROM creem_subscriptions
+       WHERE user_id = u.id
+       ORDER BY updated_at DESC LIMIT 1
+     ) cs ON true
+     WHERE u.id = $1`,
     [req.user.id]
   );
   if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden' });

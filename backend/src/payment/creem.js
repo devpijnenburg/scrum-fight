@@ -9,7 +9,7 @@ function creemPost(path, body) {
     const data = JSON.stringify(body);
     const req = https.request(
       {
-        hostname: 'api.creem.io',
+        hostname: process.env.CREEM_API_HOST || 'api.creem.io',
         path: `/v1${path}`,
         method: 'POST',
         headers: {

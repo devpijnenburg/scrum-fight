@@ -49,38 +49,61 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
 
   const banner = document.getElementById('paymentBanner');
   banner.style.cssText = 'background:#22c55e;color:#fff;border-color:#16a34a';
-  banner.textContent =
-    '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏 ' +
-    'Je abonnement wordt bijgewerkt…';
+  banner.textContent = '✓ Betaling ontvangen! Je abonnement wordt bijgewerkt — even geduld…';
   banner.classList.remove('hidden');
 
   let attempts = 0;
-  const maxAttempts = 10;
+  const maxAttempts = 15; // 30 seconds total
+
   const interval = setInterval(async () => {
     attempts++;
     try {
       const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
-      localStorage.setItem('token', token);
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.plan !== 'free' || attempts >= maxAttempts) {
+      if (payload.plan !== 'free') {
         clearInterval(interval);
-        if (payload.plan !== 'free') {
-          banner.textContent =
-            '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏';
-          window.location.reload();
-        }
+        localStorage.setItem('token', token);
+        banner.textContent =
+          '✓ Welkom als supporter! Jouw bijdrage houdt Scrum Fight draaiende — heel erg bedankt. 🙏';
+        window.location.reload();
+        return;
       }
+      localStorage.setItem('token', token);
     } catch {
-      if (attempts >= maxAttempts) clearInterval(interval);
+      // network hiccup — keep trying
+    }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(interval);
+      banner.style.cssText = '';
+      banner.className = 'plan-limit-notice';
+      banner.innerHTML =
+        'ℹ️ Je betaling is geregistreerd. Het kan soms even duren voordat je abonnement is bijgewerkt. ' +
+        '<button class="btn btn-primary btn-sm" style="margin-left:.75rem" ' +
+        'onclick="location.reload()">Vernieuwen</button>';
     }
   }, 2000);
 })();
 
-// Mark current plan and highlight pre-selected plan from URL
+// Mark current plan and highlight pre-selected plan from URL.
+// Also refreshes the JWT when the DB plan differs from the stored token
+// (e.g. after a webhook-based upgrade that happened while the user was away).
 async function initPlanState() {
   try {
     const data = await apiFetch('/auth/me');
     const currentPlan = data.plan;
+
+    // If DB plan differs from the JWT, silently refresh the token so all
+    // other pages (dashboard, navbar) pick up the new plan too.
+    const jwtPlan = getCurrentUser()?.plan;
+    if (jwtPlan && jwtPlan !== currentPlan) {
+      try {
+        const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
+        localStorage.setItem('token', token);
+      } catch {
+        // non-fatal
+      }
+    }
 
     // Show supporter note for paid users
     if (currentPlan !== 'free' && data.subscription_date) {
@@ -105,7 +128,6 @@ async function initPlanState() {
     document.querySelectorAll('.plan-card').forEach((card) => {
       const plan = card.dataset.plan;
 
-      // Mark active plan
       if (plan === currentPlan) {
         card.setAttribute('data-active', 'true');
         const btn = card.querySelector('.plan-upgrade-btn');
@@ -113,7 +135,6 @@ async function initPlanState() {
         return;
       }
 
-      // Remove upgrade button for lower/equal plans
       if (PLAN_RANK[plan] <= PLAN_RANK[currentPlan]) {
         const btn = card.querySelector('.plan-upgrade-btn');
         if (btn) btn.remove();

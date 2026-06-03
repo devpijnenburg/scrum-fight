@@ -108,25 +108,34 @@ router.post('/verify', authMiddleware, async (req, res) => {
 });
 
 // POST /api/payments/webhook
-// req.rawBody is set by the express.json() verify callback in server.js
+// req.rawBody is always set by the express.json() verify callback in server.js
 router.post('/webhook', async (req, res) => {
   const webhookSecret = process.env.CREEM_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return res.status(503).json({ error: 'Webhook niet geconfigureerd' });
   }
 
-  const signature = req.headers['creem-signature'];
-  if (!signature) {
+  const rawSignature = req.headers['creem-signature'] ?? '';
+  if (!rawSignature) {
+    console.warn('[payments] Webhook: ontbrekende creem-signature header');
     return res.status(400).json({ error: 'Ontbrekende creem-signature header' });
   }
 
   const rawBody = req.rawBody || '';
+  console.log(`[payments] Webhook ontvangen: rawBody.length=${rawBody.length} signature="${rawSignature.slice(0, 20)}…"`);
+
   const computedSig = crypto
     .createHmac('sha256', webhookSecret)
     .update(rawBody)
     .digest('hex');
 
-  if (computedSig !== signature) {
+  // Some providers prefix with "sha256=" — strip it for comparison
+  const incomingSig = rawSignature.startsWith('sha256=')
+    ? rawSignature.slice(7)
+    : rawSignature;
+
+  if (computedSig !== incomingSig) {
+    console.warn(`[payments] Webhook: signature mismatch computed="${computedSig.slice(0, 10)}…" incoming="${incomingSig.slice(0, 10)}…"`);
     return res.status(403).json({ error: 'Ongeldige webhook handtekening' });
   }
 
@@ -137,7 +146,7 @@ router.post('/webhook', async (req, res) => {
     return res.status(400).json({ error: 'Ongeldig JSON in webhook payload' });
   }
 
-  console.log('[payments] Webhook ontvangen:', JSON.stringify(event, null, 2));
+  console.log('[payments] Webhook payload:', JSON.stringify(event, null, 2));
 
   try {
     await handleEvent(event);
@@ -161,12 +170,17 @@ async function handleEvent(event) {
 
   console.log(`[payments] Event type="${type}" userId="${userId}" productId="${productId}" plan="${plan}"`);
 
-  switch (type) {
+  // Creem uses dot-notation in most docs but some SDK versions use underscores
+  const normalizedType = type?.replace(/_/g, '.') ?? '';
+
+  switch (normalizedType) {
     case 'checkout.completed': {
       if (userId && plan) {
         await creemAdapter.upgradePlan(userId, plan);
         notifyPlanUpdate(userId, plan);
         console.log(`[payments] Plan geactiveerd via checkout: user=${userId} plan=${plan}`);
+      } else {
+        console.warn(`[payments] checkout.completed maar userId="${userId}" plan="${plan}" ontbreekt`);
       }
       break;
     }
@@ -179,6 +193,8 @@ async function handleEvent(event) {
         if (subId) await creemAdapter.saveSubscription(userId, subId, customerId, plan);
         notifyPlanUpdate(userId, plan);
         console.log(`[payments] Abonnement geactiveerd: user=${userId} plan=${plan}`);
+      } else {
+        console.warn(`[payments] subscription.active maar userId="${userId}" plan="${plan}" ontbreekt`);
       }
       break;
     }
@@ -194,7 +210,7 @@ async function handleEvent(event) {
     }
 
     default:
-      // subscription.paid, subscription.trialing, etc. require no plan changes
+      console.log(`[payments] Onbekend/genegeerd event type: "${type}" (genormaliseerd: "${normalizedType}")`);
       break;
   }
 }

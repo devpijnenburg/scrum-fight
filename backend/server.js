@@ -24,13 +24,13 @@ const io = new Server(httpServer, {
 });
 
 app.use(cors());
-// Preserve raw body on webhook requests for HMAC signature verification
+// Always preserve raw body — needed for HMAC signature verification on the
+// webhook route. The path check was removed because req.path inside the verify
+// callback can behave unexpectedly with router mounts.
 app.use(
   express.json({
     verify: (req, _res, buf) => {
-      if (req.path === '/api/payments/webhook') {
-        req.rawBody = buf.toString('utf8');
-      }
+      req.rawBody = buf.toString('utf8');
     },
   })
 );

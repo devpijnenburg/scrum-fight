@@ -105,6 +105,7 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
   // Checkout ID stored by the upgrade button before redirect; used to verify
   // payment directly against Creem when inbound webhooks are blocked.
   const pendingCheckoutId = sessionStorage.getItem('pending_checkout_id');
+  console.log('[payment-return] pendingCheckoutId =', pendingCheckoutId);
 
   let done = false;
 
@@ -149,12 +150,13 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
         method: 'POST',
         body: JSON.stringify({ checkoutId: pendingCheckoutId }),
       });
+      console.log(`[payment-return] verify attempt ${attempts}:`, data);
       if (data.plan && data.plan !== 'free') {
         onPlanConfirmed(data.token ?? null);
         return;
       }
-    } catch {
-      // network hiccup — keep trying
+    } catch (err) {
+      console.warn(`[payment-return] verify attempt ${attempts} error:`, err.message);
     }
 
     if (attempts >= maxAttempts) {

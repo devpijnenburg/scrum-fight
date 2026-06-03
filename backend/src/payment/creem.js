@@ -88,10 +88,17 @@ class CreemPaymentAdapter extends PaymentAdapter {
   }
 
   async verifyCheckout(checkoutId) {
-    // Creem GET endpoint: /v1/checkouts?checkout_id=:id
-    const result = await creemGet(`/checkouts?checkout_id=${encodeURIComponent(checkoutId)}`);
-    console.log('[creem] Checkout verify response:', JSON.stringify(result, null, 2));
-    return result;
+    // Try path param first (standard REST), fall back to query param
+    try {
+      const result = await creemGet(`/checkouts/${encodeURIComponent(checkoutId)}`);
+      console.log('[creem] Checkout verify (path param):', JSON.stringify(result, null, 2));
+      return result;
+    } catch (err) {
+      console.warn('[creem] Path-param checkout lookup failed, trying query param:', err.message);
+      const result = await creemGet(`/checkouts?checkout_id=${encodeURIComponent(checkoutId)}`);
+      console.log('[creem] Checkout verify (query param):', JSON.stringify(result, null, 2));
+      return result;
+    }
   }
 
   async upgradePlan(userId, plan) {

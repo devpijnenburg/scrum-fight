@@ -63,6 +63,8 @@ router.post('/webhook', async (req, res) => {
     return res.status(400).json({ error: 'Ongeldig JSON in webhook payload' });
   }
 
+  console.log('[payments] Webhook ontvangen:', JSON.stringify(event, null, 2));
+
   try {
     await handleEvent(event);
     res.json({ ok: true });
@@ -73,18 +75,17 @@ router.post('/webhook', async (req, res) => {
 });
 
 async function handleEvent(event) {
-  // Creem sends eventType or webhookEventType
-  const type = event.eventType ?? event.webhookEventType ?? event.event_type;
+  const type = event.eventType ?? event.webhookEventType ?? event.event_type
+    ?? event.type ?? event.event;
   const data = event.object ?? event.data ?? event;
 
-  // Resolve user ID from metadata (set during checkout creation)
   const userId = data.metadata?.userId ?? data.requestId;
-  // Product ID for plan mapping
-  const productId = data.product?.id ?? data.productId;
-  // Resolve plan: prefer product→plan mapping, fall back to metadata
+  const productId = data.product?.id ?? data.productId ?? data.product_id;
   const plan =
     (productId && creemAdapter.planForProductId(productId)) ??
     data.metadata?.plan;
+
+  console.log(`[payments] Event type="${type}" userId="${userId}" productId="${productId}" plan="${plan}"`);
 
   switch (type) {
     case 'checkout.completed': {

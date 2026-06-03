@@ -29,10 +29,12 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     btn.disabled = true;
     btn.textContent = 'Laden…';
     try {
-      const { url } = await apiFetch('/payments/checkout', {
+      const { url, checkoutId } = await apiFetch('/payments/checkout', {
         method: 'POST',
         body: JSON.stringify({ plan, billing: _billing }),
       });
+      // Store so the return page can verify against Creem directly
+      if (checkoutId) sessionStorage.setItem('pending_checkout_id', checkoutId);
       window.location.href = url;
     } catch (err) {
       btn.disabled = false;
@@ -100,6 +102,10 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     timeout.classList.remove('hidden');
   }
 
+  // Checkout ID stored by the upgrade button before redirect; used to verify
+  // payment directly against Creem when inbound webhooks are blocked.
+  const pendingCheckoutId = sessionStorage.getItem('pending_checkout_id');
+
   let done = false;
 
   function onPlanConfirmed(token) {
@@ -107,13 +113,12 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     done = true;
     clearInterval(interval);
     socket.disconnect();
+    sessionStorage.removeItem('pending_checkout_id');
     if (token) localStorage.setItem('token', token);
     showSuccess();
   }
 
   // ── WebSocket — instant notification when webhook is processed ────────────
-  // Falls back to polling below for the race condition where the webhook fires
-  // before this socket has a chance to register.
   const socket = io({ transports: ['websocket'] });
   const storedToken = localStorage.getItem('token');
   if (storedToken) {
@@ -129,9 +134,10 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     }
   });
 
-  // ── Polling fallback ──────────────────────────────────────────────────────
-  // Covers the race condition: webhook may arrive and be processed before the
-  // socket above finishes connecting and emitting register-user.
+  // ── Active verification polling ───────────────────────────────────────────
+  // Calls /payments/verify which makes an outbound call to Creem's API to
+  // check the checkout status directly. This works even when inbound webhooks
+  // are blocked by the server's network policy.
   let attempts = 0;
   const maxAttempts = 15; // 30 seconds
 
@@ -139,13 +145,14 @@ document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
     if (done) return;
     attempts++;
     try {
-      const { token } = await apiFetch('/auth/refresh', { method: 'POST' });
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.plan !== 'free') {
-        onPlanConfirmed(token);
+      const data = await apiFetch('/payments/verify', {
+        method: 'POST',
+        body: JSON.stringify({ checkoutId: pendingCheckoutId }),
+      });
+      if (data.plan && data.plan !== 'free') {
+        onPlanConfirmed(data.token ?? null);
         return;
       }
-      localStorage.setItem('token', token);
     } catch {
       // network hiccup — keep trying
     }

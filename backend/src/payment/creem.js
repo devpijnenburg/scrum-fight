@@ -4,18 +4,18 @@ const db = require('../config/database');
 
 const PERSONAL_PLANS = ['pro', 'premium'];
 
-function creemPost(path, body) {
+function creemRequest(method, path, body) {
   return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
+    const data = body ? JSON.stringify(body) : null;
     const req = https.request(
       {
         hostname: process.env.CREEM_API_HOST || 'api.creem.io',
         path: `/v1${path}`,
-        method: 'POST',
+        method,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': process.env.CREEM_API_KEY,
-          'Content-Length': Buffer.byteLength(data),
+          ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}),
         },
       },
       (res) => {
@@ -36,10 +36,13 @@ function creemPost(path, body) {
       }
     );
     req.on('error', reject);
-    req.write(data);
+    if (data) req.write(data);
     req.end();
   });
 }
+
+const creemPost = (path, body) => creemRequest('POST', path, body);
+const creemGet  = (path)       => creemRequest('GET', path, null);
 
 class CreemPaymentAdapter extends PaymentAdapter {
   _productIdForPlan(plan, billing = 'monthly') {
@@ -76,8 +79,19 @@ class CreemPaymentAdapter extends PaymentAdapter {
       metadata: { userId, plan, billing },
     });
 
+    console.log('[creem] Checkout aangemaakt:', JSON.stringify(result, null, 2));
+
     if (!result.checkout_url) throw new Error(`Creem gaf geen checkout-URL terug: ${JSON.stringify(result)}`);
-    return result.checkout_url;
+    // checkout_id or id — Creem uses checkout_id in their API, id in some SDKs
+    const checkoutId = result.checkout_id ?? result.id ?? null;
+    return { url: result.checkout_url, checkoutId };
+  }
+
+  async verifyCheckout(checkoutId) {
+    // Creem GET endpoint: /v1/checkouts?checkout_id=:id
+    const result = await creemGet(`/checkouts?checkout_id=${encodeURIComponent(checkoutId)}`);
+    console.log('[creem] Checkout verify response:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   async upgradePlan(userId, plan) {

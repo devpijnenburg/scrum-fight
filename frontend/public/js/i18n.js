@@ -64,7 +64,7 @@ const TRANSLATIONS = {
     'dashboard.plan.upgrade': 'Upgraden',
     'dashboard.plan.free': 'Free',
     'dashboard.plan.rooms_3': '✓ 3 kamers',
-    'dashboard.plan.players_5': '✓ 5 deelnemers',
+    'dashboard.plan.players_5': '✓ 7 deelnemers',
     'dashboard.plan.days_30': '✓ 30 dagen bewaard',
     'dashboard.plan.rooms_20': '✓ 20 kamers',
     'dashboard.plan.players_15': '✓ 15 deelnemers',
@@ -130,6 +130,7 @@ const TRANSLATIONS = {
     'oauth.error': 'Er is een fout opgetreden.',
 
     'footer.privacy': 'Privacybeleid',
+    'footer.subscription': 'Abonnementen',
     'footer.terms': 'Algemene voorwaarden',
     'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Inloggen',
@@ -323,7 +324,7 @@ const TRANSLATIONS = {
     'dashboard.plan.upgrade': 'Upgrade',
     'dashboard.plan.free': 'Free',
     'dashboard.plan.rooms_3': '✓ 3 rooms',
-    'dashboard.plan.players_5': '✓ 5 participants',
+    'dashboard.plan.players_5': '✓ 7 participants',
     'dashboard.plan.days_30': '✓ Saved for 30 days',
     'dashboard.plan.rooms_20': '✓ 20 rooms',
     'dashboard.plan.players_15': '✓ 15 participants',
@@ -389,6 +390,7 @@ const TRANSLATIONS = {
     'oauth.error': 'An error occurred.',
 
     'footer.privacy': 'Privacy Policy',
+    'footer.subscription': 'Subscriptions',
     'footer.terms': 'Terms & Conditions',
     'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Log in',

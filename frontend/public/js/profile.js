@@ -49,6 +49,110 @@ const EMOJI_CATEGORIES = [
 let _totpSecret = null;
 let _currentEmoticon = '⚔️';
 
+const PROFILE_PLANS = [
+  {
+    key: 'free',
+    name: 'Free',
+    features: ['Sla 3 kamers op', '7 deelnemers', '30 dagen bewaard'],
+  },
+  {
+    key: 'pro',
+    name: 'Pro',
+    features: ['Sla 20 kamers op', '15 deelnemers', '30 dagen bewaard'],
+  },
+  {
+    key: 'premium',
+    name: 'Premium',
+    features: ['Sla onbeperkt kamers op', 'Onbeperkt deelnemers', 'Kamers nooit verwijderd'],
+    premium: true,
+  },
+];
+
+const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
+
+let _profileBilling = 'yearly';
+
+function renderSubscriptionSection(currentPlan, subscriptionDate) {
+  // Status line
+  const statusEl = document.getElementById('subscriptionStatus');
+  if (currentPlan !== 'free') {
+    const dateStr = subscriptionDate
+      ? new Date(subscriptionDate).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null;
+    statusEl.innerHTML = `
+      <div class="supporter-note">
+        <span class="supporter-note-icon">🙏</span>
+        <div>
+          <strong>Bedankt dat je Scrum Fight steunt!</strong>
+          <p>Jouw abonnement helpt de server- en ontwikkelkosten te dekken. Dat wordt enorm gewaardeerd.</p>
+          ${dateStr ? `<p class="text-muted" style="font-size:.85rem;margin-top:.25rem">Laatste betaling: ${dateStr}</p>` : ''}
+        </div>
+      </div>`;
+  } else {
+    statusEl.innerHTML = '';
+  }
+
+  // Billing toggle (only relevant for upgrade options)
+  const hasUpgradeOptions = PLAN_RANK[currentPlan] < PLAN_RANK['premium'];
+  const cardsEl = document.getElementById('subscriptionPlanCards');
+
+  const toggleHtml = hasUpgradeOptions ? `
+    <div class="billing-toggle" id="profileBillingToggle" style="margin-bottom:1rem">
+      <button class="billing-toggle-btn" data-billing="monthly">Maandelijks</button>
+      <button class="billing-toggle-btn billing-toggle-btn--active" data-billing="yearly">
+        Jaarlijks <span class="billing-save-badge">Bespaar ~17%</span>
+      </button>
+    </div>` : '';
+
+  // Plan cards
+  const cardsHtml = PROFILE_PLANS.map((plan) => {
+    const isActive = plan.key === currentPlan;
+    const canUpgrade = !isActive && PLAN_RANK[plan.key] > PLAN_RANK[currentPlan] && plan.key !== 'free';
+    return `
+      <div class="plan-card${plan.premium ? ' plan-card-premium' : ''}" data-plan="${plan.key}"${isActive ? ' data-active="true"' : ''}>
+        ${plan.premium ? '<div class="plan-badge">⭐ Premium</div>' : ''}
+        <div class="plan-name">${plan.name}</div>
+        <ul class="plan-features">
+          ${plan.features.map((f) => `<li>✓ ${f}</li>`).join('')}
+        </ul>
+        ${canUpgrade ? `<button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="${plan.key}">Upgraden</button>` : ''}
+      </div>`;
+  }).join('');
+
+  cardsEl.innerHTML = toggleHtml + `<div class="plan-cards">${cardsHtml}</div>`;
+
+  // Wire billing toggle
+  cardsEl.querySelectorAll('.billing-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      _profileBilling = btn.dataset.billing;
+      cardsEl.querySelectorAll('.billing-toggle-btn').forEach((b) =>
+        b.classList.toggle('billing-toggle-btn--active', b.dataset.billing === _profileBilling)
+      );
+    });
+  });
+
+  // Wire upgrade buttons
+  cardsEl.querySelectorAll('.plan-upgrade-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const plan = btn.dataset.target;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Laden…';
+      try {
+        const { url } = await apiFetch('/payments/checkout', {
+          method: 'POST',
+          body: JSON.stringify({ plan, billing: _profileBilling }),
+        });
+        window.location.href = url;
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        alert(err.message || 'Kon de betaalpagina niet openen. Probeer het later opnieuw.');
+      }
+    });
+  });
+}
+
 async function loadProfile() {
   const data = await apiFetch('/auth/me');
   document.getElementById('profileSubtitle').textContent = data.email || data.name;
@@ -59,6 +163,8 @@ async function loadProfile() {
     : 'E-mail / wachtwoord';
   document.getElementById('profilePlan').textContent = data.plan.toUpperCase();
   setTotpState(data.totp_enabled);
+
+  renderSubscriptionSection(data.plan, data.subscription_date);
 
   _currentEmoticon = data.emoticon || '⚔️';
   document.getElementById('emoticonPreviewIcon').textContent = _currentEmoticon;

@@ -766,6 +766,17 @@ function renderAll(state) {
   document.getElementById('methodBadge').textContent = state.methodLabel;
   document.title = `${state.name} — Scrum Fight`;
 
+  const planBadge = document.getElementById('roomPlanBadge');
+  if (state.ownerPlan === 'premium') {
+    planBadge.textContent = '⭐ Premium';
+    planBadge.className = 'room-plan-badge room-plan-badge--premium';
+  } else if (state.ownerPlan === 'pro') {
+    planBadge.textContent = '✦ Pro';
+    planBadge.className = 'room-plan-badge room-plan-badge--pro';
+  } else {
+    planBadge.className = 'room-plan-badge hidden';
+  }
+
   updatePlayerCount(state.players.length);
   renderPickerCards(state.cardValues);
   renderTable(state);

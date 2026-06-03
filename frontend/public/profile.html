@@ -42,6 +42,13 @@
       </div>
     </section>
 
+    <!-- Subscription / plan section -->
+    <section class="profile-section" id="abonnement">
+      <h2>💳 Abonnement</h2>
+      <div id="subscriptionStatus" style="margin-bottom:.75rem"></div>
+      <div id="subscriptionPlanCards" class="plan-cards"></div>
+    </section>
+
     <!-- Emoticon picker -->
     <section class="profile-section">
       <h2>🎭 Jouw emoticon</h2>
@@ -148,6 +155,24 @@
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <div class="lang-switcher"></div>
+        <span class="footer-copy" data-i18n="footer.copy">© 2025 Scrum Fight</span>
+      </div>
+      <nav class="footer-links">
+        <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+        <a href="/login.html#register" id="footerSubscriptionLink" data-i18n="footer.subscription">Abonnementen</a>
+        <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+        <span class="footer-auth" id="footerAuth">
+          <a href="/login.html" data-i18n="footer.login">Inloggen</a>
+          <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
+        </span>
+      </nav>
+    </div>
+  </footer>
 
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>

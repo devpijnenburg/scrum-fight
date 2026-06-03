@@ -25,13 +25,22 @@ function logout() {
 function initFooterAuth() {
   const user = getCurrentUser();
   const subLink = document.getElementById('footerSubscriptionLink');
+  const supportLink = document.getElementById('landingSupportLink');
 
   if (user) {
     const el = document.getElementById('footerAuth');
     if (el) el.classList.add('hidden');
     if (subLink) subLink.href = '/dashboard.html#abonnement';
+    if (supportLink) {
+      supportLink.href = '/dashboard.html#abonnement';
+      supportLink.textContent = 'Bekijk abonnementen';
+    }
   } else {
     if (subLink) subLink.href = '/login.html#register';
+    if (supportLink) {
+      supportLink.href = '/login.html#register';
+      supportLink.textContent = 'Maak een gratis account aan';
+    }
   }
 }
 

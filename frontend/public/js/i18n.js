@@ -130,6 +130,7 @@ const TRANSLATIONS = {
     'oauth.error': 'Er is een fout opgetreden.',
 
     'footer.privacy': 'Privacybeleid',
+    'footer.subscription': 'Abonnementen',
     'footer.terms': 'Algemene voorwaarden',
     'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Inloggen',
@@ -389,6 +390,7 @@ const TRANSLATIONS = {
     'oauth.error': 'An error occurred.',
 
     'footer.privacy': 'Privacy Policy',
+    'footer.subscription': 'Subscriptions',
     'footer.terms': 'Terms & Conditions',
     'footer.copy': '© 2026 Scrum Fight',
     'footer.login': 'Log in',

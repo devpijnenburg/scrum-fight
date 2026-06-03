@@ -20,11 +20,19 @@ function logout() {
   window.location.href = '/';
 }
 
-// Hide footer auth links when already logged in
+// Hide footer auth links when already logged in;
+// point subscription link to dashboard for logged-in users
 function initFooterAuth() {
-  if (!getCurrentUser()) return;
-  const el = document.getElementById('footerAuth');
-  if (el) el.classList.add('hidden');
+  const user = getCurrentUser();
+  const subLink = document.getElementById('footerSubscriptionLink');
+
+  if (user) {
+    const el = document.getElementById('footerAuth');
+    if (el) el.classList.add('hidden');
+    if (subLink) subLink.href = '/dashboard.html#abonnement';
+  } else {
+    if (subLink) subLink.href = '/login.html#register';
+  }
 }
 
 // Update navbar for logged-in state — no-op, handled by <site-nav> component

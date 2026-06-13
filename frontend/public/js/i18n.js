@@ -6,7 +6,7 @@ const TRANSLATIONS = {
     'nav.register': 'Registreren',
     'nav.logout': 'Uitloggen',
 
-    'landing.subtitle': 'Real-time scrum estimaties voor jouw team',
+    'landing.subtitle': 'Schat stories. Win de sprint.',
     'landing.anon': '✅ Geen account nodig — gewoon een naam invullen en spelen!',
     'landing.create.title': '✨ Kamer aanmaken',
     'landing.create.yourname': 'Jouw naam',
@@ -265,7 +265,7 @@ const TRANSLATIONS = {
     'nav.register': 'Sign up',
     'nav.logout': 'Log out',
 
-    'landing.subtitle': 'Real-time scrum estimates for your team',
+    'landing.subtitle': 'Estimate stories. Win the sprint.',
     'landing.anon': '✅ No account needed — just enter a name and play!',
     'landing.create.title': '✨ Create room',
     'landing.create.yourname': 'Your name',

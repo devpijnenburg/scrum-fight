@@ -133,7 +133,7 @@ class SiteNav extends HTMLElement {
 
     this.innerHTML = `
       <nav class="navbar">
-        <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Planning Poker 2.0</small></a>
+        <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
         <div class="navbar-actions">
           ${user
             ? '<profile-menu></profile-menu>'

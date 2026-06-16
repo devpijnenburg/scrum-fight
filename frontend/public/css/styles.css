@@ -1024,6 +1024,43 @@ profile-menu { display: contents; }
 }
 .picker-card:disabled, .picker-card.disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
+.card-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.spectator-toggle-btn {
+  font-size: .75rem;
+  opacity: .7;
+}
+.spectator-toggle-btn:hover { opacity: 1; }
+
+.spectator-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .75rem 1.25rem;
+  background: rgba(139,92,246,.1);
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 700px;
+}
+.spectator-bar-label { flex: 1; font-size: .85rem; color: var(--text-muted); }
+
+.player-name-tag.is-spectator { opacity: .6; }
+
+.card-spectator-placeholder {
+  width: 52px;
+  height: 72px;
+  border: 2px dashed rgba(255,255,255,.2);
+  border-radius: 8px;
+  opacity: .4;
+}
+
 /* ── Action bar ─────────────────────────────────────────────────────────────── */
 .action-bar {
   display: flex;
@@ -1132,6 +1169,7 @@ profile-menu { display: contents; }
   .share-popover-row { flex-direction: column; }
   .poker-table { border-width: 5px; }
   .card-container { width: 42px; height: 63px; }
+  .card-spectator-placeholder { width: 42px; height: 63px; }
   .card-value { font-size: 1.1rem; }
   .picker-card { width: 40px; height: 60px; font-size: .95rem; }
 }

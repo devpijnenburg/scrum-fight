@@ -1059,6 +1059,14 @@ profile-menu { display: contents; }
   border: 2px dashed rgba(255,255,255,.2);
   border-radius: 8px;
   opacity: .4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-spectator-placeholder::after {
+  content: '👁';
+  font-size: 1.3rem;
+  filter: grayscale(1);
 }
 
 /* ── Action bar ─────────────────────────────────────────────────────────────── */

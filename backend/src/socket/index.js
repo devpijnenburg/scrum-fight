@@ -270,7 +270,7 @@ module.exports = function setupSocket(io) {
       if (!room || room.revealed) return;
 
       const player = room.players.get(socket.id);
-      if (!player) return;
+      if (!player || player.spectator) return;
 
       const allowed = ESTIMATION_METHODS[room.method]?.values ?? [];
       if (!allowed.includes(value)) return;

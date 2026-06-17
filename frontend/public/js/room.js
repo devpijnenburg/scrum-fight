@@ -1000,7 +1000,11 @@ function updateVoteStatus() {
     return;
   }
 
-  if (total === 0) { el.innerHTML = ''; return; }
+  if (total === 0) {
+    el.innerHTML = '';
+    document.getElementById('revealBtn').disabled = true;
+    return;
+  }
 
   const pct = Math.round((voted / total) * 100);
   el.innerHTML = `

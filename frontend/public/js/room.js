@@ -15,6 +15,7 @@ let mySocketId = null;
 let myName = null;
 let roomState = null;
 let myVote = null;
+let mySpectator = false;
 let isRevealed = false;
 let analyticsLoaded = false;
 let currentStats = null;
@@ -129,12 +130,15 @@ socket.on('room-state', (state) => {
   isRevealed = state.revealed;
   currentRoundName = state.roundName || '';
   document.getElementById('roundNameInput').value = currentRoundName;
+  const me = state.players.find((p) => p.isMe);
+  if (me) { mySpectator = me.spectator || false; }
   renderAll(state);
+  updateSpectatorUI();
 });
 
-socket.on('player-joined', ({ socketId, name, emoticon }) => {
+socket.on('player-joined', ({ socketId, name, emoticon, spectator }) => {
   if (!roomState) return;
-  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, joinedMidRound: roomState.revealed });
+  roomState.players.push({ socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null, spectator: spectator || false, joinedMidRound: roomState.revealed });
   renderTable(roomState);
   updatePlayerCount(roomState.players.length);
   updateVoteStatus();
@@ -152,6 +156,22 @@ socket.on('player-voted', ({ socketId }) => {
   if (!roomState) return;
   const p = roomState.players.find((p) => p.socketId === socketId);
   if (p) p.hasVoted = true;
+  renderTable(roomState);
+  updateVoteStatus();
+});
+
+socket.on('spectator-toggled', ({ socketId, spectator }) => {
+  if (!roomState) return;
+  const p = roomState.players.find((p) => p.socketId === socketId);
+  if (p) {
+    p.spectator = spectator;
+    if (spectator) { p.hasVoted = false; p.vote = null; }
+  }
+  if (socketId === mySocketId) {
+    mySpectator = spectator;
+    if (spectator) { myVote = null; clearPickerSelection(); }
+    updateSpectatorUI();
+  }
   renderTable(roomState);
   updateVoteStatus();
 });
@@ -336,6 +356,21 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
   const btn = document.getElementById('copyCodeBtn');
   btn.textContent = '✅';
   setTimeout(() => { btn.textContent = '📋'; }, 1500);
+});
+
+// ── Spectator mode ────────────────────────────────────────────────────────────
+
+function updateSpectatorUI() {
+  document.getElementById('cardPicker').classList.toggle('hidden', mySpectator);
+  document.getElementById('spectatorBar').classList.toggle('hidden', !mySpectator);
+}
+
+document.getElementById('spectatorToggleBtn').addEventListener('click', () => {
+  socket.emit('toggle-spectator');
+});
+
+document.getElementById('spectatorJoinBtn').addEventListener('click', () => {
+  socket.emit('toggle-spectator');
 });
 
 // ── Profile menu ─────────────────────────────────────────────────────────────
@@ -823,8 +858,9 @@ function renderTable(state) {
 
     const card = createCardEl(player, state.revealed, isMe);
     const nameTag = document.createElement('div');
-    nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}`;
-    nameTag.textContent = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
+    nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}${player.spectator ? ' is-spectator' : ''}`;
+    const displayName = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
+    nameTag.textContent = player.spectator ? `${displayName} 👁` : displayName;
 
     seat.appendChild(card);
     seat.appendChild(nameTag);
@@ -842,7 +878,14 @@ function renderTable(state) {
 
 function createCardEl(player, revealed, isMe) {
   const container = document.createElement('div');
-  container.className = `card-container${player.joinedMidRound ? ' card-mid-round' : ''}`;
+  container.className = `card-container${player.joinedMidRound ? ' card-mid-round' : ''}${player.spectator ? ' card-spectator' : ''}`;
+
+  if (player.spectator) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'card-spectator-placeholder';
+    container.appendChild(placeholder);
+    return container;
+  }
 
   const card = document.createElement('div');
   card.className = 'card';
@@ -947,8 +990,9 @@ function statItem(value, label) {
 
 function updateVoteStatus() {
   if (!roomState) return;
-  const voted = roomState.players.filter((p) => p.hasVoted).length;
-  const total = roomState.players.length;
+  const nonSpectators = roomState.players.filter((p) => !p.spectator);
+  const voted = nonSpectators.filter((p) => p.hasVoted).length;
+  const total = nonSpectators.length;
   const el = document.getElementById('voteStatus');
 
   if (isRevealed) {
@@ -956,7 +1000,11 @@ function updateVoteStatus() {
     return;
   }
 
-  if (total === 0) { el.innerHTML = ''; return; }
+  if (total === 0) {
+    el.innerHTML = '';
+    document.getElementById('revealBtn').disabled = true;
+    return;
+  }
 
   const pct = Math.round((voted / total) * 100);
   el.innerHTML = `

@@ -212,9 +212,18 @@
     </div>
 
     <!-- Card picker -->
-    <div class="card-picker">
-      <p class="card-picker-label" data-i18n="room.pick">Kies jouw kaart:</p>
+    <div class="card-picker" id="cardPicker">
+      <div class="card-picker-header">
+        <p class="card-picker-label" data-i18n="room.pick">Kies jouw kaart:</p>
+        <button id="spectatorToggleBtn" class="btn btn-ghost btn-sm spectator-toggle-btn">👁 Toeschouwer worden</button>
+      </div>
       <div class="card-picker-row" id="cardPickerRow"></div>
+    </div>
+
+    <!-- Spectator rejoiner (shown when in spectator mode) -->
+    <div id="spectatorBar" class="spectator-bar hidden">
+      <span class="spectator-bar-label">👁 Je bent toeschouwer — je stemmen tellen niet mee</span>
+      <button id="spectatorJoinBtn" class="btn btn-ghost btn-sm">Toch meedoen</button>
     </div>
 
     <!-- Ad banner — placeholder, currently hidden -->

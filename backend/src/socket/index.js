@@ -24,6 +24,7 @@ function serializeRoom(room, mySocketId) {
       hasVoted: p.vote !== null,
       vote: room.revealed ? p.vote : null,
       isMe: socketId === mySocketId,
+      spectator: p.spectator || false,
     });
   }
   return {
@@ -237,7 +238,7 @@ module.exports = function setupSocket(io) {
       }
 
       const room = activeRooms.get(normalizedId);
-      room.players.set(socket.id, { name, userId, emoticon, vote: null });
+      room.players.set(socket.id, { name, userId, emoticon, vote: null, spectator: false });
 
       socket.join(normalizedId);
       socket.data.roomId = normalizedId;
@@ -251,6 +252,7 @@ module.exports = function setupSocket(io) {
         name,
         emoticon,
         hasVoted: false,
+        spectator: false,
       });
 
       // Update last_active for non-guest rooms
@@ -268,7 +270,7 @@ module.exports = function setupSocket(io) {
       if (!room || room.revealed) return;
 
       const player = room.players.get(socket.id);
-      if (!player) return;
+      if (!player || player.spectator) return;
 
       const allowed = ESTIMATION_METHODS[room.method]?.values ?? [];
       if (!allowed.includes(value)) return;
@@ -278,6 +280,24 @@ module.exports = function setupSocket(io) {
       io.to(roomId).emit('player-voted', { socketId: socket.id });
 
       if (room.isGuest) resetGuestTimer(io, roomId);
+    });
+
+    // ── toggle-spectator ──────────────────────────────────────────────────────
+    socket.on('toggle-spectator', () => {
+      const roomId = socket.data.roomId;
+      const room = activeRooms.get(roomId);
+      if (!room || room.revealed) return;
+
+      const player = room.players.get(socket.id);
+      if (!player) return;
+
+      player.spectator = !player.spectator;
+      if (player.spectator) player.vote = null;
+
+      io.to(roomId).emit('spectator-toggled', {
+        socketId: socket.id,
+        spectator: player.spectator,
+      });
     });
 
     // ── reveal ────────────────────────────────────────────────────────────────
@@ -291,13 +311,14 @@ module.exports = function setupSocket(io) {
       if (socket.data.lastRevealAt && now - socket.data.lastRevealAt < 2000) return;
       socket.data.lastRevealAt = now;
 
-      const hasAnyVote = [...room.players.values()].some((p) => p.vote !== null);
+      const voters = [...room.players.values()].filter((p) => !p.spectator);
+      const hasAnyVote = voters.some((p) => p.vote !== null);
       if (!hasAnyVote) return;
 
       // Ignore if a countdown is already running
       if (countdownTimers.has(roomId)) return;
 
-      const allVoted = [...room.players.values()].every((p) => p.vote !== null);
+      const allVoted = voters.length > 0 && voters.every((p) => p.vote !== null);
 
       if (allVoted) {
         await doReveal(io, room, roomId);

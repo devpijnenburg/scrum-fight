@@ -281,11 +281,23 @@
     </div>
   </footer>
 
+  <!-- Badge celebration overlay -->
+  <div id="badgeCelebration" class="badge-celebration hidden">
+    <div class="badge-celebration-card">
+      <div id="celebrationConfetti" class="confetti-container"></div>
+      <div id="celebrationShield" class="celebration-shield"></div>
+      <div class="celebration-label">🏅 <span id="celebrationUnlocked"></span></div>
+      <div id="celebrationName" class="celebration-name"></div>
+      <button id="celebrationClose" class="celebration-close">✕</button>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/navbar.js"></script>
+  <script src="/js/badges.js"></script>
   <script src="/js/room.js"></script>
 </body>
 </html>

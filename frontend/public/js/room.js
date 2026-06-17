@@ -275,6 +275,15 @@ socket.on('reaction', ({ name, emoji }) => {
   spawnFloatingEmoji(emoji, name);
 });
 
+socket.on('badge-earned', ({ badgeIds }) => {
+  badgeIds.forEach((id, i) => setTimeout(() => showBadgeCelebration(id), i * 1200));
+  document.querySelector('profile-menu')?.addBadgeCount(badgeIds.length);
+});
+
+socket.on('badge-announced', ({ playerName, badgeId }) => {
+  prependBadgeToTimeline(playerName, badgeId);
+});
+
 function spawnFloatingEmoji(emoji, name) {
   const area = document.querySelector('.table-area');
   if (!area) return;
@@ -285,6 +294,67 @@ function spawnFloatingEmoji(emoji, name) {
   el.style.left = `${15 + Math.random() * 70}%`;
   area.appendChild(el);
   setTimeout(() => el.remove(), 2200);
+}
+
+function showBadgeCelebration(badgeId) {
+  const badge = typeof BADGES !== 'undefined' ? BADGES.find(b => b.id === badgeId) : null;
+  const overlay = document.getElementById('badgeCelebration');
+  if (!overlay) return;
+
+  const confettiEl = document.getElementById('celebrationConfetti');
+  const shieldEl = document.getElementById('celebrationShield');
+  const unlockedEl = document.getElementById('celebrationUnlocked');
+  const nameEl = document.getElementById('celebrationName');
+
+  if (badge && typeof shieldSvg === 'function') {
+    shieldEl.innerHTML = shieldSvg(badge.tier, badge.icon, true, 1);
+    const lang = typeof getLang === 'function' ? getLang() : 'en';
+    nameEl.textContent = badge.name[lang] || badge.name.en || badge.name.nl || '';
+  } else {
+    shieldEl.innerHTML = '';
+    nameEl.textContent = badgeId;
+  }
+
+  const unlockedText = typeof t === 'function' ? t('stats.badge_unlocked') : 'Badge behaald!';
+  unlockedEl.textContent = unlockedText;
+
+  // Generate confetti particles
+  confettiEl.innerHTML = '';
+  const colors = ['#f5c97a', '#c47b2b', '#5ec5f2', '#d97706', '#22c55e', '#8b5cf6', '#ec4899', '#f59e0b'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    p.style.left = `${Math.random() * 100}%`;
+    p.style.animationDelay = `${Math.random() * 1.2}s`;
+    p.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.transform = `rotate(${Math.random() * 360}deg)`;
+    confettiEl.appendChild(p);
+  }
+
+  overlay.classList.remove('hidden');
+
+  const dismiss = () => overlay.classList.add('hidden');
+  const autoTimer = setTimeout(dismiss, 4000);
+  document.getElementById('celebrationClose').onclick = () => { clearTimeout(autoTimer); dismiss(); };
+  overlay.onclick = (e) => { if (e.target === overlay) { clearTimeout(autoTimer); dismiss(); } };
+}
+
+function prependBadgeToTimeline(playerName, badgeId) {
+  const list = document.getElementById('analyticsHistoryList');
+  if (!list) return;
+  document.getElementById('analyticsHistoryEmpty')?.classList.add('hidden');
+
+  const badge = typeof BADGES !== 'undefined' ? BADGES.find(b => b.id === badgeId) : null;
+  const lang = typeof getLang === 'function' ? getLang() : 'en';
+  const badgeName = badge ? (badge.name[lang] || badge.name.en || badge.name.nl || badgeId) : badgeId;
+  const announced = typeof t === 'function' ? t('room.badge.announced') : 'earned a badge:';
+
+  const el = document.createElement('div');
+  el.className = 'badge-timeline-item fade-in';
+  el.innerHTML = `<span class="badge-timeline-icon">🏅</span>
+    <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
+  list.insertBefore(el, list.firstChild);
 }
 
 // Wire reaction buttons once

@@ -259,6 +259,10 @@ const TRANSLATIONS = {
     'stats.badge.coffee_addict.desc': 'Kies 20× de koffie-kaart ☕.',
     'stats.badge.speedrunner': 'Speedrunner',
     'stats.badge.speedrunner.desc': 'Speel 10 rondes op één dag.',
+
+    'stats.badge_unlocked': 'Badge behaald!',
+    'room.badge.announced': 'verdiende een badge:',
+    'nav.badges_title': 'Bekijk mijn badges',
   },
   en: {
     'nav.login': 'Log in',
@@ -518,6 +522,10 @@ const TRANSLATIONS = {
     'stats.badge.coffee_addict.desc': 'Pick the coffee card ☕ 20 times.',
     'stats.badge.speedrunner': 'Speedrunner',
     'stats.badge.speedrunner.desc': 'Play 10 rounds in a single day.',
+
+    'stats.badge_unlocked': 'Badge unlocked!',
+    'room.badge.announced': 'earned a badge:',
+    'nav.badges_title': 'View my badges',
   },
 };
 

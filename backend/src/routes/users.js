@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { authMiddleware } = require('../auth/middleware');
+const { getEarnedBadgeIds, getRecentBadges } = require('../domain/badges/badgeRepository');
 
 // ── GET /api/users/stats ──────────────────────────────────────────────────────
 
@@ -205,6 +206,31 @@ router.get('/stats', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ error: 'Kon statistieken niet ophalen' });
+  }
+});
+
+// ── GET /api/users/badges ─────────────────────────────────────────────────────
+
+router.get('/badges', authMiddleware, async (req, res) => {
+  try {
+    const earned = await getEarnedBadgeIds(req.user.id);
+    res.json({ badgeIds: [...earned] });
+  } catch (err) {
+    console.error('Badges fetch error:', err);
+    res.status(500).json({ error: 'Kon badges niet ophalen' });
+  }
+});
+
+// ── GET /api/users/badges/recent ──────────────────────────────────────────────
+
+router.get('/badges/recent', authMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+    const rows = await getRecentBadges(req.user.id, limit);
+    res.json(rows);
+  } catch (err) {
+    console.error('Recent badges fetch error:', err);
+    res.status(500).json({ error: 'Kon recente badges niet ophalen' });
   }
 });
 

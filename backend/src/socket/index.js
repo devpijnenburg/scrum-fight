@@ -1,6 +1,7 @@
 const db = require('../config/database');
 const { verify } = require('../auth/jwt');
 const { ESTIMATION_METHODS, PLAN_LIMITS } = require('../config/plans');
+const { evaluateBadgesForUser } = require('../domain/badges/badgeEvaluator');
 
 // roomId → { id, name, method, isGuest, revealed, players: Map<socketId, player> }
 const activeRooms = new Map();
@@ -134,6 +135,20 @@ async function doReveal(io, room, roomId) {
   } catch (err) {
     console.error('Error saving round history:', err);
   }
+
+  // Fire-and-forget badge evaluation — never blocks the reveal
+  setImmediate(async () => {
+    for (const [socketId, p] of room.players) {
+      if (!p.userId || !p.vote) continue;
+      const newBadges = await evaluateBadgesForUser(p.userId);
+      if (newBadges.length > 0) {
+        io.to(socketId).emit('badge-earned', { badgeIds: newBadges });
+        for (const badgeId of newBadges) {
+          io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
+        }
+      }
+    }
+  });
 
   if (room.isGuest) resetGuestTimer(io, roomId);
 }

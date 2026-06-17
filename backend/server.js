@@ -39,6 +39,7 @@ const MIGRATIONS = [
   '003_round_name.sql',
   '004_admin_organizations.sql',
   '005_emoticon.sql',
+  '006_user_badges.sql',
 ];
 
 async function runMigrations() {

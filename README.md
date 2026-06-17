@@ -6,6 +6,15 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 
 - **Real-time stemmen** via Socket.io — iedereen stemt tegelijk, kaarten worden tegelijk onthuld
 - **Meerdere schattingsmethoden** — Fibonacci, Modified Fibonacci, T-shirt maten, Powers of 2
+- **Spectator modus** — toeschouwers kunnen de sessie bijwonen zonder te stemmen; de countdown wacht niet op hen
+- **Consensus-indicatoren** — automatische herkenning van volledige consensus, bijna-consensus, ☕-runs, ?-runs, dichtbij en verspreid
+- **Analyticspaneel** — statistieken per ronde (gemiddelde, min, max, modus, verdeling) en volledige rondegeschiedenis
+- **Emoji-reacties** — spelers kunnen na een reveal reageren met context-gevoelige emoji's
+- **Ronde namen** — optionele naam per ronde voor eenvoudig terugkijken in de geschiedenis
+- **Emoticons per speler** — accountgebruikers kiezen een persoonlijk emoticon dat naast hun naam verschijnt
+- **Kamer naam bewerken** — de kamernaam is live aanpasbaar voor alle deelnemers
+- **Late-joiner markering** — spelers die midden in een ronde joinen worden apart aangeduid
+- **Toetsenbordsnelkoppelingen** — `1`–`9` voor kaarten, `R` voor reveal, `N` voor nieuwe ronde
 - **Meerdere kamers** — elk team heeft een eigen kamer met unieke toegangscode
 - **Gastdeelname** — joinen zonder account is mogelijk
 - **Accounts & sessiebewaring** — inloggen via e-mail/wachtwoord of OAuth (Google / GitHub)
@@ -109,17 +118,29 @@ PORT=80                             # poort voor de frontend-container
 
 ## Socket.io events
 
-| Event           | Richting       | Beschrijving                              |
-|-----------------|----------------|-------------------------------------------|
-| `join-room`     | client → server| Kamer joinen met roomId + token/naam      |
-| `vote`          | client → server| Kaartwaarde kiezen                        |
-| `reveal`        | client → server| Alle kaarten omdraaien                    |
-| `new-round`     | client → server| Volgende ronde starten                    |
-| `room-state`    | server → client| Volledige staat bij join                  |
-| `player-joined` | server → room  | Broadcast: nieuwe speler                  |
-| `player-voted`  | server → room  | Broadcast: iemand heeft gestemd           |
-| `cards-revealed`| server → room  | Broadcast: kaarten + statistieken         |
-| `round-reset`   | server → room  | Broadcast: ronde gereset                  |
+| Event               | Richting       | Beschrijving                                      |
+|---------------------|----------------|---------------------------------------------------|
+| `join-room`         | client → server| Kamer joinen met roomId + token/naam              |
+| `vote`              | client → server| Kaartwaarde kiezen (geblokkeerd voor spectators)  |
+| `reveal`            | client → server| Alle kaarten omdraaien                            |
+| `new-round`         | client → server| Volgende ronde starten                            |
+| `set-round-name`    | client → server| Naam instellen voor de huidige ronde              |
+| `update-room-name`  | client → server| Kamernaam wijzigen                                |
+| `toggle-spectator`  | client → server| Spectator modus aan/uitzetten                     |
+| `react`             | client → server| Emoji-reactie versturen (na reveal)               |
+| `room-state`        | server → client| Volledige staat bij join                          |
+| `player-joined`     | server → room  | Broadcast: nieuwe speler                          |
+| `player-left`       | server → room  | Broadcast: speler verlaat kamer                   |
+| `player-voted`      | server → room  | Broadcast: iemand heeft gestemd                   |
+| `spectator-toggled` | server → room  | Broadcast: spectator status gewijzigd             |
+| `countdown`         | server → room  | Aftelling (3, 2, 1) als niet iedereen gestemd heeft|
+| `countdown-cancelled`| server → room | Aftelling geannuleerd (nieuwe ronde gestart)      |
+| `cards-revealed`    | server → room  | Broadcast: kaarten + statistieken                 |
+| `round-reset`       | server → room  | Broadcast: ronde gereset                          |
+| `round-name-set`    | server → room  | Broadcast: rondenaam bijgewerkt                   |
+| `room-name-updated` | server → room  | Broadcast: kamernaam bijgewerkt                   |
+| `reaction`          | server → room  | Broadcast: emoji-reactie van een speler           |
+| `room-expired`      | server → client| Gastkamer verlopen wegens inactiviteit            |
 
 ## Deployment op een VPS
 

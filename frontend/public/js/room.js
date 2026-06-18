@@ -131,8 +131,12 @@ socket.on('room-state', (state) => {
   currentRoundName = state.roundName || '';
   document.getElementById('roundNameInput').value = currentRoundName;
   const me = state.players.find((p) => p.isMe);
-  if (me) { mySpectator = me.spectator || false; }
+  if (me) {
+    mySpectator = me.spectator || false;
+    if (me.vote) myVote = me.vote;
+  }
   renderAll(state);
+  if (!state.revealed && myVote) restorePickerSelection(myVote);
   updateSpectatorUI();
 });
 
@@ -960,6 +964,12 @@ function setPickerDisabled(disabled) {
 
 function clearPickerSelection() {
   document.querySelectorAll('.picker-card').forEach((c) => c.classList.remove('selected'));
+}
+
+function restorePickerSelection(value) {
+  document.querySelectorAll('.picker-card').forEach((c) => {
+    c.classList.toggle('selected', c.dataset.value === value);
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

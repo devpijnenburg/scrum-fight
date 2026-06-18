@@ -238,7 +238,19 @@ module.exports = function setupSocket(io) {
       }
 
       const room = activeRooms.get(normalizedId);
-      room.players.set(socket.id, { name, userId, emoticon, vote: null, spectator: false });
+
+      let restoredVote = null;
+      if (room.revealed) {
+        try {
+          const { rows } = await db.query(
+            `SELECT votes FROM round_history WHERE room_id = $1 ORDER BY created_at DESC LIMIT 1`,
+            [normalizedId]
+          );
+          if (rows.length && rows[0].votes?.[name]) restoredVote = rows[0].votes[name];
+        } catch { /* ignore */ }
+      }
+
+      room.players.set(socket.id, { name, userId, emoticon, vote: restoredVote, spectator: false });
 
       socket.join(normalizedId);
       socket.data.roomId = normalizedId;

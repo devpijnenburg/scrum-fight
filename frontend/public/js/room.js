@@ -349,20 +349,34 @@ function showBadgeCelebration(badgeId) {
 }
 
 function prependBadgeToTimeline(playerName, badgeId) {
-  const list = document.getElementById('analyticsHistoryList');
-  if (!list) return;
-  document.getElementById('analyticsHistoryEmpty')?.classList.add('hidden');
-
   const badge = typeof BADGES !== 'undefined' ? BADGES.find(b => b.id === badgeId) : null;
   const lang = typeof getLang === 'function' ? getLang() : 'en';
   const badgeName = badge ? (badge.name[lang] || badge.name.en || badge.name.nl || badgeId) : badgeId;
   const announced = typeof t === 'function' ? t('room.badge.announced') : 'earned a badge:';
 
-  const el = document.createElement('div');
-  el.className = 'badge-timeline-item fade-in';
-  el.innerHTML = `<span class="badge-timeline-icon">🏅</span>
-    <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
-  list.insertBefore(el, list.firstChild);
+  // Add to analytics panel history list
+  const list = document.getElementById('analyticsHistoryList');
+  if (list) {
+    document.getElementById('analyticsHistoryEmpty')?.classList.add('hidden');
+    const el = document.createElement('div');
+    el.className = 'badge-timeline-item fade-in';
+    el.innerHTML = `<span class="badge-timeline-icon">🏅</span>
+      <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
+    list.insertBefore(el, list.firstChild);
+  }
+
+  // Also show a brief room-level toast so everyone sees it regardless of panel state
+  const container = document.getElementById('roomToastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'badge-announced-toast';
+  toast.innerHTML = `<span class="badge-announced-icon">🏅</span>
+    <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, 4000);
 }
 
 // Wire reaction buttons once

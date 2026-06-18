@@ -2581,3 +2581,25 @@ kbd {
 }
 .badge-timeline-icon { font-size: 1rem; flex-shrink: 0; }
 .badge-timeline-text em { font-style: normal; color: #5ec5f2; }
+
+/* ── Room badge-announced toast (visible to all, even with panel closed) ─── */
+.badge-announced-toast {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: var(--surface-1, #1e293b);
+  border: 1px solid rgba(245, 197, 24, .45);
+  border-left: 3px solid var(--gold, #f5c518);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+  pointer-events: none;
+  font-size: .85rem;
+  max-width: 320px;
+  animation: toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.badge-announced-toast.badge-toast-hide {
+  animation: toastOut .35s ease forwards;
+}
+.badge-announced-icon { font-size: 1.1rem; flex-shrink: 0; }
+.badge-announced-text em { font-style: normal; color: #5ec5f2; font-weight: 600; }

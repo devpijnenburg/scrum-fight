@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { authMiddleware } = require('../auth/middleware');
+const { getEarnedBadgeIds, getRecentBadges } = require('../domain/badges/badgeRepository');
+const { fetchBadgeStats } = require('../domain/users/userStatsRepository');
 
 // ── GET /api/users/stats ──────────────────────────────────────────────────────
 
@@ -9,29 +11,14 @@ router.get('/stats', authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const [summary, distribution, activity, byHour, consensus, streaks, methods, maxDay,
-           sessions, consensusStreak, teamComparison] =
+    // Run the badge-stats queries (shared with badge evaluation) in parallel
+    // with the 5 additional queries that only the stats page needs.
+    const [badgeStats, activity, byHour, sessions, consensusStreak, teamComparison] =
       await Promise.all([
 
-        // Summary totals
-        db.query(
-          `SELECT
-             COUNT(*)::int                AS total_rounds,
-             COUNT(DISTINCT room_id)::int AS total_sessions,
-             MIN(created_at)              AS first_vote_at
-           FROM user_votes WHERE user_id = $1`,
-          [userId]
-        ),
+        fetchBadgeStats(userId),
 
-        // Vote distribution
-        db.query(
-          `SELECT value, COUNT(*)::int AS count
-           FROM user_votes WHERE user_id = $1
-           GROUP BY value ORDER BY count DESC`,
-          [userId]
-        ),
-
-        // Activity last 90 days
+        // Activity last 90 days (heatmap)
         db.query(
           `SELECT DATE(created_at AT TIME ZONE 'UTC')::text AS day,
                   COUNT(*)::int AS rounds
@@ -47,67 +34,6 @@ router.get('/stats', authMiddleware, async (req, res) => {
                   COUNT(*)::int AS count
            FROM user_votes WHERE user_id = $1
            GROUP BY hour ORDER BY hour`,
-          [userId]
-        ),
-
-        // Consensus rate — how often user voted same as round mode
-        db.query(
-          `WITH vote_vals AS (
-             SELECT rh.id AS round_id, val.v AS vote_val
-             FROM round_history rh
-             JOIN user_votes uv ON uv.round_id = rh.id AND uv.user_id = $1
-             CROSS JOIN LATERAL (SELECT value AS v FROM jsonb_each_text(rh.votes)) val
-           ),
-           modes AS (
-             SELECT round_id, vote_val,
-               ROW_NUMBER() OVER (PARTITION BY round_id ORDER BY COUNT(*) DESC) AS rn
-             FROM vote_vals GROUP BY round_id, vote_val
-           )
-           SELECT
-             COUNT(*) FILTER (WHERE uv.value = m.vote_val)::int AS consensus_rounds,
-             COUNT(*)::int AS total_rounds
-           FROM user_votes uv
-           JOIN modes m ON m.round_id = uv.round_id AND m.rn = 1
-           WHERE uv.user_id = $1`,
-          [userId]
-        ),
-
-        // Longest and current active-day streak
-        db.query(
-          `WITH days AS (
-             SELECT DISTINCT DATE(created_at AT TIME ZONE 'UTC') AS d
-             FROM user_votes WHERE user_id = $1
-           ),
-           grouped AS (
-             SELECT d, d - (ROW_NUMBER() OVER (ORDER BY d))::int AS grp FROM days
-           ),
-           streaks AS (
-             SELECT COUNT(*)::int AS len, MAX(d) AS last_day FROM grouped GROUP BY grp
-           )
-           SELECT
-             MAX(len)::int AS max_streak,
-             COALESCE((SELECT len FROM streaks ORDER BY last_day DESC LIMIT 1), 0)::int AS current_streak
-           FROM streaks`,
-          [userId]
-        ),
-
-        // Distinct estimation methods used
-        db.query(
-          `SELECT COUNT(DISTINCT r.method)::int AS count
-           FROM user_votes uv
-           JOIN rooms r ON r.id = uv.room_id
-           WHERE uv.user_id = $1`,
-          [userId]
-        ),
-
-        // Max rounds in a single day (Speedrunner badge)
-        db.query(
-          `SELECT COALESCE(MAX(cnt), 0)::int AS max_day_rounds
-           FROM (
-             SELECT COUNT(*)::int AS cnt
-             FROM user_votes WHERE user_id = $1
-             GROUP BY DATE(created_at AT TIME ZONE 'UTC')
-           ) sub`,
           [userId]
         ),
 
@@ -130,7 +56,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
           [userId]
         ),
 
-        // Consensus streak — consecutive rounds where user voted with the majority
+        // Consecutive consensus streak
         db.query(
           `WITH ranked AS (
              SELECT uv.value AS user_vote,
@@ -189,22 +115,52 @@ router.get('/stats', authMiddleware, async (req, res) => {
         ),
       ]);
 
+    const { summary, distribution, consensus, streak, methodsCount, maxDayRounds,
+            spectatorSessions, totalReactions } = badgeStats;
+
     res.json({
-      summary:          summary.rows[0],
-      distribution:     distribution.rows,
-      activity:         activity.rows,
-      byHour:           byHour.rows,
-      consensus:        consensus.rows[0],
-      streak:           streaks.rows[0],
-      methodsCount:     methods.rows[0].count,
-      maxDayRounds:     maxDay.rows[0].max_day_rounds,
-      sessions:         sessions.rows,
-      consensusStreak:  consensusStreak.rows[0],
-      teamComparison:   teamComparison.rows[0],
+      summary,
+      distribution,
+      activity:          activity.rows,
+      byHour:            byHour.rows,
+      consensus,
+      streak,
+      methodsCount,
+      maxDayRounds,
+      sessions:          sessions.rows,
+      consensusStreak:   consensusStreak.rows[0],
+      spectatorSessions,
+      totalReactions,
+      teamComparison:    teamComparison.rows[0],
     });
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ error: 'Kon statistieken niet ophalen' });
+  }
+});
+
+// ── GET /api/users/badges ─────────────────────────────────────────────────────
+
+router.get('/badges', authMiddleware, async (req, res) => {
+  try {
+    const earned = await getEarnedBadgeIds(req.user.id);
+    res.json({ badgeIds: [...earned] });
+  } catch (err) {
+    console.error('Badges fetch error:', err);
+    res.status(500).json({ error: 'Kon badges niet ophalen' });
+  }
+});
+
+// ── GET /api/users/badges/recent ──────────────────────────────────────────────
+
+router.get('/badges/recent', authMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+    const rows = await getRecentBadges(req.user.id, limit);
+    res.json(rows);
+  } catch (err) {
+    console.error('Recent badges fetch error:', err);
+    res.status(500).json({ error: 'Kon recente badges niet ophalen' });
   }
 });
 

@@ -10,9 +10,11 @@
 class ProfileMenu extends HTMLElement {
   connectedCallback() {
     this._name = null;
+    this._badgeCount = 0;
     this._boundOutsideClick = () => this.close();
     this._render();
     document.addEventListener('click', this._boundOutsideClick);
+    this._loadBadgeCount();
   }
 
   disconnectedCallback() {
@@ -35,6 +37,33 @@ class ProfileMenu extends HTMLElement {
     if (btn)  btn.setAttribute('aria-expanded', 'false');
   }
 
+  addBadgeCount(n) {
+    this._badgeCount = (this._badgeCount || 0) + n;
+    const countEl = this.querySelector('.pm-bell-count');
+    if (countEl) {
+      countEl.textContent = this._badgeCount;
+      countEl.classList.remove('hidden');
+    }
+  }
+
+  async _loadBadgeCount() {
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user || typeof apiFetch !== 'function') return;
+    try {
+      const rows = await apiFetch('/users/badges/recent?limit=50');
+      // Badges earned since the last time the user saw the bell are "new".
+      // Use localStorage so the threshold survives page reloads.
+      const tsKey = 'sfBadgeBellSeen';
+      const lastSeen = parseInt(localStorage.getItem(tsKey) || '0', 10);
+      const newCount = rows.filter(r => new Date(r.earned_at).getTime() > lastSeen).length;
+      // Mark as seen up to now — next load this batch won't count again.
+      localStorage.setItem(tsKey, String(Date.now()));
+      if (newCount > 0) this.addBadgeCount(newCount);
+    } catch {
+      // badges are optional
+    }
+  }
+
   _render() {
     const user     = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
     const loggedIn = !!user;
@@ -45,8 +74,14 @@ class ProfileMenu extends HTMLElement {
       return;
     }
 
+    const bellHtml = loggedIn ? `
+      <button class="pm-bell _pm-bell" type="button" title="${typeof t === 'function' ? t('nav.badges_title') : 'Badges'}">
+        🏅<span class="pm-bell-count hidden" id="pmBellCount">${this._badgeCount || 0}</span>
+      </button>` : '';
+
     this.innerHTML = `
       <div class="profile-menu-wrap">
+        ${bellHtml}
         <button class="profile-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
           <span class="profile-avatar">👤</span>
           <span class="profile-name-label">${typeof escapeHtml === 'function' ? escapeHtml(name || 'Profiel') : (name || 'Profiel')}</span>
@@ -86,6 +121,15 @@ class ProfileMenu extends HTMLElement {
       </div>
     `;
 
+    // Restore badge count display after re-render
+    if (this._badgeCount > 0) {
+      const countEl = this.querySelector('.pm-bell-count');
+      if (countEl) {
+        countEl.textContent = this._badgeCount;
+        countEl.classList.remove('hidden');
+      }
+    }
+
     this._wire();
 
     if (typeof buildLangDropdown === 'function') {
@@ -114,6 +158,11 @@ class ProfileMenu extends HTMLElement {
     this.querySelector('._pm-auth')?.addEventListener('click', () => {
       this.close();
       this.dispatchEvent(new CustomEvent('profile-auth-request', { bubbles: true }));
+    });
+
+    this.querySelector('._pm-bell')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.location.href = '/stats.html#badges';
     });
   }
 }

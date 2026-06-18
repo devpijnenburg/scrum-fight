@@ -115,6 +115,12 @@ function joinRoomSocket(name, token) {
   socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token });
 }
 
+// Force reconnect when restoring from bfcache (mobile back-button/tab-restore)
+// Without this the socket stays disconnected and the page shows stale state.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && socket.disconnected) socket.connect();
+});
+
 // ── Socket events ─────────────────────────────────────────────────────────────
 
 socket.on('connect', () => {
@@ -132,7 +138,9 @@ socket.on('room-state', (state) => {
   document.getElementById('roundNameInput').value = currentRoundName;
   const me = state.players.find((p) => p.isMe);
   if (me) { mySpectator = me.spectator || false; }
-  renderAll(state);
+  // noAnim=true: skip flip transition on reconnect so cards appear directly
+  // in the correct state (no 3-D animation that can glitch on mobile restore)
+  renderAll(state, true);
   updateSpectatorUI();
 });
 
@@ -275,6 +283,17 @@ socket.on('reaction', ({ name, emoji }) => {
   spawnFloatingEmoji(emoji, name);
 });
 
+let _celebrationTimer = null;
+
+socket.on('badge-earned', ({ badgeIds }) => {
+  badgeIds.forEach((id, i) => setTimeout(() => showBadgeCelebration(id), i * 1200));
+  document.querySelector('profile-menu')?.addBadgeCount(badgeIds.length);
+});
+
+socket.on('badge-announced', ({ playerName, badgeId }) => {
+  prependBadgeToTimeline(playerName, badgeId);
+});
+
 function spawnFloatingEmoji(emoji, name) {
   const area = document.querySelector('.table-area');
   if (!area) return;
@@ -285,6 +304,82 @@ function spawnFloatingEmoji(emoji, name) {
   el.style.left = `${15 + Math.random() * 70}%`;
   area.appendChild(el);
   setTimeout(() => el.remove(), 2200);
+}
+
+function showBadgeCelebration(badgeId) {
+  const badge = typeof BADGES !== 'undefined' ? BADGES.find(b => b.id === badgeId) : null;
+  const overlay = document.getElementById('badgeCelebration');
+  if (!overlay) return;
+
+  const confettiEl = document.getElementById('celebrationConfetti');
+  const shieldEl = document.getElementById('celebrationShield');
+  const unlockedEl = document.getElementById('celebrationUnlocked');
+  const nameEl = document.getElementById('celebrationName');
+
+  if (badge && typeof shieldSvg === 'function') {
+    shieldEl.innerHTML = shieldSvg(badge.tier, badge.icon, true, 1);
+    const lang = typeof getLang === 'function' ? getLang() : 'en';
+    nameEl.textContent = badge.name[lang] || badge.name.en || badge.name.nl || '';
+  } else {
+    shieldEl.innerHTML = '';
+    nameEl.textContent = badgeId;
+  }
+
+  const unlockedText = typeof t === 'function' ? t('stats.badge_unlocked') : 'Badge behaald!';
+  unlockedEl.textContent = unlockedText;
+
+  // Generate confetti particles
+  confettiEl.innerHTML = '';
+  const colors = ['#f5c97a', '#c47b2b', '#5ec5f2', '#d97706', '#22c55e', '#8b5cf6', '#ec4899', '#f59e0b'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    p.style.left = `${Math.random() * 100}%`;
+    p.style.animationDelay = `${Math.random() * 1.2}s`;
+    p.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.transform = `rotate(${Math.random() * 360}deg)`;
+    confettiEl.appendChild(p);
+  }
+
+  clearTimeout(_celebrationTimer);
+  overlay.classList.remove('hidden');
+
+  const dismiss = () => overlay.classList.add('hidden');
+  _celebrationTimer = setTimeout(dismiss, 7000);
+  document.getElementById('celebrationClose').onclick = () => { clearTimeout(_celebrationTimer); dismiss(); };
+  overlay.onclick = (e) => { if (e.target === overlay) { clearTimeout(_celebrationTimer); dismiss(); } };
+}
+
+function prependBadgeToTimeline(playerName, badgeId) {
+  const badge = typeof BADGES !== 'undefined' ? BADGES.find(b => b.id === badgeId) : null;
+  const lang = typeof getLang === 'function' ? getLang() : 'en';
+  const badgeName = badge ? (badge.name[lang] || badge.name.en || badge.name.nl || badgeId) : badgeId;
+  const announced = typeof t === 'function' ? t('room.badge.announced') : 'earned a badge:';
+
+  // Add to analytics panel history list
+  const list = document.getElementById('analyticsHistoryList');
+  if (list) {
+    document.getElementById('analyticsHistoryEmpty')?.classList.add('hidden');
+    const el = document.createElement('div');
+    el.className = 'badge-timeline-item fade-in';
+    el.innerHTML = `<span class="badge-timeline-icon">🏅</span>
+      <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
+    list.insertBefore(el, list.firstChild);
+  }
+
+  // Also show a brief room-level toast so everyone sees it regardless of panel state
+  const container = document.getElementById('roomToastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'badge-announced-toast';
+  toast.innerHTML = `<span class="badge-announced-icon">🏅</span>
+    <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, 4000);
 }
 
 // Wire reaction buttons once
@@ -795,7 +890,7 @@ document.addEventListener('click', (e) => {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 
-function renderAll(state) {
+function renderAll(state, noAnim = false) {
   document.getElementById('roomNameDisplay').textContent = state.name;
   document.getElementById('roomCodeDisplay').textContent = state.id;
   document.getElementById('methodBadge').textContent = state.methodLabel;
@@ -803,7 +898,7 @@ function renderAll(state) {
 
   updatePlayerCount(state.players.length);
   renderPickerCards(state.cardValues);
-  renderTable(state);
+  renderTable(state, noAnim);
   updateVoteStatus();
 
   if (state.revealed) {
@@ -825,7 +920,7 @@ function renderAll(state) {
 
 // ── Poker table rendering ─────────────────────────────────────────────────────
 
-function renderTable(state) {
+function renderTable(state, noAnim = false) {
   if (!state) return;
   const table = document.getElementById('pokerTable');
   table.querySelectorAll('.player-seat').forEach((el) => el.remove());
@@ -856,7 +951,7 @@ function renderTable(state) {
     seat.style.left = `${cx}%`;
     seat.style.top = `${cy}%`;
 
-    const card = createCardEl(player, state.revealed, isMe);
+    const card = createCardEl(player, state.revealed, isMe, noAnim);
     const nameTag = document.createElement('div');
     nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}${player.spectator ? ' is-spectator' : ''}`;
     const displayName = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
@@ -876,7 +971,7 @@ function renderTable(state) {
   });
 }
 
-function createCardEl(player, revealed, isMe) {
+function createCardEl(player, revealed, isMe, noAnim = false) {
   const container = document.createElement('div');
   container.className = `card-container${player.joinedMidRound ? ' card-mid-round' : ''}${player.spectator ? ' card-spectator' : ''}`;
 
@@ -912,7 +1007,11 @@ function createCardEl(player, revealed, isMe) {
 
   card.appendChild(back);
   card.appendChild(front);
-  if (revealed) card.classList.add('flipped');
+  if (revealed) {
+    if (noAnim) card.style.transition = 'none';
+    card.classList.add('flipped');
+    if (noAnim) requestAnimationFrame(() => { card.style.transition = ''; });
+  }
 
   container.appendChild(card);
   return container;

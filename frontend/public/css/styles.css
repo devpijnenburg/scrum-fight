@@ -859,6 +859,11 @@ profile-menu { display: contents; }
 
 .card.flipped { transform: rotateY(180deg); }
 
+/* Belt-and-suspenders: hide the invisible face explicitly so mobile browsers
+   that mishandle backface-visibility can't show both faces at once. */
+.card.flipped .card-back-face  { visibility: hidden; }
+.card:not(.flipped) .card-front-face { visibility: hidden; }
+
 .card-mid-round .card:not(.flipped) { opacity: .35; }
 
 .card-face {
@@ -1894,6 +1899,26 @@ kbd {
 }
 .badge-card.badge-locked { opacity: .75; }
 
+.badge-card.badge-new {
+  box-shadow: 0 0 0 2px var(--gold, #f5c518), 0 4px 18px rgba(245,197,24,.25);
+}
+.badge-new-chip {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--gold, #f5c518);
+  color: #000;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.badge-card { position: relative; }
+
 .badge-shield {
   width: 78px;
   height: 94px;
@@ -2413,3 +2438,177 @@ kbd {
   opacity: .5;
 }
 .plan-limit-close:hover { opacity: 1; }
+
+/* ── Badge bell (profile-menu) ─────────────────────────────────────────────── */
+
+.pm-bell {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  padding: .25rem .4rem;
+  border-radius: var(--radius);
+  line-height: 1;
+  opacity: .85;
+  transition: opacity .15s, background .15s;
+}
+.pm-bell:hover { opacity: 1; background: rgba(255,255,255,.07); }
+.pm-bell-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 900;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+.profile-menu-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+}
+
+/* ── Badge celebration overlay ─────────────────────────────────────────────── */
+
+.badge-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(2, 6, 23, .75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.badge-celebration.hidden { display: none; }
+
+.badge-celebration-card {
+  position: relative;
+  background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(94, 197, 242, .3);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 340px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  top: -10px;
+  animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(380px) rotate(720deg); opacity: 0; }
+}
+
+.celebration-shield {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 1rem;
+  width: 100px;
+}
+.celebration-shield svg {
+  width: 100px;
+  height: 120px;
+}
+
+.celebration-label {
+  position: relative;
+  z-index: 1;
+  font-size: .9rem;
+  color: var(--text-muted);
+  margin-bottom: .35rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.celebration-name {
+  position: relative;
+  z-index: 1;
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #f0f4f8;
+  line-height: 1.2;
+  margin-bottom: .5rem;
+}
+
+.celebration-close {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: .25rem .4rem;
+  border-radius: var(--radius);
+  z-index: 2;
+}
+.celebration-close:hover { color: #f0f4f8; }
+
+/* ── Badge timeline item (analytics panel) ─────────────────────────────────── */
+
+.badge-timeline-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem .8rem;
+  background: rgba(94, 197, 242, .07);
+  border-left: 3px solid rgba(94, 197, 242, .4);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: .4rem;
+  font-size: .82rem;
+  color: var(--text-muted);
+  animation: fadeIn .3s ease;
+}
+.badge-timeline-icon { font-size: 1rem; flex-shrink: 0; }
+.badge-timeline-text em { font-style: normal; color: #5ec5f2; }
+
+/* ── Room badge-announced toast (visible to all, even with panel closed) ─── */
+.badge-announced-toast {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: var(--surface-1, #1e293b);
+  border: 1px solid rgba(245, 197, 24, .45);
+  border-left: 3px solid var(--gold, #f5c518);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+  pointer-events: none;
+  font-size: .85rem;
+  max-width: 320px;
+  animation: toastIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.badge-announced-toast.badge-toast-hide {
+  animation: toastOut .35s ease forwards;
+}
+.badge-announced-icon { font-size: 1.1rem; flex-shrink: 0; }
+.badge-announced-text em { font-style: normal; color: #5ec5f2; font-weight: 600; }

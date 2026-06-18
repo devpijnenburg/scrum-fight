@@ -326,6 +326,7 @@ async function loadStats() {
     // Always render badges — shows locked state + progress even before first vote
     renderBadges(data, earnedIds);
     showBadgeToastsFromDb();
+    document.getElementById('badgesSection').classList.remove('hidden');
 
     if (!data.summary.total_rounds) {
       document.getElementById('statsEmpty').classList.remove('hidden');

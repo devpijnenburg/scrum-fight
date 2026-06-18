@@ -69,8 +69,15 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authMiddleware, async (req, res) => {
   const { rows } = await db.query(
-    `SELECT id, name, email, plan, is_admin, totp_enabled, oauth_provider, emoticon, created_at
-     FROM users WHERE id = $1`,
+    `SELECT u.id, u.name, u.email, u.plan, u.is_admin, u.totp_enabled, u.oauth_provider, u.emoticon, u.created_at,
+            cs.updated_at AS subscription_date, cs.current_period_end_date
+     FROM users u
+     LEFT JOIN LATERAL (
+       SELECT updated_at, current_period_end_date FROM creem_subscriptions
+       WHERE user_id = u.id
+       ORDER BY updated_at DESC LIMIT 1
+     ) cs ON true
+     WHERE u.id = $1`,
     [req.user.id]
   );
   if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden' });
@@ -175,6 +182,22 @@ router.get('/github/callback', async (req, res) => {
   } catch (err) {
     console.error('GitHub OAuth error:', err);
     res.redirect('/?error=oauth_failed');
+  }
+});
+
+// POST /api/auth/refresh — issue a fresh token with current plan from DB
+router.post('/refresh', authMiddleware, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Gebruiker niet gevonden' });
+    const u = rows[0];
+    const token = sign({ id: u.id, name: u.name, plan: u.plan, is_admin: u.is_admin });
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ error: 'Kon token niet vernieuwen' });
   }
 });
 

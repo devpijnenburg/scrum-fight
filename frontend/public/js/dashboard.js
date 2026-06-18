@@ -39,10 +39,20 @@ document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { p
 document.querySelectorAll('.plan-card').forEach((card) => {
   if (card.dataset.plan === user.plan) {
     card.setAttribute('data-active', 'true');
-    const btn = card.querySelector('.plan-upgrade-btn');
+    const btn = card.querySelector('.btn');
     if (btn) btn.remove();
   }
 });
+
+// Only show plan upgrade section for free users;
+// if a paid user lands on #abonnement, redirect to subscription page
+if (user.plan !== 'free') {
+  const planInfoSection = document.querySelector('.plan-info');
+  if (planInfoSection) planInfoSection.classList.add('hidden');
+  if (location.hash === '#abonnement') {
+    window.location.replace('/subscription.html');
+  }
+}
 
 document.getElementById('modalRoomName').value = generateRoomName();
 document.getElementById('modalRandomBtn').addEventListener('click', () => {

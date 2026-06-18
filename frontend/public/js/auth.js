@@ -20,11 +20,29 @@ function logout() {
   window.location.href = '/';
 }
 
-// Hide footer auth links when already logged in
+// Hide footer auth links when already logged in;
+// point subscription link to dedicated subscription page for logged-in users
 function initFooterAuth() {
-  if (!getCurrentUser()) return;
-  const el = document.getElementById('footerAuth');
-  if (el) el.classList.add('hidden');
+  const user = getCurrentUser();
+  const subLink = document.getElementById('footerSubscriptionLink');
+  const supportLink = document.getElementById('landingSupportLink');
+
+  if (user) {
+    const el = document.getElementById('footerAuth');
+    if (el) el.classList.add('hidden');
+
+    if (subLink) subLink.href = '/subscription.html';
+    if (supportLink) {
+      supportLink.href = '/subscription.html';
+      supportLink.textContent = 'Bekijk abonnementen';
+    }
+  } else {
+    if (subLink) subLink.href = '/login.html#register';
+    if (supportLink) {
+      supportLink.href = '/login.html#register';
+      supportLink.textContent = 'Maak een gratis account aan';
+    }
+  }
 }
 
 // Update navbar for logged-in state — no-op, handled by <site-nav> component

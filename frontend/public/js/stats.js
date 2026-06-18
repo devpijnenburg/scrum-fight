@@ -20,11 +20,17 @@ function renderBadges(data, earnedIds = new Set()) {
   const container = document.getElementById('badgesGrid');
   container.innerHTML = '';
 
-  // Badges in earnedIds but not yet seen on this page → show "NEW" chip.
   const SEEN_KEY = 'sfBadgesSeenOnStats';
+
+  // After a data reset earnedIds is empty — wipe any stale localStorage so
+  // the bell and NEW chips start fresh without a manual browser cache clear.
+  if (earnedIds.size === 0) {
+    localStorage.removeItem(SEEN_KEY);
+    localStorage.removeItem('sfBadgeBellSeen');
+  }
+
   const seenOnStats = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'));
   const newBadgeIds = new Set([...earnedIds].filter(id => !seenOnStats.has(id)));
-  // After rendering, mark all current earned badges as seen.
   localStorage.setItem(SEEN_KEY, JSON.stringify([...earnedIds]));
 
   BADGE_GROUPS.forEach((group) => {

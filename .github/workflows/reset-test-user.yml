@@ -48,46 +48,42 @@ jobs:
           fi
 
           echo "Gebruiker gevonden: \$USER_ID"
-          echo "Data voor reset:"
-          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
-            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
-            "SELECT
-               COUNT(*)                                         AS stemmen,
-               COUNT(DISTINCT room_id)                         AS spellen,
-               COUNT(*) FILTER (WHERE value = '☕')            AS koffies,
-               COUNT(*) FILTER (WHERE value NOT IN ('?','☕')) AS schattingen
-             FROM user_votes WHERE user_id = '\$USER_ID';"
 
-          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
-            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
-            "DO \$\$
-             DECLARE uid UUID := '\$USER_ID';
-             BEGIN
-               DELETE FROM user_votes WHERE user_id = uid;
-               BEGIN
-                 DELETE FROM user_badges WHERE user_id = uid;
-               EXCEPTION WHEN undefined_table THEN NULL;
-               END;
-               BEGIN
-                 DELETE FROM user_spectator_sessions WHERE user_id = uid;
-               EXCEPTION WHEN undefined_table THEN NULL;
-               END;
-               BEGIN
-                 DELETE FROM user_reactions WHERE user_id = uid;
-               EXCEPTION WHEN undefined_table THEN NULL;
-               END;
-             END \$\$;"
+          psql_run() {
+            docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+              exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c "\$1"
+          }
+          psql_opt() {
+            psql_run "\$1" 2>/dev/null || echo "  (tabel bestaat nog niet)"
+          }
+          show_stats() {
+            psql_run "SELECT
+                COUNT(*)                                         AS stemmen,
+                COUNT(DISTINCT room_id)                         AS spellen,
+                COUNT(*) FILTER (WHERE value = '☕')            AS koffies,
+                COUNT(*) FILTER (WHERE value NOT IN ('?','☕')) AS schattingen
+              FROM user_votes WHERE user_id = '\$USER_ID';"
+            psql_opt "SELECT COUNT(*) AS badges            FROM user_badges             WHERE user_id = '\$USER_ID';"
+            psql_opt "SELECT COUNT(*) AS spectator_sessies FROM user_spectator_sessions WHERE user_id = '\$USER_ID';"
+            psql_opt "SELECT COUNT(*) AS reacties          FROM user_reactions          WHERE user_id = '\$USER_ID';"
+          }
 
-          echo "Verificatie na reset:"
-          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
-            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
-            "SELECT
-               COUNT(*)                                         AS stemmen,
-               COUNT(DISTINCT room_id)                         AS spellen,
-               COUNT(*) FILTER (WHERE value = '☕')            AS koffies,
-               COUNT(*) FILTER (WHERE value NOT IN ('?','☕')) AS schattingen
-             FROM user_votes WHERE user_id = '\$USER_ID';"
+          echo ""
+          echo "=== Data voor reset ==="
+          show_stats
 
+          echo ""
+          echo "=== Reset uitvoeren ==="
+          psql_run "DELETE FROM user_votes               WHERE user_id = '\$USER_ID';"
+          psql_opt "DELETE FROM user_badges              WHERE user_id = '\$USER_ID';"
+          psql_opt "DELETE FROM user_spectator_sessions  WHERE user_id = '\$USER_ID';"
+          psql_opt "DELETE FROM user_reactions           WHERE user_id = '\$USER_ID';"
+
+          echo ""
+          echo "=== Verificatie na reset ==="
+          show_stats
+
+          echo ""
           echo "Reset voltooid voor '${{ inputs.email }}'."
           EOF
 

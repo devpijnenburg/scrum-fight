@@ -307,7 +307,15 @@ module.exports = function setupSocket(io) {
       if (!player) return;
 
       player.spectator = !player.spectator;
-      if (player.spectator) player.vote = null;
+      if (player.spectator) {
+        player.vote = null;
+        if (player.userId) {
+          db.query(
+            'INSERT INTO user_spectator_sessions (user_id, room_id) VALUES ($1, $2)',
+            [player.userId, roomId]
+          ).catch(console.error);
+        }
+      }
 
       io.to(roomId).emit('spectator-toggled', {
         socketId: socket.id,
@@ -403,6 +411,13 @@ module.exports = function setupSocket(io) {
 
       const player = room.players.get(socket.id);
       if (!player) return;
+
+      if (player.userId) {
+        db.query(
+          'INSERT INTO user_reactions (user_id, room_id, emoji) VALUES ($1, $2, $3)',
+          [player.userId, roomId, emoji]
+        ).catch(console.error);
+      }
 
       io.to(roomId).emit('reaction', { name: player.name, emoji });
     });

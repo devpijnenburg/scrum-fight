@@ -11,7 +11,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 
   try {
     const [summary, distribution, activity, byHour, consensus, streaks, methods, maxDay,
-           sessions, consensusStreak, teamComparison] =
+           sessions, consensusStreak, teamComparison, spectatorRows, reactionRows] =
       await Promise.all([
 
         // Summary totals
@@ -164,6 +164,18 @@ router.get('/stats', authMiddleware, async (req, res) => {
           [userId]
         ),
 
+        // Spectator sessions
+        db.query(
+          'SELECT COUNT(*)::int AS spectator_sessions FROM user_spectator_sessions WHERE user_id = $1',
+          [userId]
+        ),
+
+        // Total emoji reactions sent
+        db.query(
+          'SELECT COUNT(*)::int AS total_reactions FROM user_reactions WHERE user_id = $1',
+          [userId]
+        ),
+
         // Team comparison — user avg vs team avg on numeric rounds
         db.query(
           `WITH numeric_rounds AS (
@@ -191,17 +203,19 @@ router.get('/stats', authMiddleware, async (req, res) => {
       ]);
 
     res.json({
-      summary:          summary.rows[0],
-      distribution:     distribution.rows,
-      activity:         activity.rows,
-      byHour:           byHour.rows,
-      consensus:        consensus.rows[0],
-      streak:           streaks.rows[0],
-      methodsCount:     methods.rows[0].count,
-      maxDayRounds:     maxDay.rows[0].max_day_rounds,
-      sessions:         sessions.rows,
-      consensusStreak:  consensusStreak.rows[0],
-      teamComparison:   teamComparison.rows[0],
+      summary:           summary.rows[0],
+      distribution:      distribution.rows,
+      activity:          activity.rows,
+      byHour:            byHour.rows,
+      consensus:         consensus.rows[0],
+      streak:            streaks.rows[0],
+      methodsCount:      methods.rows[0].count,
+      maxDayRounds:      maxDay.rows[0].max_day_rounds,
+      sessions:          sessions.rows,
+      consensusStreak:   consensusStreak.rows[0],
+      spectatorSessions: spectatorRows.rows[0].spectator_sessions,
+      totalReactions:    reactionRows.rows[0].total_reactions,
+      teamComparison:    teamComparison.rows[0],
     });
   } catch (err) {
     console.error('Stats error:', err);

@@ -62,12 +62,37 @@ const BADGE_UNLOCK_FNS = [
   { id: 'scrum_starter',        unlock: atLeast((d) => d.summary.total_sessions, 1) },
   { id: 'facilitator',          unlock: atLeast((d) => d.summary.total_sessions, 10) },
 
+  // Coffee
+  { id: 'coffee_break',         unlock: atLeast((d) => voteCount(d, ['☕']), 1) },
+  { id: 'barista',              unlock: atLeast((d) => voteCount(d, ['☕']), 15) },
+  { id: 'coffee_addict',        unlock: atLeast((d) => voteCount(d, ['☕']), 40) },
+  { id: 'espresso_yourself',    unlock: atLeast((d) => voteCount(d, ['☕']), 75) },
+
+  // Question mark
+  { id: 'first_doubt',          unlock: atLeast((d) => voteCount(d, ['?']), 3) },
+  { id: 'sceptic',              unlock: atLeast((d) => voteCount(d, ['?']), 20) },
+  { id: 'philosopher',          unlock: atLeast((d) => voteCount(d, ['?']), 50) },
+  { id: 'oracle',               unlock: atLeast((d) => voteCount(d, ['?']), 100) },
+
+  // Spectator
+  { id: 'ghost',                unlock: atLeast((d) => d.spectatorSessions || 0, 1) },
+  { id: 'phantom',              unlock: atLeast((d) => d.spectatorSessions || 0, 15) },
+  { id: 'eternal_watcher',      unlock: atLeast((d) => d.spectatorSessions || 0, 50) },
+
+  // Reactions
+  { id: 'reactor',              unlock: atLeast((d) => d.totalReactions || 0, 10) },
+  { id: 'hype_machine',         unlock: atLeast((d) => d.totalReactions || 0, 100) },
+  { id: 'emoji_god',            unlock: atLeast((d) => d.totalReactions || 0, 500) },
+
   // Specials & fun
   { id: 'all_in_estimator',     unlock: atLeast((d) => d.summary.total_rounds, 500) },
   { id: 'lowballer',            unlock: atLeast((d) => voteCount(d, ['0', '½', '1', 'XS', 'S']), 10) },
   { id: 'middle_ground',        unlock: atLeast((d) => voteCount(d, ['3', '5', '8', 'M']), 10) },
   { id: 'contrarian',           unlock: atLeast((d) => voteCount(d, ['?']), 10) },
   { id: 'mind_reader',          unlock: atLeast((d) => d.consensus?.consensus_rounds || 0, 10) },
+  { id: 'eight_ball',           unlock: atLeast((d) => voteCount(d, ['8']), 20) },
+  { id: 'centurion',            unlock: atLeast((d) => voteCount(d, ['100']), 5) },
+  { id: 'pessimist',            unlock: atLeast((d) => voteCount(d, ['89', '100', 'XXL']), 10) },
 
   // Ultra
   { id: 'estimation_beast',     unlock: atLeast((d) => d.summary.total_rounds, 500) },

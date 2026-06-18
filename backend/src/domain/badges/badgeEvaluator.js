@@ -4,7 +4,7 @@ const { getEarnedBadgeIds, insertNewBadges } = require('./badgeRepository');
 
 // Fetches the stats subset needed for badge evaluation (lighter than the full /users/stats endpoint).
 async function fetchStatsForUser(userId) {
-  const [summary, distribution, consensus, streaks, methods, maxDay] = await Promise.all([
+  const [summary, distribution, consensus, streaks, methods, maxDay, spectatorRows, reactionRows] = await Promise.all([
     db.query(
       `SELECT COUNT(*)::int AS total_rounds,
               COUNT(DISTINCT room_id)::int AS total_sessions
@@ -69,15 +69,25 @@ async function fetchStatsForUser(userId) {
        ) sub`,
       [userId]
     ),
+    db.query(
+      'SELECT COUNT(*)::int AS spectator_sessions FROM user_spectator_sessions WHERE user_id = $1',
+      [userId]
+    ),
+    db.query(
+      'SELECT COUNT(*)::int AS total_reactions FROM user_reactions WHERE user_id = $1',
+      [userId]
+    ),
   ]);
 
   return {
-    summary:      summary.rows[0],
-    distribution: distribution.rows,
-    consensus:    consensus.rows[0],
-    streak:       streaks.rows[0],
-    methodsCount: methods.rows[0].count,
-    maxDayRounds: maxDay.rows[0].max_day_rounds,
+    summary:          summary.rows[0],
+    distribution:     distribution.rows,
+    consensus:        consensus.rows[0],
+    streak:           streaks.rows[0],
+    methodsCount:     methods.rows[0].count,
+    maxDayRounds:     maxDay.rows[0].max_day_rounds,
+    spectatorSessions: spectatorRows.rows[0].spectator_sessions,
+    totalReactions:   reactionRows.rows[0].total_reactions,
   };
 }
 

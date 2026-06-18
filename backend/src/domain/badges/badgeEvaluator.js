@@ -30,7 +30,7 @@ async function fetchStatsForUser(userId) {
          FROM vote_vals GROUP BY round_id, rv_val
        )
        SELECT
-         COUNT(*) FILTER (WHERE uv_val = modes.rv_val AND modes.rn = 1)::int AS consensus_rounds,
+         COUNT(*) FILTER (WHERE uv.value = modes.rv_val AND modes.rn = 1)::int AS consensus_rounds,
          COUNT(DISTINCT uv.round_id)::int AS total_rounds
        FROM user_votes uv
        JOIN modes ON modes.round_id = uv.round_id

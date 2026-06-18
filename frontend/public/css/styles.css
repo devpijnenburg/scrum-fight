@@ -805,8 +805,8 @@ profile-menu { display: contents; }
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: url('/brightcubes-logo.png') center / auto 50% no-repeat;
-  filter: hue-rotate(110deg) saturate(0.45) brightness(1.3);
-  opacity: .22;
+  filter: saturate(0) brightness(10);
+  opacity: .2;
   pointer-events: none;
   z-index: 0;
 }

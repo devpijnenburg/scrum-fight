@@ -800,18 +800,15 @@ profile-menu { display: contents; }
   overflow: hidden;
 }
 
-.table-watermark {
+.poker-table::before {
+  content: '';
   position: absolute;
-  height: 50%;
-  width: auto;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: .18;
+  inset: 0;
+  background: url('/brightcubes-logo.jpg') center / auto 50% no-repeat;
   mix-blend-mode: soft-light;
   filter: grayscale(1) brightness(2.5);
+  opacity: .18;
   pointer-events: none;
-  user-select: none;
 }
 
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }

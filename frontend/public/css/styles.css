@@ -1651,6 +1651,12 @@ kbd {
   width: 100%;
 }
 
+#statsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .stats-header {
   display: flex;
   align-items: flex-start;

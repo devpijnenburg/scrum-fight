@@ -168,13 +168,13 @@ router.get('/stats', authMiddleware, async (req, res) => {
         db.query(
           'SELECT COUNT(*)::int AS spectator_sessions FROM user_spectator_sessions WHERE user_id = $1',
           [userId]
-        ),
+        ).catch(() => ({ rows: [{ spectator_sessions: 0 }] })),
 
         // Total emoji reactions sent
         db.query(
           'SELECT COUNT(*)::int AS total_reactions FROM user_reactions WHERE user_id = $1',
           [userId]
-        ),
+        ).catch(() => ({ rows: [{ total_reactions: 0 }] })),
 
         // Team comparison — user avg vs team avg on numeric rounds
         db.query(

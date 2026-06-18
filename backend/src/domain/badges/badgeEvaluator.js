@@ -72,11 +72,11 @@ async function fetchStatsForUser(userId) {
     db.query(
       'SELECT COUNT(*)::int AS spectator_sessions FROM user_spectator_sessions WHERE user_id = $1',
       [userId]
-    ),
+    ).catch(() => ({ rows: [{ spectator_sessions: 0 }] })),
     db.query(
       'SELECT COUNT(*)::int AS total_reactions FROM user_reactions WHERE user_id = $1',
       [userId]
-    ),
+    ).catch(() => ({ rows: [{ total_reactions: 0 }] })),
   ]);
 
   return {

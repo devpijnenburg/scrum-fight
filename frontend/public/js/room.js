@@ -115,6 +115,12 @@ function joinRoomSocket(name, token) {
   socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token });
 }
 
+// Force reconnect when restoring from bfcache (mobile back-button/tab-restore)
+// Without this the socket stays disconnected and the page shows stale state.
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted && socket.disconnected) socket.connect();
+});
+
 // ── Socket events ─────────────────────────────────────────────────────────────
 
 socket.on('connect', () => {
@@ -132,7 +138,9 @@ socket.on('room-state', (state) => {
   document.getElementById('roundNameInput').value = currentRoundName;
   const me = state.players.find((p) => p.isMe);
   if (me) { mySpectator = me.spectator || false; }
-  renderAll(state);
+  // noAnim=true: skip flip transition on reconnect so cards appear directly
+  // in the correct state (no 3-D animation that can glitch on mobile restore)
+  renderAll(state, true);
   updateSpectatorUI();
 });
 
@@ -865,7 +873,7 @@ document.addEventListener('click', (e) => {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 
-function renderAll(state) {
+function renderAll(state, noAnim = false) {
   document.getElementById('roomNameDisplay').textContent = state.name;
   document.getElementById('roomCodeDisplay').textContent = state.id;
   document.getElementById('methodBadge').textContent = state.methodLabel;
@@ -873,7 +881,7 @@ function renderAll(state) {
 
   updatePlayerCount(state.players.length);
   renderPickerCards(state.cardValues);
-  renderTable(state);
+  renderTable(state, noAnim);
   updateVoteStatus();
 
   if (state.revealed) {
@@ -895,7 +903,7 @@ function renderAll(state) {
 
 // ── Poker table rendering ─────────────────────────────────────────────────────
 
-function renderTable(state) {
+function renderTable(state, noAnim = false) {
   if (!state) return;
   const table = document.getElementById('pokerTable');
   table.querySelectorAll('.player-seat').forEach((el) => el.remove());
@@ -926,7 +934,7 @@ function renderTable(state) {
     seat.style.left = `${cx}%`;
     seat.style.top = `${cy}%`;
 
-    const card = createCardEl(player, state.revealed, isMe);
+    const card = createCardEl(player, state.revealed, isMe, noAnim);
     const nameTag = document.createElement('div');
     nameTag.className = `player-name-tag${isMe ? ' is-me' : ''}${player.spectator ? ' is-spectator' : ''}`;
     const displayName = player.emoticon ? `${player.emoticon} ${player.name}` : player.name;
@@ -946,7 +954,7 @@ function renderTable(state) {
   });
 }
 
-function createCardEl(player, revealed, isMe) {
+function createCardEl(player, revealed, isMe, noAnim = false) {
   const container = document.createElement('div');
   container.className = `card-container${player.joinedMidRound ? ' card-mid-round' : ''}${player.spectator ? ' card-spectator' : ''}`;
 
@@ -982,7 +990,11 @@ function createCardEl(player, revealed, isMe) {
 
   card.appendChild(back);
   card.appendChild(front);
-  if (revealed) card.classList.add('flipped');
+  if (revealed) {
+    if (noAnim) card.style.transition = 'none';
+    card.classList.add('flipped');
+    if (noAnim) requestAnimationFrame(() => { card.style.transition = ''; });
+  }
 
   container.appendChild(card);
   return container;

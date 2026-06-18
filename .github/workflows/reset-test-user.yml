@@ -52,17 +52,25 @@ jobs:
           docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
             exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
             "SELECT
-               (SELECT COUNT(*) FROM user_votes              WHERE user_id = '\$USER_ID') AS votes,
-               (SELECT COUNT(*) FROM user_badges             WHERE user_id = '\$USER_ID') AS badges,
-               (SELECT COUNT(*) FROM user_spectator_sessions WHERE user_id = '\$USER_ID') AS spectator_sessions,
-               (SELECT COUNT(*) FROM user_reactions          WHERE user_id = '\$USER_ID') AS reactions;"
+               (SELECT COUNT(*) FROM user_votes  WHERE user_id = '\$USER_ID') AS votes,
+               (SELECT COUNT(*) FROM user_badges WHERE user_id = '\$USER_ID') AS badges;"
 
           docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
             exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
-            "DELETE FROM user_badges             WHERE user_id = '\$USER_ID';
-             DELETE FROM user_votes              WHERE user_id = '\$USER_ID';
-             DELETE FROM user_spectator_sessions WHERE user_id = '\$USER_ID';
-             DELETE FROM user_reactions          WHERE user_id = '\$USER_ID';"
+            "DO \$\$
+             DECLARE uid UUID := '\$USER_ID';
+             BEGIN
+               DELETE FROM user_badges WHERE user_id = uid;
+               DELETE FROM user_votes   WHERE user_id = uid;
+               BEGIN
+                 DELETE FROM user_spectator_sessions WHERE user_id = uid;
+               EXCEPTION WHEN undefined_table THEN NULL;
+               END;
+               BEGIN
+                 DELETE FROM user_reactions WHERE user_id = uid;
+               EXCEPTION WHEN undefined_table THEN NULL;
+               END;
+             END \$\$;"
 
           echo "Reset voltooid voor '${{ inputs.email }}'."
           EOF

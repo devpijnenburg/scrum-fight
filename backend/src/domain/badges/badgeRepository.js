@@ -10,17 +10,14 @@ async function getEarnedBadgeIds(userId) {
 
 async function insertNewBadges(userId, badgeIds) {
   if (!badgeIds.length) return [];
-  const newlyEarned = [];
-  for (const badgeId of badgeIds) {
-    const { rowCount } = await db.query(
-      `INSERT INTO user_badges (user_id, badge_id)
-       VALUES ($1, $2)
-       ON CONFLICT (user_id, badge_id) DO NOTHING`,
-      [userId, badgeId]
-    );
-    if (rowCount > 0) newlyEarned.push(badgeId);
-  }
-  return newlyEarned;
+  const { rows } = await db.query(
+    `INSERT INTO user_badges (user_id, badge_id)
+     SELECT $1, unnest($2::text[])
+     ON CONFLICT (user_id, badge_id) DO NOTHING
+     RETURNING badge_id`,
+    [userId, badgeIds]
+  );
+  return rows.map((r) => r.badge_id);
 }
 
 async function getRecentBadges(userId, limit = 20) {

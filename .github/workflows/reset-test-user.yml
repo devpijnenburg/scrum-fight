@@ -1,0 +1,72 @@
+name: Reset test user data
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'E-mailadres van de gebruiker om te resetten'
+        required: true
+        default: 'scrumfight@pijnenburg.pro'
+      environment:
+        description: 'Omgeving'
+        required: true
+        default: 'test'
+        type: choice
+        options: [test, production]
+
+jobs:
+  reset-user:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Reset user data via psql
+        run: |
+          ENV_FILE=".env${{ inputs.environment == 'test' && '.test' || '' }}"
+          COMPOSE_FILE="docker-compose${{ inputs.environment == 'test' && '.test' || '.prod' }}.yml"
+          PROJECT="scrum-fight${{ inputs.environment == 'test' && '-test' || '' }}"
+          DB_NAME="${{ inputs.environment == 'test' && 'scrumfight_test' || '' }}"
+
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl << EOF
+          source ~/scrum-fight/${ENV_FILE}
+          RESOLVED_DB="${DB_NAME:-\$POSTGRES_DB}"
+
+          RESULT=\$(docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -t -c \
+            "SELECT id FROM users WHERE email = '${{ inputs.email }}';")
+          USER_ID=\$(echo "\$RESULT" | tr -d '[:space:]')
+
+          if [ -z "\$USER_ID" ]; then
+            echo "FOUT: gebruiker '${{ inputs.email }}' niet gevonden."
+            exit 1
+          fi
+
+          echo "Gebruiker gevonden: \$USER_ID"
+          echo "Data voor reset:"
+          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
+            "SELECT
+               (SELECT COUNT(*) FROM user_votes              WHERE user_id = '\$USER_ID') AS votes,
+               (SELECT COUNT(*) FROM user_badges             WHERE user_id = '\$USER_ID') AS badges,
+               (SELECT COUNT(*) FROM user_spectator_sessions WHERE user_id = '\$USER_ID') AS spectator_sessions,
+               (SELECT COUNT(*) FROM user_reactions          WHERE user_id = '\$USER_ID') AS reactions;"
+
+          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
+            "DELETE FROM user_badges             WHERE user_id = '\$USER_ID';
+             DELETE FROM user_votes              WHERE user_id = '\$USER_ID';
+             DELETE FROM user_spectator_sessions WHERE user_id = '\$USER_ID';
+             DELETE FROM user_reactions          WHERE user_id = '\$USER_ID';"
+
+          echo "Reset voltooid voor '${{ inputs.email }}'."
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

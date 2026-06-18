@@ -787,7 +787,9 @@ profile-menu { display: contents; }
   width: 100%;
   max-width: 600px;
   aspect-ratio: 16 / 9;
-  background: radial-gradient(ellipse at center, #1a7a3c 0%, #155e2e 60%, #0d3b17 100%);
+  background:
+    url('/brightcubes-logo.png') center / auto 50% no-repeat,
+    radial-gradient(ellipse at center, #1a7a3c 0%, #155e2e 60%, #0d3b17 100%);
   border-radius: 50%;
   border: 8px solid var(--table-gold);
   box-shadow:
@@ -798,17 +800,6 @@ profile-menu { display: contents; }
   align-items: center;
   justify-content: center;
   overflow: hidden;
-}
-
-.poker-table::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: url('/brightcubes-logo.png') center / auto 50% no-repeat;
-  filter: saturate(0) brightness(10);
-  opacity: .2;
-  pointer-events: none;
-  z-index: 0;
 }
 
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }

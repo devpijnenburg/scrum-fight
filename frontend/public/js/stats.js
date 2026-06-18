@@ -317,6 +317,10 @@ async function loadStats() {
 
     document.getElementById('statsLoading').classList.add('hidden');
 
+    // Always render badges — shows locked state + progress even before first vote
+    renderBadges(data, earnedIds);
+    showBadgeToastsFromDb();
+
     if (!data.summary.total_rounds) {
       document.getElementById('statsEmpty').classList.remove('hidden');
       return;
@@ -393,10 +397,6 @@ async function loadStats() {
         </div>`;
       badge.classList.remove('hidden');
     }
-
-    // Badges — DB is source of truth for unlocked state
-    renderBadges(data, earnedIds);
-    showBadgeToastsFromDb();
 
     // Charts (guard against CDN failure)
     if (typeof Chart !== 'undefined') {

@@ -20,6 +20,13 @@ function renderBadges(data, earnedIds = new Set()) {
   const container = document.getElementById('badgesGrid');
   container.innerHTML = '';
 
+  // Badges in earnedIds but not yet seen on this page → show "NEW" chip.
+  const SEEN_KEY = 'sfBadgesSeenOnStats';
+  const seenOnStats = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'));
+  const newBadgeIds = new Set([...earnedIds].filter(id => !seenOnStats.has(id)));
+  // After rendering, mark all current earned badges as seen.
+  localStorage.setItem(SEEN_KEY, JSON.stringify([...earnedIds]));
+
   BADGE_GROUPS.forEach((group) => {
     const section = document.createElement('section');
     section.className = 'badge-category';
@@ -36,6 +43,7 @@ function renderBadges(data, earnedIds = new Set()) {
     const grid = section.querySelector('.badge-category-grid');
     group.badges.forEach((b) => {
       const unlocked = earnedIds.has(b.id);
+      const isNew = newBadgeIds.has(b.id);
       let pct = null;
       if (b.progress) {
         const [cur, max] = b.progress(data);
@@ -56,9 +64,10 @@ function renderBadges(data, earnedIds = new Set()) {
       })() : '<div class="badge-tier-dots" aria-hidden="true"><span class="tier-bronze"></span><span class="tier-silver"></span><span class="tier-gold"></span><span class="tier-diamond"></span></div>';
 
       const card = document.createElement('div');
-      card.className = `badge-card badge-tier-${b.tier}${unlocked ? ' badge-unlocked' : ' badge-locked'}`;
+      card.className = `badge-card badge-tier-${b.tier}${unlocked ? ' badge-unlocked' : ' badge-locked'}${isNew ? ' badge-new' : ''}`;
       card.title = `${name}: ${desc}`;
       card.innerHTML = `
+        ${isNew ? '<span class="badge-new-chip">★ NEW</span>' : ''}
         <div class="badge-shield">${shieldSvg(b.tier, b.icon, unlocked, pct)}</div>
         <div class="badge-name">${name}</div>
         <div class="badge-desc">${desc}</div>

@@ -51,10 +51,13 @@ class ProfileMenu extends HTMLElement {
     if (!user || typeof apiFetch !== 'function') return;
     try {
       const rows = await apiFetch('/users/badges/recent?limit=50');
-      const seenKey = 'sfSeenBadgesNav';
-      const seen = new Set(JSON.parse(sessionStorage.getItem(seenKey) || '[]'));
-      const newCount = rows.filter(r => !seen.has(r.badge_id)).length;
-      sessionStorage.setItem(seenKey, JSON.stringify(rows.map(r => r.badge_id)));
+      // Badges earned since the last time the user saw the bell are "new".
+      // Use localStorage so the threshold survives page reloads.
+      const tsKey = 'sfBadgeBellSeen';
+      const lastSeen = parseInt(localStorage.getItem(tsKey) || '0', 10);
+      const newCount = rows.filter(r => new Date(r.earned_at).getTime() > lastSeen).length;
+      // Mark as seen up to now — next load this batch won't count again.
+      localStorage.setItem(tsKey, String(Date.now()));
       if (newCount > 0) this.addBadgeCount(newCount);
     } catch {
       // badges are optional

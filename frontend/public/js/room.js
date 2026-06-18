@@ -343,7 +343,7 @@ function showBadgeCelebration(badgeId) {
   overlay.classList.remove('hidden');
 
   const dismiss = () => overlay.classList.add('hidden');
-  const autoTimer = setTimeout(dismiss, 4000);
+  const autoTimer = setTimeout(dismiss, 7000);
   document.getElementById('celebrationClose').onclick = () => { clearTimeout(autoTimer); dismiss(); };
   overlay.onclick = (e) => { if (e.target === overlay) { clearTimeout(autoTimer); dismiss(); } };
 }

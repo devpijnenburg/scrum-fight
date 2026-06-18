@@ -531,6 +531,105 @@ select.input { cursor: pointer; }
   text-transform: uppercase;
 }
 
+/* ── Support notes ──────────────────────────────────────────────────────────── */
+.landing-support-note {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: .875rem;
+  max-width: 520px;
+  margin: 2rem auto 0;
+  line-height: 1.6;
+}
+.landing-support-note a {
+  color: var(--primary);
+  text-decoration: none;
+}
+.landing-support-note a:hover { text-decoration: underline; }
+
+.plan-support-note {
+  color: var(--text-muted);
+  font-size: .825rem;
+  margin-top: 1.25rem;
+  line-height: 1.6;
+  padding: .75rem 1rem;
+  border-left: 2px solid var(--border);
+}
+
+.supporter-note {
+  display: flex;
+  gap: .85rem;
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: var(--radius-sm);
+  padding: .9rem 1rem;
+  margin-bottom: .25rem;
+}
+.supporter-note-icon { font-size: 1.4rem; line-height: 1; }
+.supporter-note strong { display: block; margin-bottom: .2rem; }
+.supporter-note p { font-size: .875rem; color: var(--text-muted); margin: 0; }
+
+/* ── Room plan badge ────────────────────────────────────────────────────────── */
+.room-plan-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.room-plan-badge--pro {
+  background: color-mix(in srgb, var(--secondary) 18%, transparent);
+  color: var(--secondary);
+  border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
+}
+.room-plan-badge--premium {
+  background: color-mix(in srgb, var(--table-gold) 15%, transparent);
+  color: var(--table-gold);
+  border: 1px solid color-mix(in srgb, var(--table-gold) 35%, transparent);
+}
+
+/* ── Billing toggle ─────────────────────────────────────────────────────────── */
+.billing-toggle {
+  display: inline-flex;
+  gap: .25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .25rem;
+  margin-bottom: 1.25rem;
+}
+.billing-toggle-btn {
+  background: none;
+  border: none;
+  border-radius: 999px;
+  padding: .35rem .9rem;
+  font-size: .85rem;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.billing-toggle-btn--active {
+  background: var(--primary);
+  color: #fff;
+}
+.billing-save-badge {
+  background: color-mix(in srgb, var(--success) 25%, transparent);
+  color: var(--success);
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .1rem .4rem;
+  border-radius: 999px;
+}
+.billing-toggle-btn--active .billing-save-badge {
+  background: color-mix(in srgb, #fff 20%, transparent);
+  color: #fff;
+}
+
 /* ── Room header ────────────────────────────────────────────────────────────── */
 .page-room { display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 

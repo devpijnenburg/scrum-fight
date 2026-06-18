@@ -34,6 +34,7 @@ function serializeRoom(room, mySocketId) {
     methodLabel: ESTIMATION_METHODS[room.method]?.label ?? room.method,
     cardValues: ESTIMATION_METHODS[room.method]?.values ?? [],
     isGuest: room.isGuest,
+    ownerPlan: room.ownerPlan || 'free',
     revealed: room.revealed,
     roundName: room.roundName || '',
     players,
@@ -199,14 +200,15 @@ module.exports = function setupSocket(io) {
         return;
       }
 
-      // Check participant limit for authenticated room owners
+      // Fetch owner plan for authenticated rooms (used for limit check and room badge)
+      let ownerPlan = 'free';
       if (!dbRoom.is_guest && dbRoom.owner_id) {
         const { rows: ownerRows } = await db.query(
           'SELECT plan FROM users WHERE id = $1',
           [dbRoom.owner_id]
         );
-        const plan = ownerRows[0]?.plan ?? 'free';
-        const limit = PLAN_LIMITS[plan]?.maxParticipants ?? 5;
+        ownerPlan = ownerRows[0]?.plan ?? 'free';
+        const limit = PLAN_LIMITS[ownerPlan]?.maxParticipants ?? 7;
 
         if (limit !== Infinity) {
           const current = activeRooms.get(normalizedId)?.players?.size ?? 0;
@@ -227,6 +229,7 @@ module.exports = function setupSocket(io) {
           name: dbRoom.name,
           method: dbRoom.method,
           isGuest: dbRoom.is_guest,
+          ownerPlan,
           revealed: false,
           roundName: '',
           players: new Map(),

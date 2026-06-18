@@ -1,7 +1,7 @@
 const PLAN_LIMITS = {
   free: {
     maxRooms: 3,
-    maxParticipants: 5,
+    maxParticipants: 7,
     retentionDays: 30,
   },
   pro: {

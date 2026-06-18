@@ -799,6 +799,21 @@ profile-menu { display: contents; }
   justify-content: center;
 }
 
+.table-watermark {
+  position: absolute;
+  height: 50%;
+  width: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: .12;
+  mix-blend-mode: screen;
+  filter: sepia(1) hue-rotate(85deg) saturate(0.6) brightness(1.4);
+  pointer-events: none;
+  user-select: none;
+  border-radius: 4px;
+}
+
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }
 
 /* ── Player seats on the table ──────────────────────────────────────────────── */

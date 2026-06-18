@@ -51,7 +51,12 @@ jobs:
           echo "Data voor reset:"
           docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
             exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
-            "SELECT COUNT(*) AS stemmen FROM user_votes WHERE user_id = '\$USER_ID';"
+            "SELECT
+               COUNT(*)                                         AS stemmen,
+               COUNT(DISTINCT room_id)                         AS spellen,
+               COUNT(*) FILTER (WHERE value = '☕')            AS koffies,
+               COUNT(*) FILTER (WHERE value NOT IN ('?','☕')) AS schattingen
+             FROM user_votes WHERE user_id = '\$USER_ID';"
 
           docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
             exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
@@ -72,6 +77,16 @@ jobs:
                EXCEPTION WHEN undefined_table THEN NULL;
                END;
              END \$\$;"
+
+          echo "Verificatie na reset:"
+          docker compose -p "${PROJECT}" -f ~/scrum-fight/${COMPOSE_FILE} \
+            exec -T db psql -U \$POSTGRES_USER -d \$RESOLVED_DB -c \
+            "SELECT
+               COUNT(*)                                         AS stemmen,
+               COUNT(DISTINCT room_id)                         AS spellen,
+               COUNT(*) FILTER (WHERE value = '☕')            AS koffies,
+               COUNT(*) FILTER (WHERE value NOT IN ('?','☕')) AS schattingen
+             FROM user_votes WHERE user_id = '\$USER_ID';"
 
           echo "Reset voltooid voor '${{ inputs.email }}'."
           EOF

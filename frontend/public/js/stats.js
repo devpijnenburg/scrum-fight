@@ -577,6 +577,10 @@ async function loadStats() {
 
     document.getElementById('statsLoading').classList.add('hidden');
 
+    // Always show badges — locked state is informative even with zero votes
+    renderBadges(data);
+    document.getElementById('badgesSection').classList.remove('hidden');
+
     if (!data.summary.total_rounds) {
       document.getElementById('statsEmpty').classList.remove('hidden');
       return;
@@ -654,9 +658,8 @@ async function loadStats() {
       badge.classList.remove('hidden');
     }
 
-    // Badges
+    // Badges (already rendered above; just show toasts)
     const unlockedIds = BADGES.filter(b => b.unlock(data)).map(b => b.id);
-    renderBadges(data);
     showBadgeToasts(unlockedIds);
 
     // Charts (guard against CDN failure)

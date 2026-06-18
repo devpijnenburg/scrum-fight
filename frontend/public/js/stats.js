@@ -264,7 +264,10 @@ function showBadgeToastsFromDb(earnedIds) {
     sessionStorage.setItem(SEEN_BADGES_KEY, JSON.stringify(badgeIds));
     if (seen.size === 0) return;
     const newOnes = badgeIds.filter(id => !seen.has(id));
-    newOnes.forEach((id, i) => setTimeout(() => showToast(id), i * 700));
+    const MAX = 3;
+    newOnes.slice(0, MAX).forEach((id, i) => setTimeout(() => showToast(id), i * 700));
+    const extra = newOnes.length - MAX;
+    if (extra > 0) setTimeout(() => showToastSummary(extra), MAX * 700);
   } catch {
     // badges are optional — silently skip
   }
@@ -281,6 +284,25 @@ function showToast(badgeId) {
     <div class="badge-toast-body">
       <div class="badge-toast-label">${t('stats.toast_unlocked')}</div>
       <div class="badge-toast-name">${localText(badge.name)}</div>
+    </div>
+    <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    setTimeout(() => toast.remove(), 400);
+  }, 5500);
+}
+
+function showToastSummary(count) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const label = getLang() === 'nl' ? `en nog ${count} andere badge${count !== 1 ? 's' : ''} verdiend` : `and ${count} more badge${count !== 1 ? 's' : ''} unlocked`;
+  const toast = document.createElement('div');
+  toast.className = 'badge-toast-item';
+  toast.innerHTML = `
+    <div class="badge-toast-body" style="padding:.6rem 0">
+      <div class="badge-toast-label">🏅 ${label}</div>
     </div>
     <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
   `;

@@ -16,7 +16,7 @@ if (!user) window.location.href = '/login.html';
 
 // ── Badge rendering ───────────────────────────────────────────────────────────
 
-function renderBadges(data) {
+function renderBadges(data, earnedIds = new Set()) {
   const container = document.getElementById('badgesGrid');
   container.innerHTML = '';
 
@@ -24,7 +24,7 @@ function renderBadges(data) {
     const section = document.createElement('section');
     section.className = 'badge-category';
 
-    const unlockedCount = group.badges.filter((badge) => badge.unlock(data)).length;
+    const unlockedCount = group.badges.filter((badge) => earnedIds.has(badge.id)).length;
     section.innerHTML = `
       <div class="badge-category-header">
         <h3><span>${group.icon}</span>${localText(group.title)}</h3>
@@ -35,7 +35,7 @@ function renderBadges(data) {
 
     const grid = section.querySelector('.badge-category-grid');
     group.badges.forEach((b) => {
-      const unlocked = b.unlock(data);
+      const unlocked = earnedIds.has(b.id);
       let pct = null;
       if (b.progress) {
         const [cur, max] = b.progress(data);
@@ -300,7 +300,11 @@ function renderSessions(sessions) {
 
 async function loadStats() {
   try {
-    const data = await apiFetch('/users/stats', { method: 'GET' });
+    const [data, badgeData] = await Promise.all([
+      apiFetch('/users/stats', { method: 'GET' }),
+      apiFetch('/users/badges').catch(() => ({ badgeIds: [] })),
+    ]);
+    const earnedIds = new Set(badgeData.badgeIds || []);
 
     document.getElementById('statsLoading').classList.add('hidden');
 
@@ -381,8 +385,8 @@ async function loadStats() {
       badge.classList.remove('hidden');
     }
 
-    // Badges
-    renderBadges(data);
+    // Badges — DB is source of truth for unlocked state
+    renderBadges(data, earnedIds);
     showBadgeToastsFromDb();
 
     // Charts (guard against CDN failure)

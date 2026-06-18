@@ -797,6 +797,7 @@ profile-menu { display: contents; }
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .table-watermark {
@@ -806,12 +807,11 @@ profile-menu { display: contents; }
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: .12;
-  mix-blend-mode: screen;
-  filter: sepia(1) hue-rotate(85deg) saturate(0.6) brightness(1.4);
+  opacity: .18;
+  mix-blend-mode: soft-light;
+  filter: grayscale(1) brightness(2.5);
   pointer-events: none;
   user-select: none;
-  border-radius: 4px;
 }
 
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }

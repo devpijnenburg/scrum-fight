@@ -803,12 +803,12 @@ profile-menu { display: contents; }
 .poker-table::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: url('/brightcubes-logo.jpg') center / auto 50% no-repeat;
-  mix-blend-mode: soft-light;
-  filter: grayscale(1) brightness(2.5);
-  opacity: .18;
+  mix-blend-mode: multiply;
+  opacity: .35;
   pointer-events: none;
+  z-index: 0;
 }
 
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }

@@ -11,7 +11,7 @@ const CONSENSUS_SQL = `
   ),
   modes AS (
     SELECT round_id, vote_val,
-      ROW_NUMBER() OVER (PARTITION BY round_id ORDER BY COUNT(*) DESC) AS rn
+      ROW_NUMBER() OVER (PARTITION BY round_id ORDER BY COUNT(*) DESC, vote_val) AS rn
     FROM vote_vals GROUP BY round_id, vote_val
   )
   SELECT

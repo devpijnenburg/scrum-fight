@@ -283,6 +283,8 @@ socket.on('reaction', ({ name, emoji }) => {
   spawnFloatingEmoji(emoji, name);
 });
 
+let _celebrationTimer = null;
+
 socket.on('badge-earned', ({ badgeIds }) => {
   badgeIds.forEach((id, i) => setTimeout(() => showBadgeCelebration(id), i * 1200));
   document.querySelector('profile-menu')?.addBadgeCount(badgeIds.length);
@@ -340,12 +342,13 @@ function showBadgeCelebration(badgeId) {
     confettiEl.appendChild(p);
   }
 
+  clearTimeout(_celebrationTimer);
   overlay.classList.remove('hidden');
 
   const dismiss = () => overlay.classList.add('hidden');
-  const autoTimer = setTimeout(dismiss, 7000);
-  document.getElementById('celebrationClose').onclick = () => { clearTimeout(autoTimer); dismiss(); };
-  overlay.onclick = (e) => { if (e.target === overlay) { clearTimeout(autoTimer); dismiss(); } };
+  _celebrationTimer = setTimeout(dismiss, 7000);
+  document.getElementById('celebrationClose').onclick = () => { clearTimeout(_celebrationTimer); dismiss(); };
+  overlay.onclick = (e) => { if (e.target === overlay) { clearTimeout(_celebrationTimer); dismiss(); } };
 }
 
 function prependBadgeToTimeline(playerName, badgeId) {
@@ -361,7 +364,7 @@ function prependBadgeToTimeline(playerName, badgeId) {
     const el = document.createElement('div');
     el.className = 'badge-timeline-item fade-in';
     el.innerHTML = `<span class="badge-timeline-icon">🏅</span>
-      <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
+      <span class="badge-timeline-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
     list.insertBefore(el, list.firstChild);
   }
 
@@ -371,7 +374,7 @@ function prependBadgeToTimeline(playerName, badgeId) {
   const toast = document.createElement('div');
   toast.className = 'badge-announced-toast';
   toast.innerHTML = `<span class="badge-announced-icon">🏅</span>
-    <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${announced} <em>${escapeHtml(badgeName)}</em></span>`;
+    <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('badge-toast-hide');

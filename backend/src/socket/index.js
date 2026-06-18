@@ -132,23 +132,23 @@ async function doReveal(io, room, roomId) {
     }
 
     await db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
+
+    // Fire-and-forget badge evaluation — only when votes were persisted successfully
+    setImmediate(async () => {
+      for (const [socketId, p] of room.players) {
+        if (!p.userId || !p.vote) continue;
+        const newBadges = await evaluateBadgesForUser(p.userId);
+        if (newBadges.length > 0) {
+          io.to(socketId).emit('badge-earned', { badgeIds: newBadges });
+          for (const badgeId of newBadges) {
+            io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
+          }
+        }
+      }
+    });
   } catch (err) {
     console.error('Error saving round history:', err);
   }
-
-  // Fire-and-forget badge evaluation — never blocks the reveal
-  setImmediate(async () => {
-    for (const [socketId, p] of room.players) {
-      if (!p.userId || !p.vote) continue;
-      const newBadges = await evaluateBadgesForUser(p.userId);
-      if (newBadges.length > 0) {
-        io.to(socketId).emit('badge-earned', { badgeIds: newBadges });
-        for (const badgeId of newBadges) {
-          io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
-        }
-      }
-    }
-  });
 
   if (room.isGuest) resetGuestTimer(io, roomId);
 }
@@ -310,10 +310,14 @@ module.exports = function setupSocket(io) {
       if (player.spectator) {
         player.vote = null;
         if (player.userId) {
-          db.query(
-            'INSERT INTO user_spectator_sessions (user_id, room_id) VALUES ($1, $2)',
-            [player.userId, roomId]
-          ).catch(console.error);
+          const now = Date.now();
+          if (!player._lastSpectatorInsert || now - player._lastSpectatorInsert > 60_000) {
+            player._lastSpectatorInsert = now;
+            db.query(
+              'INSERT INTO user_spectator_sessions (user_id, room_id) VALUES ($1, $2)',
+              [player.userId, roomId]
+            ).catch(console.error);
+          }
         }
       }
 

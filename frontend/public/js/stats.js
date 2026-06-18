@@ -16,28 +16,31 @@ if (!user) window.location.href = '/login.html';
 
 // ── Badge rendering ───────────────────────────────────────────────────────────
 
-function renderBadges(data, earnedIds = new Set()) {
+function renderBadges(data, earnedIds) {
+  const ids = earnedIds ?? new Set();
   const container = document.getElementById('badgesGrid');
   container.innerHTML = '';
 
   const SEEN_KEY = 'sfBadgesSeenOnStats';
 
-  // After a data reset earnedIds is empty — wipe any stale localStorage so
-  // the bell and NEW chips start fresh without a manual browser cache clear.
-  if (earnedIds.size === 0) {
+  // Only wipe stale localStorage when we KNOW the user has no earned badges
+  // (earnedIds is an empty Set from a successful fetch, not null from a failed one).
+  if (earnedIds !== null && earnedIds !== undefined && ids.size === 0) {
     localStorage.removeItem(SEEN_KEY);
     localStorage.removeItem('sfBadgeBellSeen');
   }
 
   const seenOnStats = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'));
-  const newBadgeIds = new Set([...earnedIds].filter(id => !seenOnStats.has(id)));
-  localStorage.setItem(SEEN_KEY, JSON.stringify([...earnedIds]));
+  const newBadgeIds = new Set([...ids].filter(id => !seenOnStats.has(id)));
+  if (earnedIds !== null && earnedIds !== undefined) {
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...ids]));
+  }
 
   BADGE_GROUPS.forEach((group) => {
     const section = document.createElement('section');
     section.className = 'badge-category';
 
-    const unlockedCount = group.badges.filter((badge) => earnedIds.has(badge.id)).length;
+    const unlockedCount = group.badges.filter((badge) => ids.has(badge.id)).length;
     section.innerHTML = `
       <div class="badge-category-header">
         <h3><span>${group.icon}</span>${localText(group.title)}</h3>
@@ -48,7 +51,7 @@ function renderBadges(data, earnedIds = new Set()) {
 
     const grid = section.querySelector('.badge-category-grid');
     group.badges.forEach((b) => {
-      const unlocked = earnedIds.has(b.id);
+      const unlocked = ids.has(b.id);
       const isNew = newBadgeIds.has(b.id);
       let pct = null;
       if (b.progress) {
@@ -254,9 +257,9 @@ function buildHoursChart(byHour) {
 
 const SEEN_BADGES_KEY = 'sfSeenBadges';
 
-async function showBadgeToastsFromDb() {
+function showBadgeToastsFromDb(earnedIds) {
   try {
-    const { badgeIds } = await apiFetch('/users/badges');
+    const badgeIds = [...earnedIds];
     const seen = new Set(JSON.parse(sessionStorage.getItem(SEEN_BADGES_KEY) || '[]'));
     sessionStorage.setItem(SEEN_BADGES_KEY, JSON.stringify(badgeIds));
     if (seen.size === 0) return;
@@ -317,15 +320,15 @@ async function loadStats() {
   try {
     const [data, badgeData] = await Promise.all([
       apiFetch('/users/stats', { method: 'GET' }),
-      apiFetch('/users/badges').catch(() => ({ badgeIds: [] })),
+      apiFetch('/users/badges').catch(() => null),
     ]);
-    const earnedIds = new Set(badgeData.badgeIds || []);
+    const earnedIds = badgeData ? new Set(badgeData.badgeIds || []) : null;
 
     document.getElementById('statsLoading').classList.add('hidden');
 
     // Always render badges — shows locked state + progress even before first vote
     renderBadges(data, earnedIds);
-    showBadgeToastsFromDb();
+    if (earnedIds) showBadgeToastsFromDb(earnedIds);
     document.getElementById('badgesSection').classList.remove('hidden');
 
     if (!data.summary.total_rounds) {
@@ -415,6 +418,7 @@ async function loadStats() {
 
   } catch (err) {
     document.getElementById('statsLoading').textContent = t('stats.error');
+    document.getElementById('badgesSection').classList.remove('hidden');
     console.error(err);
   }
 }

@@ -799,7 +799,6 @@ profile-menu { display: contents; }
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .table-label { font-size: 2rem; opacity: .25; user-select: none; }

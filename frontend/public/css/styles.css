@@ -801,8 +801,6 @@ profile-menu { display: contents; }
   justify-content: center;
 }
 
-.table-label { font-size: 2rem; opacity: .25; user-select: none; }
-
 /* ── Player seats on the table ──────────────────────────────────────────────── */
 .player-seat {
   position: absolute;

@@ -1,7 +1,5 @@
 const nodemailer = require('nodemailer');
 
-const ROB_EMAIL = process.env.ROB_EMAIL || '';
-
 let _transporter = null;
 let _from = '';
 
@@ -51,12 +49,4 @@ async function sendMail(to, subject, text) {
   }
 }
 
-async function sendAdminNotification(subject, text) {
-  if (!ROB_EMAIL) {
-    console.warn('[mail] ROB_EMAIL niet ingesteld — admin-notificatie overgeslagen.');
-    return;
-  }
-  await sendMail(ROB_EMAIL, `[Scrum Fight] ${subject}`, text);
-}
-
-module.exports = { sendMail, sendAdminNotification };
+module.exports = { sendMail };

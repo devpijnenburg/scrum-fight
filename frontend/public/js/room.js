@@ -772,7 +772,7 @@ function initRoomAuth() {
     const err = document.getElementById('roomRegError');
     err.classList.add('hidden');
     try {
-      const { user, token } = await apiFetch('/auth/register', {
+      await apiFetch('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           name: document.getElementById('roomRegName').value,
@@ -780,7 +780,9 @@ function initRoomAuth() {
           password: document.getElementById('roomRegPassword').value,
         }),
       });
-      onRoomAuthSuccess(user, token);
+      err.classList.add('hidden');
+      document.getElementById('roomRegisterForm').innerHTML =
+        '<p style="text-align:center;padding:1rem">✉️ Controleer je e-mail voor een bevestigingslink.</p>';
     } catch (ex) {
       err.textContent = ex.message;
       err.classList.remove('hidden');

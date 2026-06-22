@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const speakeasy = require('speakeasy');
@@ -7,6 +8,7 @@ const github = require('../auth/strategies/github');
 const { authMiddleware } = require('../auth/middleware');
 const { verify, sign } = require('../auth/jwt');
 const db = require('../config/database');
+const { sendMail } = require('../config/email');
 
 // In-memory store for OAuth state nonces (maps state → { provider, timestamp })
 const oauthStates = new Map();
@@ -66,6 +68,39 @@ router.post('/login', async (req, res) => {
     }
     res.status(401).json({ error: err.message });
   }
+});
+
+// ── Verificatiemail opnieuw sturen ────────────────────────────────────────────
+
+router.post('/resend-verification', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'E-mail is verplicht' });
+
+  const { rows } = await db.query(
+    'SELECT id, name, email, email_verified FROM users WHERE email = $1',
+    [email.toLowerCase().trim()]
+  );
+
+  // Altijd 200 teruggeven om e-mailenumeratie te voorkomen
+  if (!rows.length || rows[0].email_verified) {
+    return res.json({ ok: true });
+  }
+
+  const user = rows[0];
+  const token = crypto.randomUUID();
+  await db.query(
+    'UPDATE users SET email_verification_token = $1, updated_at = NOW() WHERE id = $2',
+    [token, user.id]
+  );
+
+  const baseUrl = process.env.BASE_URL || 'http://localhost';
+  await sendMail(
+    user.email,
+    'Bevestig je e-mailadres — Scrum Fight',
+    `Hoi ${user.name},\n\nKlik op de link hieronder om je e-mailadres te bevestigen:\n\n${baseUrl}/verify-email.html?token=${token}\n\nDeze link is eenmalig geldig.\n\nGroeten,\nScrum Fight`
+  );
+
+  res.json({ ok: true });
 });
 
 // ── Current user ─────────────────────────────────────────────────────────────

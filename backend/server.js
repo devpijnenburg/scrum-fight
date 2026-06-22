@@ -42,6 +42,7 @@ const MIGRATIONS = [
   '006_user_badges.sql',
   '007_spectator_reactions.sql',
   '008_email_verification.sql',
+  '009_verify_existing_accounts.sql',
 ];
 
 async function runMigrations() {

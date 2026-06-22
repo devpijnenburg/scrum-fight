@@ -133,6 +133,21 @@ document.getElementById('editUserSaveBtn').addEventListener('click', async () =>
   }
 });
 
+document.getElementById('editUserDeleteBtn').addEventListener('click', async () => {
+  const u = userMap.get(editingUserId);
+  if (!confirm(`Gebruiker "${u?.name}" verwijderen? Dit kan niet ongedaan worden.`)) return;
+  const err = document.getElementById('editUserError');
+  err.classList.add('hidden');
+  try {
+    await apiFetch(`/admin/users/${editingUserId}`, { method: 'DELETE' });
+    closeEditUser();
+    loadUsers();
+  } catch (ex) {
+    err.textContent = ex.message;
+    err.classList.remove('hidden');
+  }
+});
+
 // ── Organizations ─────────────────────────────────────────────────────────────
 
 let orgList = [];

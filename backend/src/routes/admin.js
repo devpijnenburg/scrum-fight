@@ -68,6 +68,11 @@ router.put('/users/:id', async (req, res) => {
   res.json(rows[0]);
 });
 
+router.delete('/users/:id', async (req, res) => {
+  await db.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+  res.status(204).end();
+});
+
 // ── Organizations ─────────────────────────────────────────────────────────────
 
 router.get('/organizations', async (req, res) => {

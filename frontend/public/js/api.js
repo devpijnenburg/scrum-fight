@@ -52,5 +52,6 @@ async function apiFetch(path, options = {}) {
     throw err;
   }
 
+  if (res.status === 204) return null;
   return res.json();
 }

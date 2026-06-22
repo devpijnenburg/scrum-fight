@@ -42,8 +42,8 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Wachtwoord moet minimaal 8 tekens bevatten' });
   }
   try {
-    const { user, token } = await local.register(name, email, password);
-    res.status(201).json({ user, token });
+    const result = await local.register(name, email, password);
+    res.status(201).json(result);
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'E-mailadres is al in gebruik' });
@@ -61,6 +61,9 @@ router.post('/login', async (req, res) => {
     const result = await local.login(email, password);
     res.json(result);
   } catch (err) {
+    if (err.code === 'EMAIL_NOT_VERIFIED') {
+      return res.status(403).json({ error: err.message, code: 'EMAIL_NOT_VERIFIED' });
+    }
     res.status(401).json({ error: err.message });
   }
 });
@@ -108,6 +111,63 @@ router.post('/verify-totp', async (req, res) => {
     return res.status(401).json({ error: 'Ongeldige code' });
   }
 
+  const token = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
+  res.json({ token });
+});
+
+// ── E-mailverificatie ─────────────────────────────────────────────────────────
+
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: 'Token ontbreekt' });
+
+  const { rows } = await db.query(
+    `UPDATE users
+     SET email_verified = true, email_verification_token = NULL, updated_at = NOW()
+     WHERE email_verification_token = $1
+     RETURNING id, name, email, plan, is_admin`,
+    [token]
+  );
+  if (!rows.length) return res.status(400).json({ error: 'Ongeldig of verlopen token' });
+
+  const user = rows[0];
+  const jwtToken = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
+  res.json({ token: jwtToken, user });
+});
+
+// ── E-mail 2FA verificatie ────────────────────────────────────────────────────
+
+router.post('/verify-email-2fa', async (req, res) => {
+  const { preAuthToken, code } = req.body;
+  if (!preAuthToken || !code) {
+    return res.status(400).json({ error: 'Token en code zijn verplicht' });
+  }
+
+  let payload;
+  try {
+    payload = verify(preAuthToken);
+  } catch {
+    return res.status(401).json({ error: 'Ongeldig of verlopen token' });
+  }
+  if (!payload.preAuth) {
+    return res.status(401).json({ error: 'Ongeldig pre-auth token' });
+  }
+
+  const { rows: codeRows } = await db.query(
+    `DELETE FROM email_2fa_codes
+     WHERE user_id = $1 AND code = $2 AND expires_at > NOW()
+     RETURNING user_id`,
+    [payload.id, code]
+  );
+  if (!codeRows.length) {
+    return res.status(401).json({ error: 'Ongeldige of verlopen code' });
+  }
+
+  const { rows: userRows } = await db.query(
+    'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
+    [payload.id]
+  );
+  const user = userRows[0];
   const token = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
   res.json({ token });
 });

@@ -54,6 +54,42 @@ router.post('/totp/disable', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── E-mail 2FA beheer ─────────────────────────────────────────────────────────
+
+router.post('/email-2fa/enable', authMiddleware, async (req, res) => {
+  const { rows } = await db.query(
+    'SELECT totp_enabled, email_2fa_enabled FROM users WHERE id = $1',
+    [req.user.id]
+  );
+  const user = rows[0];
+  if (user?.totp_enabled) {
+    return res.status(400).json({ error: 'Schakel TOTP eerst uit voordat je e-mail 2FA inschakelt' });
+  }
+  if (user?.email_2fa_enabled) {
+    return res.status(400).json({ error: 'E-mail 2FA is al ingeschakeld' });
+  }
+  await db.query(
+    'UPDATE users SET email_2fa_enabled = true, updated_at = NOW() WHERE id = $1',
+    [req.user.id]
+  );
+  res.json({ ok: true });
+});
+
+router.post('/email-2fa/disable', authMiddleware, async (req, res) => {
+  const { rows } = await db.query(
+    'SELECT email_2fa_enabled FROM users WHERE id = $1',
+    [req.user.id]
+  );
+  if (!rows[0]?.email_2fa_enabled) {
+    return res.status(400).json({ error: 'E-mail 2FA is niet ingeschakeld' });
+  }
+  await db.query(
+    'UPDATE users SET email_2fa_enabled = false, updated_at = NOW() WHERE id = $1',
+    [req.user.id]
+  );
+  res.json({ ok: true });
+});
+
 router.get('/emoticon', authMiddleware, async (req, res) => {
   const { rows } = await db.query('SELECT emoticon FROM users WHERE id = $1', [req.user.id]);
   res.json({ emoticon: rows[0]?.emoticon || '⚔️' });

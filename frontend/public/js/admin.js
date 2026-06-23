@@ -31,6 +31,26 @@ function debounce(fn, ms) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    document.getElementById('confirmMessage').textContent = message;
+    const modal = document.getElementById('confirmModal');
+    modal.classList.remove('hidden');
+    const ok = document.getElementById('confirmOkBtn');
+    const cancel = document.getElementById('confirmCancelBtn');
+    function cleanup(result) {
+      modal.classList.add('hidden');
+      ok.removeEventListener('click', onOk);
+      cancel.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+  });
+}
+
 document.getElementById('userSearch').addEventListener('input', debounce((e) => {
   userSearch = e.target.value.trim();
   userPage = 0;
@@ -135,7 +155,7 @@ document.getElementById('editUserSaveBtn').addEventListener('click', async () =>
 
 document.getElementById('editUserDeleteBtn').addEventListener('click', async () => {
   const u = userMap.get(editingUserId);
-  if (!confirm(`Gebruiker "${u?.name}" verwijderen? Dit kan niet ongedaan worden.`)) return;
+  if (!await showConfirm(`Gebruiker "${u?.name}" verwijderen? Dit kan niet ongedaan worden.`)) return;
   const err = document.getElementById('editUserError');
   err.classList.add('hidden');
   try {
@@ -255,7 +275,7 @@ document.getElementById('orgSaveBtn').addEventListener('click', async () => {
 });
 
 async function deleteOrg(id) {
-  if (!confirm('Organisatie verwijderen? Dit kan niet ongedaan worden.')) return;
+  if (!await showConfirm('Organisatie verwijderen? Dit kan niet ongedaan worden.')) return;
   try {
     await apiFetch(`/admin/organizations/${id}`, { method: 'DELETE' });
     loadOrgs();
@@ -323,7 +343,7 @@ document.getElementById('addMemberBtn').addEventListener('click', async () => {
 });
 
 async function removeMember(userId) {
-  if (!confirm('Lid verwijderen uit organisatie?')) return;
+  if (!await showConfirm('Lid verwijderen uit organisatie?')) return;
   try {
     await apiFetch(`/admin/organizations/${membersOrgId}/members/${userId}`, { method: 'DELETE' });
     await loadMembers();

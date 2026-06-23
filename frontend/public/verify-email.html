@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-mail bevestigen — Scrum Fight</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/css/styles.css?v=202606201047" />
+</head>
+<body class="page-auth">
+
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card" style="text-align:center">
+      <p id="verifyMessage" style="margin-bottom:1rem">Je e-mailadres wordt bevestigd…</p>
+      <p id="verifyError" class="form-error hidden"></p>
+      <a href="/login.html" id="loginLink" class="btn btn-ghost btn-full hidden" style="margin-top:1rem;justify-content:center">← Terug naar inloggen</a>
+    </div>
+  </main>
+
+  <script src="/js/api.js?v=bded843"></script>
+  <script>
+    (async () => {
+      const token = new URLSearchParams(location.search).get('token');
+      const msg = document.getElementById('verifyMessage');
+      const err = document.getElementById('verifyError');
+      const link = document.getElementById('loginLink');
+
+      if (!token) {
+        msg.textContent = '';
+        err.textContent = 'Ongeldige link — token ontbreekt.';
+        err.classList.remove('hidden');
+        link.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const { token: jwt } = await apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+        localStorage.setItem('token', jwt);
+        msg.textContent = '✓ E-mailadres bevestigd! Je wordt doorgestuurd…';
+        setTimeout(() => { window.location.href = '/dashboard.html'; }, 1500);
+      } catch (ex) {
+        msg.textContent = '';
+        err.textContent = ex.message || 'De bevestigingslink is ongeldig of verlopen.';
+        err.classList.remove('hidden');
+        link.classList.remove('hidden');
+      }
+    })();
+  </script>
+</body>
+</html>

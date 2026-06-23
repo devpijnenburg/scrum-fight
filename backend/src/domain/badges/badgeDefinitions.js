@@ -29,7 +29,6 @@ const BADGE_UNLOCK_FNS = [
   { id: 'planning_pro',         unlock: atLeast((d) => d.summary.total_rounds, 100) },
 
   // Estimation
-  { id: 'first_estimate',       unlock: atLeast((d) => d.summary.total_rounds, 1) },
   { id: 'fibonacci_fan',        unlock: atLeast((d) => voteCount(d, FIBONACCI_VALUES), 10) },
   { id: 'consistent_estimator', unlock: (d) => (d.consensus?.total_rounds >= 10) && consensusRate(d) >= 0.7 },
   { id: 'sharp_estimator',      unlock: atLeast((d) => d.consensus?.consensus_rounds || 0, 5) },
@@ -59,7 +58,7 @@ const BADGE_UNLOCK_FNS = [
   { id: 'precision_master',     unlock: atLeast((d) => d.consensus?.consensus_rounds || 0, 50) },
 
   // Facilitation & roles
-  { id: 'scrum_starter',        unlock: atLeast((d) => d.summary.total_sessions, 1) },
+  { id: 'scrum_starter',        unlock: atLeast((d) => d.hostedSessions, 1) },
   { id: 'facilitator',          unlock: atLeast((d) => d.summary.total_sessions, 10) },
 
   // Coffee

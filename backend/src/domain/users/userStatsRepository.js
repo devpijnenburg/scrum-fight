@@ -42,7 +42,7 @@ const STREAK_SQL = `
  * Also consumed by the /api/users/stats endpoint to avoid duplicate queries.
  */
 async function fetchBadgeStats(userId) {
-  const [summary, distribution, consensus, streak, methods, maxDay, spectator, reactions] =
+  const [summary, distribution, consensus, streak, methods, maxDay, spectator, reactions, hosted] =
     await Promise.all([
       db.query(
         `SELECT COUNT(*)::int                AS total_rounds,
@@ -83,6 +83,10 @@ async function fetchBadgeStats(userId) {
         'SELECT COUNT(*)::int AS total_reactions FROM user_reactions WHERE user_id = $1',
         [userId]
       ).catch(() => ({ rows: [{ total_reactions: 0 }] })),
+      db.query(
+        'SELECT COUNT(*)::int AS hosted_sessions FROM rooms WHERE owner_id = $1',
+        [userId]
+      ),
     ]);
 
   return {
@@ -94,6 +98,7 @@ async function fetchBadgeStats(userId) {
     maxDayRounds:      maxDay.rows[0].max_day_rounds,
     spectatorSessions: spectator.rows[0].spectator_sessions,
     totalReactions:    reactions.rows[0].total_reactions,
+    hostedSessions:    hosted.rows[0].hosted_sessions,
   };
 }
 

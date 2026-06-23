@@ -92,7 +92,7 @@ const BADGE_GROUPS = [
     icon: '♙',
     title: { nl: 'Estimation', en: 'Estimation' },
     badges: [
-      { id: 'first_estimate', tier: 'bronze', icon: '1', ...atLeast((d) => d.summary.total_rounds, 1),
+      { id: 'first_estimate', tier: 'bronze', icon: '1', unlock: () => false, progress: null,
         name: { nl: 'First Estimate', en: 'First Estimate' }, desc: { nl: 'Schat je eerste story.', en: 'Estimate your first story.' } },
       { id: 'fibonacci_fan', tier: 'silver', icon: '↻', ...atLeast((d) => voteCount(d, FIBONACCI_VALUES), 10),
         name: { nl: 'Fibonacci Fan', en: 'Fibonacci Fan' }, desc: { nl: 'Gebruik Fibonacci kaarten in 10 sessies.', en: 'Use Fibonacci cards 10 times.' } },
@@ -192,7 +192,7 @@ const BADGE_GROUPS = [
     icon: '♟',
     title: { nl: 'Facilitation & rollen', en: 'Facilitation & roles' },
     badges: [
-      { id: 'scrum_starter', tier: 'silver', icon: '⚑', ...atLeast((d) => d.summary.total_sessions, 1),
+      { id: 'scrum_starter', tier: 'silver', icon: '⚑', ...atLeast((d) => d.hostedSessions || 0, 1),
         name: { nl: 'Scrum Starter', en: 'Scrum Starter' }, desc: { nl: 'Host je eerste sessie.', en: 'Host your first session.' } },
       { id: 'facilitator', tier: 'silver', icon: '♟', ...atLeast((d) => d.summary.total_sessions, 10),
         name: { nl: 'Facilitator', en: 'Facilitator' }, desc: { nl: 'Leid 10 sessies.', en: 'Facilitate 10 sessions.' } },

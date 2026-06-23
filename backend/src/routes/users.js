@@ -116,7 +116,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       ]);
 
     const { summary, distribution, consensus, streak, methodsCount, maxDayRounds,
-            spectatorSessions, totalReactions } = badgeStats;
+            spectatorSessions, totalReactions, hostedSessions } = badgeStats;
 
     res.json({
       summary,
@@ -131,6 +131,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       consensusStreak:   consensusStreak.rows[0],
       spectatorSessions,
       totalReactions,
+      hostedSessions,
       teamComparison:    teamComparison.rows[0],
     });
   } catch (err) {

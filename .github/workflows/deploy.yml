@@ -96,6 +96,14 @@ jobs:
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
       - name: Ensure .env.test exists with correct overrides
+        env:
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ vars.SMTP_FROM }}
+          SMTP_STARTTLS: ${{ vars.SMTP_STARTTLS }}
+          SMTP_SSL_TLS: ${{ vars.SMTP_SSL_TLS }}
         run: |
           ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
@@ -105,6 +113,18 @@ jobs:
             && sed -i 's/^FRONTEND_TEST_PORT=.*/FRONTEND_TEST_PORT=8082/' ~/scrum-fight/.env.test \
             || echo 'FRONTEND_TEST_PORT=8082' >> ~/scrum-fight/.env.test
           EOF
+          {
+            esc() { printf '%s' "$1" | sed 's/\$/\$\$/g'; }
+            printf 'SMTP_HOST=%s\n'     "$(esc "${SMTP_HOST}")"
+            printf 'SMTP_PORT=%s\n'     "$(esc "${SMTP_PORT}")"
+            printf 'SMTP_USER=%s\n'     "$(esc "${SMTP_USER}")"
+            printf 'SMTP_PASSWORD=%s\n' "$(esc "${SMTP_PASSWORD}")"
+            printf 'SMTP_FROM=%s\n'     "$(esc "${SMTP_FROM}")"
+            printf 'SMTP_STARTTLS=%s\n' "$(esc "${SMTP_STARTTLS}")"
+            printf 'SMTP_SSL_TLS=%s\n'  "$(esc "${SMTP_SSL_TLS}")"
+          } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+              "cat >> ~/scrum-fight/.env.test && chmod 600 ~/scrum-fight/.env.test"
 
       - name: Deploy test on VM
         run: |

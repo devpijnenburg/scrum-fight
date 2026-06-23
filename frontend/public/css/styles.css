@@ -2260,6 +2260,10 @@ kbd {
 .admin-del { color: var(--error) !important; }
 .admin-del:hover { background: rgba(239,68,68,.1) !important; }
 
+@media (max-width: 480px) {
+  .btn-label { display: none; }
+}
+
 .admin-checkbox-label {
   display: flex;
   align-items: center;

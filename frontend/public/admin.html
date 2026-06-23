@@ -104,10 +104,16 @@
       </div>
       <p id="editUserError" class="form-error hidden"></p>
       <div class="modal-actions">
-        <button class="btn btn-ghost admin-del" id="editUserDeleteBtn">Verwijderen</button>
+        <button class="btn btn-ghost admin-del" id="editUserDeleteBtn" title="Verwijderen">
+          <span class="btn-label">Verwijderen</span> 🗑️
+        </button>
         <div style="display:flex;gap:.5rem">
-          <button class="btn btn-ghost" id="editUserCancelBtn">Annuleren</button>
-          <button class="btn btn-primary" id="editUserSaveBtn">Opslaan →</button>
+          <button class="btn btn-ghost" id="editUserCancelBtn" title="Annuleren">
+            <span class="btn-label">Annuleren</span> ✕
+          </button>
+          <button class="btn btn-primary" id="editUserSaveBtn" title="Opslaan">
+            <span class="btn-label">Opslaan</span> 💾
+          </button>
         </div>
       </div>
     </div>
@@ -139,8 +145,12 @@
       </div>
       <p id="orgModalError" class="form-error hidden"></p>
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="orgCancelBtn">Annuleren</button>
-        <button class="btn btn-primary" id="orgSaveBtn">Opslaan →</button>
+        <button class="btn btn-ghost" id="orgCancelBtn" title="Annuleren">
+          <span class="btn-label">Annuleren</span> ✕
+        </button>
+        <button class="btn btn-primary" id="orgSaveBtn" title="Opslaan">
+          <span class="btn-label">Opslaan</span> 💾
+        </button>
       </div>
     </div>
   </div>

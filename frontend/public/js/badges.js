@@ -92,8 +92,6 @@ const BADGE_GROUPS = [
     icon: '♙',
     title: { nl: 'Estimation', en: 'Estimation' },
     badges: [
-      { id: 'first_estimate', tier: 'bronze', icon: '1', unlock: () => false, progress: null,
-        name: { nl: 'First Estimate', en: 'First Estimate' }, desc: { nl: 'Schat je eerste story.', en: 'Estimate your first story.' } },
       { id: 'fibonacci_fan', tier: 'silver', icon: '↻', ...atLeast((d) => voteCount(d, FIBONACCI_VALUES), 10),
         name: { nl: 'Fibonacci Fan', en: 'Fibonacci Fan' }, desc: { nl: 'Gebruik Fibonacci kaarten in 10 sessies.', en: 'Use Fibonacci cards 10 times.' } },
       { id: 'consistent_estimator', tier: 'gold', icon: '◎', unlock: (d) => d.consensus?.total_rounds >= 10 && consensusRate(d) >= 0.7, progress: null,

@@ -261,7 +261,13 @@ select.input { cursor: pointer; }
   box-shadow: var(--shadow);
 }
 .modal-card h2 { font-size: 1.3rem; font-weight: 800; }
-.modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+.modal-actions { display: flex; gap: .6rem; justify-content: space-between; flex-wrap: wrap; }
+.modal-actions > div { display: flex; gap: .6rem; }
+
+@media (max-width: 480px) {
+  .modal-card { padding: 1.25rem; }
+  .btn-label { display: none; }
+}
 .join-room-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .15rem; }
 
 /* ── Landing page ───────────────────────────────────────────────────────────── */
@@ -2260,9 +2266,6 @@ kbd {
 .admin-del { color: var(--error) !important; }
 .admin-del:hover { background: rgba(239,68,68,.1) !important; }
 
-@media (max-width: 480px) {
-  .btn-label { display: none; }
-}
 
 .admin-checkbox-label {
   display: flex;

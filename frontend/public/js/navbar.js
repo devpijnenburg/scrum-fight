@@ -185,7 +185,7 @@ class SiteNav extends HTMLElement {
         <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
         <div class="navbar-actions">
           ${user
-            ? '<profile-menu></profile-menu>'
+            ? `<div class="lang-switcher _nav-lang"></div><profile-menu></profile-menu>`
             : `<div class="lang-switcher _nav-lang"></div>
                ${showCta
                  ? `<a href="/login.html" class="btn btn-ghost" data-i18n="nav.login">Inloggen</a>

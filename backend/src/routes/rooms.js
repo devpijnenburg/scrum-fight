@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 const { authMiddleware, optionalAuth } = require('../auth/middleware');
 const { PLAN_LIMITS, VALID_METHODS } = require('../config/plans');
+const { claimGuestRoom } = require('../socket');
 
 const ROOM_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -127,6 +128,43 @@ router.get('/:id/history', async (req, res) => {
     [req.params.id.toUpperCase()]
   );
   res.json(rows);
+});
+
+// ── Claim (upgrade) a guest room ─────────────────────────────────────────────
+// Converts an ownerless guest room into a permanent room owned by the caller,
+// subject to their plan's room limit. Cancels the guest-room inactivity TTL.
+
+router.post('/:id/claim', authMiddleware, async (req, res) => {
+  const roomId = req.params.id.toUpperCase();
+
+  const plan = req.user.plan || 'free';
+  const limits = PLAN_LIMITS[plan];
+
+  if (limits.maxRooms !== Infinity) {
+    const { rows } = await db.query(
+      `SELECT COUNT(*) FROM rooms WHERE owner_id = $1 AND is_guest = FALSE`,
+      [req.user.id]
+    );
+    if (parseInt(rows[0].count, 10) >= limits.maxRooms) {
+      return res.status(403).json({
+        error: `Maximaal aantal kamers bereikt voor het ${plan}-plan (${limits.maxRooms}).`,
+      });
+    }
+  }
+
+  const { rows } = await db.query(
+    `UPDATE rooms SET is_guest = FALSE, owner_id = $1
+     WHERE id = $2 AND is_guest = TRUE
+     RETURNING id, name, method, is_guest`,
+    [req.user.id, roomId]
+  );
+
+  if (!rows.length) {
+    return res.status(409).json({ error: 'Kamer kan niet geclaimd worden (bestaat niet meer of is al permanent)' });
+  }
+
+  claimGuestRoom(roomId);
+  res.json(rows[0]);
 });
 
 // ── Delete room ───────────────────────────────────────────────────────────────

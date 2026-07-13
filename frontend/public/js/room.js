@@ -142,7 +142,27 @@ socket.on('room-state', (state) => {
   // in the correct state (no 3-D animation that can glitch on mobile restore)
   renderAll(state, true);
   updateSpectatorUI();
+
+  if (state.isGuest) claimRoomIfLoggedIn();
 });
+
+socket.on('room-claimed', () => {
+  if (roomState) roomState.isGuest = false;
+});
+
+// A logged-in user in a still-guest room silently claims it, converting it
+// to a permanent room (subject to their plan's room limit) so it no longer
+// expires after an hour of inactivity and its analytics history is kept.
+async function claimRoomIfLoggedIn() {
+  if (!getCurrentUser()) return;
+  try {
+    await apiFetch(`/rooms/${ROOM_ID}/claim`, { method: 'POST' });
+    if (roomState) roomState.isGuest = false;
+    showRoomToast('💾', t('room.claimed'));
+  } catch {
+    // Plan limit reached, room already claimed by someone else, etc. — non-critical.
+  }
+}
 
 socket.on('player-joined', ({ socketId, name, emoticon, spectator }) => {
   if (!roomState) return;
@@ -375,6 +395,20 @@ function prependBadgeToTimeline(playerName, badgeId) {
   toast.className = 'badge-announced-toast';
   toast.innerHTML = `<span class="badge-announced-icon">🏅</span>
     <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('badge-toast-hide');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, 4000);
+}
+
+function showRoomToast(icon, text) {
+  const container = document.getElementById('roomToastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'badge-announced-toast';
+  toast.innerHTML = `<span class="badge-announced-icon">${icon}</span>
+    <span class="badge-announced-text">${escapeHtml(text)}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('badge-toast-hide');
@@ -805,6 +839,7 @@ function onRoomAuthSuccess(user, token) {
   closeRoomAuthModal();
   showRoomUserBadge(user.name);
   initSettings();
+  if (roomState?.isGuest) claimRoomIfLoggedIn();
 }
 
 function showRoomUserBadge(name) {

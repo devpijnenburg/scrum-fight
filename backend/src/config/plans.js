@@ -2,28 +2,23 @@ const PLAN_LIMITS = {
   free: {
     maxRooms: 3,
     maxParticipants: 5,
-    retentionDays: 30,
   },
   pro: {
     maxRooms: 20,
     maxParticipants: 15,
-    retentionDays: 30,
   },
   premium: {
     maxRooms: Infinity,
     maxParticipants: Infinity,
-    retentionDays: null,
   },
   org_starter: {
     maxRooms: 20,
     maxParticipants: 15,
-    retentionDays: 30,
     orgMaxMembers: 20,
   },
   org_enterprise: {
     maxRooms: Infinity,
     maxParticipants: Infinity,
-    retentionDays: null,
     orgMaxMembers: 100,
   },
 };

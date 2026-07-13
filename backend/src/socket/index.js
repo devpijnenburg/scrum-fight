@@ -14,6 +14,10 @@ const countdownTimers = new Map();
 
 const GUEST_TTL_MS = 60 * 60 * 1000; // 1 hour
 
+// Set once setupSocket(io) runs, so REST routes (rooms.js) can reach
+// connected clients (e.g. to announce a room being claimed).
+let ioInstance = null;
+
 function serializeRoom(room, mySocketId) {
   const players = [];
   for (const [socketId, p] of room.players) {
@@ -98,6 +102,21 @@ function resetGuestTimer(io, roomId) {
   db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]).catch(console.error);
 }
 
+// Called by the REST layer when a logged-in user claims a guest room —
+// cancels the inactivity TTL and flips the in-memory room to permanent
+// so subsequent join/vote/reveal handlers stop resetting a guest timer.
+function claimGuestRoom(roomId) {
+  if (guestTimers.has(roomId)) {
+    clearTimeout(guestTimers.get(roomId));
+    guestTimers.delete(roomId);
+  }
+  const room = activeRooms.get(roomId);
+  if (room) {
+    room.isGuest = false;
+    if (ioInstance) ioInstance.to(roomId).emit('room-claimed');
+  }
+}
+
 async function doReveal(io, room, roomId) {
   room.revealed = true;
 
@@ -166,7 +185,8 @@ async function deleteGuestRoom(io, roomId) {
   }
 }
 
-module.exports = function setupSocket(io) {
+function setupSocket(io) {
+  ioInstance = io;
   io.on('connection', (socket) => {
 
     // ── join-room ─────────────────────────────────────────────────────────────
@@ -461,4 +481,7 @@ module.exports = function setupSocket(io) {
       // Guest rooms remain available until their inactivity timer expires.
     });
   });
-};
+}
+
+module.exports = setupSocket;
+module.exports.claimGuestRoom = claimGuestRoom;

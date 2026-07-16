@@ -4,6 +4,7 @@ const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const db = require('../config/database');
 const { authMiddleware } = require('../auth/middleware');
+const { verifyTotpCode } = require('../auth/totp');
 
 router.get('/totp/setup', authMiddleware, async (req, res) => {
   const { base32: secret } = speakeasy.generateSecret({ length: 20 });
@@ -20,8 +21,7 @@ router.post('/totp/enable', authMiddleware, async (req, res) => {
   if (!secret || !code) {
     return res.status(400).json({ error: 'Secret en code zijn verplicht' });
   }
-  const valid = speakeasy.totp.verify({ secret, encoding: 'base32', token: code, window: 1 });
-  if (!valid) {
+  if (!verifyTotpCode(secret, code)) {
     return res.status(400).json({ error: 'Ongeldige code, probeer opnieuw' });
   }
   await db.query(
@@ -43,8 +43,7 @@ router.post('/totp/disable', authMiddleware, async (req, res) => {
   if (!user?.totp_enabled) {
     return res.status(400).json({ error: '2FA is niet ingeschakeld' });
   }
-  const valid = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
-  if (!valid) {
+  if (!verifyTotpCode(user.totp_secret, code)) {
     return res.status(400).json({ error: 'Ongeldige code' });
   }
   await db.query(

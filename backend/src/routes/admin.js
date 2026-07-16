@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { requireAdmin } = require('../auth/adminMiddleware');
+const { PLAN_LIMITS, VALID_PLANS, ORG_PLANS } = require('../config/plans');
+
+function orgMaxMembers(plan) {
+  return PLAN_LIMITS[plan]?.orgMaxMembers;
+}
 
 router.use(requireAdmin);
 
@@ -33,8 +38,7 @@ router.put('/users/:id', async (req, res) => {
   const { name, email, plan, is_admin } = req.body;
   const { id } = req.params;
 
-  const allowed = ['free', 'pro', 'premium', 'org_starter', 'org_enterprise'];
-  if (plan && !allowed.includes(plan)) {
+  if (plan && !VALID_PLANS.includes(plan)) {
     return res.status(400).json({ error: 'Ongeldig plan' });
   }
 
@@ -93,12 +97,11 @@ router.post('/organizations', async (req, res) => {
   const { name, slug, plan, owner_email } = req.body;
   if (!name || !slug) return res.status(400).json({ error: 'Naam en slug zijn verplicht' });
 
-  const allowed = ['org_starter', 'org_enterprise'];
-  if (plan && !allowed.includes(plan)) {
+  if (plan && !ORG_PLANS.includes(plan)) {
     return res.status(400).json({ error: 'Ongeldig organisatieplan' });
   }
 
-  const maxMembers = plan === 'org_enterprise' ? 100 : 20;
+  const maxMembers = orgMaxMembers(plan || 'org_starter');
   let ownerId = null;
 
   if (owner_email) {
@@ -125,8 +128,7 @@ router.put('/organizations/:id', async (req, res) => {
   const { name, slug, plan, owner_email } = req.body;
   const { id } = req.params;
 
-  const allowed = ['org_starter', 'org_enterprise'];
-  if (plan && !allowed.includes(plan)) {
+  if (plan && !ORG_PLANS.includes(plan)) {
     return res.status(400).json({ error: 'Ongeldig organisatieplan' });
   }
 
@@ -141,7 +143,7 @@ router.put('/organizations/:id', async (req, res) => {
     }
   }
 
-  const maxMembers = plan === 'org_enterprise' ? 100 : plan === 'org_starter' ? 20 : undefined;
+  const maxMembers = plan ? orgMaxMembers(plan) : undefined;
 
   try {
     const { rows } = await db.query(

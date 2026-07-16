@@ -10,4 +10,14 @@ function verify(token) {
   return jwt.verify(token, SECRET);
 }
 
-module.exports = { sign, verify };
+// Full session token issued after successful authentication.
+function signSessionToken(user) {
+  return sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
+}
+
+// Short-lived token issued between password/OAuth success and 2FA verification.
+function signPreAuthToken(userId, expiresIn = '5m') {
+  return sign({ id: userId, preAuth: true }, { expiresIn });
+}
+
+module.exports = { sign, verify, signSessionToken, signPreAuthToken };

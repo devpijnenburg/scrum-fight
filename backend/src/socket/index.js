@@ -1,7 +1,8 @@
-const db = require('../config/database');
 const { verify } = require('../auth/jwt');
 const { ESTIMATION_METHODS, PLAN_LIMITS } = require('../config/plans');
 const { evaluateBadgesForUser } = require('../domain/badges/badgeEvaluator');
+const roomRepository = require('../domain/rooms/roomRepository');
+const userRepository = require('../domain/users/userRepository');
 
 // roomId → { id, name, method, isGuest, revealed, players: Map<socketId, player> }
 const activeRooms = new Map();
@@ -88,7 +89,7 @@ function scheduleGuestExpiry(io, roomId) {
     guestTimers.delete(roomId);
 
     try {
-      await db.query('DELETE FROM rooms WHERE id = $1', [roomId]);
+      await roomRepository.deleteRoom(roomId);
     } catch (err) {
       console.error('Error deleting expired guest room:', err);
     }
@@ -99,7 +100,7 @@ function scheduleGuestExpiry(io, roomId) {
 
 function resetGuestTimer(io, roomId) {
   scheduleGuestExpiry(io, roomId);
-  db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]).catch(console.error);
+  roomRepository.touchLastActive(roomId).catch(console.error);
 }
 
 // Called by the REST layer when a logged-in user claims a guest room —
@@ -133,24 +134,7 @@ async function doReveal(io, room, roomId) {
   });
 
   try {
-    const votes = {};
-    for (const [, p] of room.players) votes[p.name] = p.vote;
-    const { rows: rhRows } = await db.query(
-      `INSERT INTO round_history (room_id, votes, name) VALUES ($1, $2, $3) RETURNING id`,
-      [roomId, JSON.stringify(votes), room.roundName || null]
-    );
-    const roundId = rhRows[0].id;
-
-    for (const [, p] of room.players) {
-      if (p.userId && p.vote) {
-        await db.query(
-          `INSERT INTO user_votes (user_id, room_id, round_id, value) VALUES ($1, $2, $3, $4)`,
-          [p.userId, roomId, roundId, p.vote]
-        );
-      }
-    }
-
-    await db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
+    await roomRepository.recordRound(roomId, room.roundName, [...room.players.values()]);
 
     // Fire-and-forget badge evaluation — only when votes were persisted successfully
     setImmediate(async () => {
@@ -179,7 +163,7 @@ async function deleteGuestRoom(io, roomId) {
   }
   activeRooms.delete(roomId);
   try {
-    await db.query('DELETE FROM rooms WHERE id = $1', [roomId]);
+    await roomRepository.deleteRoom(roomId);
   } catch (err) {
     console.error('Error deleting empty guest room:', err);
   }
@@ -201,14 +185,11 @@ function setupSocket(io) {
       if (token) {
         try {
           const payload = verify(token);
-          const { rows } = await db.query(
-            'SELECT id, name, emoticon FROM users WHERE id = $1',
-            [payload.id]
-          );
-          if (rows.length) {
-            userId = rows[0].id;
-            name = rows[0].name;
-            emoticon = rows[0].emoticon || '⚔️';
+          const user = await userRepository.findById(payload.id);
+          if (user) {
+            userId = user.id;
+            name = user.name;
+            emoticon = user.emoticon || '⚔️';
           }
         } catch {
           // invalid token — fall back to provided name
@@ -223,12 +204,11 @@ function setupSocket(io) {
       // Verify room exists in DB
       let dbRoom;
       try {
-        const { rows } = await db.query('SELECT * FROM rooms WHERE id = $1', [normalizedId]);
-        if (!rows.length) {
+        dbRoom = await roomRepository.findRoomById(normalizedId);
+        if (!dbRoom) {
           socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Kamer niet gevonden' });
           return;
         }
-        dbRoom = rows[0];
       } catch (err) {
         socket.emit('error', { code: 'SERVER_ERROR', message: 'Serverfout' });
         return;
@@ -236,11 +216,7 @@ function setupSocket(io) {
 
       // Check participant limit for authenticated room owners
       if (!dbRoom.is_guest && dbRoom.owner_id) {
-        const { rows: ownerRows } = await db.query(
-          'SELECT plan FROM users WHERE id = $1',
-          [dbRoom.owner_id]
-        );
-        const plan = ownerRows[0]?.plan ?? 'free';
+        const plan = await userRepository.getPlan(dbRoom.owner_id);
         const limit = PLAN_LIMITS[plan]?.maxParticipants ?? 5;
 
         if (limit !== Infinity) {
@@ -292,7 +268,7 @@ function setupSocket(io) {
 
       // Update last_active for non-guest rooms
       if (!dbRoom.is_guest) {
-        db.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [normalizedId]).catch(console.error);
+        roomRepository.touchLastActive(normalizedId).catch(console.error);
       } else {
         resetGuestTimer(io, normalizedId);
       }
@@ -333,10 +309,7 @@ function setupSocket(io) {
           const now = Date.now();
           if (!player._lastSpectatorInsert || now - player._lastSpectatorInsert > 60_000) {
             player._lastSpectatorInsert = now;
-            db.query(
-              'INSERT INTO user_spectator_sessions (user_id, room_id) VALUES ($1, $2)',
-              [player.userId, roomId]
-            ).catch(console.error);
+            userRepository.recordSpectatorSession(player.userId, roomId).catch(console.error);
           }
         }
       }
@@ -437,10 +410,7 @@ function setupSocket(io) {
       if (!player) return;
 
       if (player.userId) {
-        db.query(
-          'INSERT INTO user_reactions (user_id, room_id, emoji) VALUES ($1, $2, $3)',
-          [player.userId, roomId, emoji]
-        ).catch(console.error);
+        userRepository.recordReaction(player.userId, roomId, emoji).catch(console.error);
       }
 
       io.to(roomId).emit('reaction', { name: player.name, emoji });
@@ -459,7 +429,7 @@ function setupSocket(io) {
       io.to(roomId).emit('room-name-updated', { name: trimmed });
 
       try {
-        await db.query('UPDATE rooms SET name = $1 WHERE id = $2', [trimmed, roomId]);
+        await roomRepository.updateRoomName(roomId, trimmed);
       } catch (err) {
         console.error('Error updating room name:', err);
       }

@@ -40,13 +40,14 @@ const baseUser = {
   plan: 'free',
   is_admin: false,
   totp_enabled: false,
+  email_verified: true,
   password_hash: '$2a$12$hashed',
 };
 
 // ── POST /api/auth/register ────────────────────────────────────────────────────
 
 describe('POST /api/auth/register', () => {
-  it('creates a new user and returns a JWT', async () => {
+  it('creates a new user and requires email verification — no JWT yet', async () => {
     db.query.mockResolvedValueOnce({
       rows: [{ id: 'uuid-1', name: 'Alice', email: 'alice@test.com', plan: 'free', is_admin: false }],
     });
@@ -56,9 +57,9 @@ describe('POST /api/auth/register', () => {
       .send({ name: 'Alice', email: 'alice@test.com', password: 'password123' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('token');
-    expect(res.body.user.email).toBe('alice@test.com');
-    expect(res.body.user.password_hash).toBeUndefined();
+    expect(res.body.requiresVerification).toBe(true);
+    // Must NOT hand out a JWT before the email address is verified
+    expect(res.body.token).toBeUndefined();
   });
 
   it('returns 400 when name is missing', async () => {
@@ -130,6 +131,19 @@ describe('POST /api/auth/login', () => {
       .send({ email: 'alice@test.com', password: 'wrong' });
 
     expect(res.status).toBe(401);
+  });
+
+  it('returns 403 with EMAIL_NOT_VERIFIED when the email is not verified yet', async () => {
+    db.query.mockResolvedValueOnce({ rows: [{ ...baseUser, email_verified: false }] });
+    bcrypt.compare.mockResolvedValueOnce(true);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'alice@test.com', password: 'password123' });
+
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('EMAIL_NOT_VERIFIED');
+    expect(res.body.token).toBeUndefined();
   });
 
   it('returns 401 for unknown email', async () => {

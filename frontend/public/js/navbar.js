@@ -1,9 +1,11 @@
-// Single navbar file — defines <profile-menu> and <site-nav>.
-// Include this on every page instead of profile-menu.js.
+// Shared page chrome — defines <profile-menu>, <site-nav> and <site-footer>.
+// Include this on every page.
 //
 // Usage:
 //   <site-nav></site-nav>              — brand + profile if logged in, lang switcher if not
 //   <site-nav show-cta></site-nav>     — same + login/register buttons when not logged in
+//   <site-footer></site-footer>        — footer with login/register links when logged out
+//   <site-footer hide-auth></site-footer> — footer without the login/register links
 
 // ── ProfileMenu ───────────────────────────────────────────────────────────────
 
@@ -204,3 +206,39 @@ class SiteNav extends HTMLElement {
 }
 
 customElements.define('site-nav', SiteNav);
+
+// ── SiteFooter ────────────────────────────────────────────────────────────────
+
+class SiteFooter extends HTMLElement {
+  connectedCallback() {
+    const loggedIn = typeof getCurrentUser === 'function' && !!getCurrentUser();
+    const showAuth = !this.hasAttribute('hide-auth') && !loggedIn;
+
+    this.innerHTML = `
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <div class="footer-left">
+            <div class="lang-switcher"></div>
+            <span class="footer-copy" data-i18n="footer.copy">© 2026 Scrum Fight</span>
+          </div>
+          <nav class="footer-links">
+            <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+            <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+            ${showAuth ? `
+            <span class="footer-auth" id="footerAuth">
+              <a href="/login.html" data-i18n="footer.login">Inloggen</a>
+              <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
+            </span>` : ''}
+          </nav>
+        </div>
+      </footer>
+    `;
+
+    if (typeof buildLangDropdown === 'function') {
+      this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    }
+    if (typeof applyTranslations === 'function') applyTranslations();
+  }
+}
+
+customElements.define('site-footer', SiteFooter);

@@ -1,5 +1,4 @@
-const db = require('../../config/database');
-const { sign } = require('../jwt');
+const { upsertOAuthUser, buildAuthResult } = require('./oauthAccount');
 
 const GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize';
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
@@ -52,39 +51,11 @@ async function handleCallback(code, redirectUri) {
     ? emails.find((e) => e.primary)?.email
     : null;
 
-  const name = profile.name || profile.login;
-  const email = primaryEmail || profile.email;
-
-  const { rows: existing } = await db.query(
-    `SELECT id, name, email, plan, is_admin, totp_enabled FROM users
-     WHERE oauth_provider = 'github' AND oauth_id = $1`,
-    [String(profile.id)]
-  );
-
-  let user;
-  if (existing.length) {
-    user = existing[0];
-    await db.query(`UPDATE users SET name = $1, updated_at = NOW() WHERE id = $2`, [name, user.id]);
-    user.name = name;
-  } else {
-    const { rows } = await db.query(
-      `INSERT INTO users (name, email, oauth_provider, oauth_id)
-       VALUES ($1, $2, 'github', $3)
-       RETURNING id, name, email, plan, is_admin, totp_enabled`,
-      [name, email, String(profile.id)]
-    );
-    user = rows[0];
-  }
-
-  if (user.totp_enabled) {
-    const preAuthToken = sign({ id: user.id, preAuth: true }, { expiresIn: '5m' });
-    return { user, preAuthToken, requiresTotp: true };
-  }
-
-  return {
-    user,
-    token: sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin }),
-  };
+  const user = await upsertOAuthUser('github', String(profile.id), {
+    name: profile.name || profile.login,
+    email: primaryEmail || profile.email,
+  });
+  return buildAuthResult(user);
 }
 
 module.exports = { isConfigured, getAuthUrl, handleCallback };

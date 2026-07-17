@@ -44,4 +44,7 @@ const ESTIMATION_METHODS = {
 
 const VALID_METHODS = Object.keys(ESTIMATION_METHODS);
 
-module.exports = { PLAN_LIMITS, ESTIMATION_METHODS, VALID_METHODS };
+const VALID_PLANS = Object.keys(PLAN_LIMITS);
+const ORG_PLANS = VALID_PLANS.filter((p) => PLAN_LIMITS[p].orgMaxMembers !== undefined);
+
+module.exports = { PLAN_LIMITS, ESTIMATION_METHODS, VALID_METHODS, VALID_PLANS, ORG_PLANS };

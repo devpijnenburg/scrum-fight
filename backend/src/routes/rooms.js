@@ -1,28 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
 const { authMiddleware, optionalAuth } = require('../auth/middleware');
-const { PLAN_LIMITS, VALID_METHODS } = require('../config/plans');
+const { VALID_METHODS } = require('../config/plans');
+const roomRepository = require('../domain/rooms/roomRepository');
+const roomService = require('../domain/rooms/roomService');
+const { getPlan } = require('../domain/users/userRepository');
 const { claimGuestRoom } = require('../socket');
-
-const ROOM_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-function generateRoomId() {
-  let id = '';
-  for (let i = 0; i < 6; i++) {
-    id += ROOM_ID_CHARS[Math.floor(Math.random() * ROOM_ID_CHARS.length)];
-  }
-  return id;
-}
-
-async function uniqueRoomId() {
-  for (let i = 0; i < 10; i++) {
-    const id = generateRoomId();
-    const { rows } = await db.query('SELECT id FROM rooms WHERE id = $1', [id]);
-    if (!rows.length) return id;
-  }
-  throw new Error('Kon geen unieke kamer-ID genereren');
-}
 
 // ── Create room ───────────────────────────────────────────────────────────────
 // Both guests and authenticated users can create rooms.
@@ -39,41 +22,11 @@ router.post('/', optionalAuth, async (req, res) => {
     return res.status(400).json({ error: 'Ongeldige schattingsmethode' });
   }
 
-  let ownerId = null;
-  let isGuest = true;
-  let planLimitWarning = null;
-
-  if (req.user) {
-    ownerId = req.user.id;
-    isGuest = false;
-
-    const plan = req.user.plan || 'free';
-    const limits = PLAN_LIMITS[plan];
-
-    if (limits.maxRooms !== Infinity) {
-      const { rows } = await db.query(
-        `SELECT COUNT(*) FROM rooms WHERE owner_id = $1 AND is_guest = FALSE`,
-        [ownerId]
-      );
-      if (parseInt(rows[0].count, 10) >= limits.maxRooms) {
-        // Allow creation as a temporary (non-saved) room instead of blocking
-        isGuest = true;
-        ownerId = null;
-        planLimitWarning = `Maximaal aantal kamers bereikt voor het ${plan}-plan (${limits.maxRooms}).`;
-      }
-    }
-  }
-
   try {
-    const id = await uniqueRoomId();
-    const { rows } = await db.query(
-      `INSERT INTO rooms (id, name, owner_id, method, is_guest)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, method, is_guest`,
-      [id, name.trim().slice(0, 100), ownerId, method, isGuest]
-    );
-    const room = rows[0];
-    if (planLimitWarning) room.planLimitWarning = planLimitWarning;
+    const room = await roomService.createRoom(req.user, {
+      name: name.trim().slice(0, 100),
+      method,
+    });
     res.status(201).json(room);
   } catch (err) {
     console.error('Create room error:', err);
@@ -85,17 +38,10 @@ router.post('/', optionalAuth, async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
   // Query plan from DB — JWT may be stale after admin changes plan
-  const { rows: userRows } = await db.query('SELECT plan FROM users WHERE id = $1', [req.user.id]);
-  const plan = userRows[0]?.plan ?? 'free';
-  const maxRooms = PLAN_LIMITS[plan]?.maxRooms ?? 3;
+  const plan = await getPlan(req.user.id);
+  const maxRooms = roomService.maxRoomsForPlan(plan);
 
-  const { rows } = await db.query(
-    `SELECT id, name, method, last_active, created_at
-     FROM rooms
-     WHERE owner_id = $1 AND is_guest = FALSE
-     ORDER BY last_active DESC`,
-    [req.user.id]
-  );
+  const rows = await roomRepository.listOwnedRooms(req.user.id);
 
   const rooms = rows.map((r, i) => ({
     ...r,
@@ -108,25 +54,15 @@ router.get('/', authMiddleware, async (req, res) => {
 // ── Get single room ───────────────────────────────────────────────────────────
 
 router.get('/:id', async (req, res) => {
-  const { rows } = await db.query(
-    `SELECT id, name, method, is_guest FROM rooms WHERE id = $1`,
-    [req.params.id.toUpperCase()]
-  );
-  if (!rows.length) return res.status(404).json({ error: 'Kamer niet gevonden' });
-  res.json(rows[0]);
+  const room = await roomRepository.findRoomById(req.params.id.toUpperCase());
+  if (!room) return res.status(404).json({ error: 'Kamer niet gevonden' });
+  res.json({ id: room.id, name: room.name, method: room.method, is_guest: room.is_guest });
 });
 
 // ── Get room history ──────────────────────────────────────────────────────────
 
 router.get('/:id/history', async (req, res) => {
-  const { rows } = await db.query(
-    `SELECT id, votes, name, created_at
-     FROM round_history
-     WHERE room_id = $1
-     ORDER BY created_at DESC
-     LIMIT 20`,
-    [req.params.id.toUpperCase()]
-  );
+  const rows = await roomRepository.getRoundHistory(req.params.id.toUpperCase());
   res.json(rows);
 });
 
@@ -136,45 +72,26 @@ router.get('/:id/history', async (req, res) => {
 
 router.post('/:id/claim', authMiddleware, async (req, res) => {
   const roomId = req.params.id.toUpperCase();
-
   const plan = req.user.plan || 'free';
-  const limits = PLAN_LIMITS[plan];
 
-  if (limits.maxRooms !== Infinity) {
-    const { rows } = await db.query(
-      `SELECT COUNT(*) FROM rooms WHERE owner_id = $1 AND is_guest = FALSE`,
-      [req.user.id]
-    );
-    if (parseInt(rows[0].count, 10) >= limits.maxRooms) {
-      return res.status(403).json({
-        error: `Maximaal aantal kamers bereikt voor het ${plan}-plan (${limits.maxRooms}).`,
-      });
-    }
+  if (await roomService.hasReachedRoomLimit(req.user.id, plan)) {
+    return res.status(403).json({ error: roomService.roomLimitMessage(plan) });
   }
 
-  const { rows } = await db.query(
-    `UPDATE rooms SET is_guest = FALSE, owner_id = $1
-     WHERE id = $2 AND is_guest = TRUE
-     RETURNING id, name, method, is_guest`,
-    [req.user.id, roomId]
-  );
-
-  if (!rows.length) {
+  const room = await roomRepository.claimRoom(roomId, req.user.id);
+  if (!room) {
     return res.status(409).json({ error: 'Kamer kan niet geclaimd worden (bestaat niet meer of is al permanent)' });
   }
 
   claimGuestRoom(roomId);
-  res.json(rows[0]);
+  res.json(room);
 });
 
 // ── Delete room ───────────────────────────────────────────────────────────────
 
 router.delete('/:id', authMiddleware, async (req, res) => {
-  const { rowCount } = await db.query(
-    `DELETE FROM rooms WHERE id = $1 AND owner_id = $2`,
-    [req.params.id.toUpperCase(), req.user.id]
-  );
-  if (!rowCount) return res.status(404).json({ error: 'Kamer niet gevonden of geen toegang' });
+  const deleted = await roomRepository.deleteOwnedRoom(req.params.id.toUpperCase(), req.user.id);
+  if (!deleted) return res.status(404).json({ error: 'Kamer niet gevonden of geen toegang' });
   res.json({ success: true });
 });
 

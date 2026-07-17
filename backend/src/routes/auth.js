@@ -1,28 +1,15 @@
 const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
-const speakeasy = require('speakeasy');
 const local = require('../auth/strategies/local');
 const google = require('../auth/strategies/google');
 const github = require('../auth/strategies/github');
 const { authMiddleware } = require('../auth/middleware');
-const { verify, sign } = require('../auth/jwt');
+const { verify, signSessionToken } = require('../auth/jwt');
+const { verifyTotpCode } = require('../auth/totp');
+const oauthStateStore = require('../auth/oauthStateStore');
 const db = require('../config/database');
-const { sendMail } = require('../config/email');
-
-// In-memory store for OAuth state nonces (maps state → { provider, timestamp })
-const oauthStates = new Map();
-
-function generateState() {
-  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-}
-
-function cleanExpiredStates() {
-  const expiry = Date.now() - 10 * 60 * 1000; // 10 minutes
-  for (const [key, val] of oauthStates) {
-    if (val.timestamp < expiry) oauthStates.delete(key);
-  }
-}
+const { sendVerificationEmail } = require('../domain/users/userMailer');
 
 // ── Provider discovery ────────────────────────────────────────────────────────
 
@@ -93,12 +80,7 @@ router.post('/resend-verification', async (req, res) => {
     [token, user.id]
   );
 
-  const baseUrl = process.env.BASE_URL || 'http://localhost';
-  await sendMail(
-    user.email,
-    'Bevestig je e-mailadres — Scrum Fight',
-    `Hoi ${user.name},\n\nKlik op de link hieronder om je e-mailadres te bevestigen:\n\n${baseUrl}/verify-email.html?token=${token}\n\nDeze link is eenmalig geldig.\n\nGroeten,\nScrum Fight`
-  );
+  await sendVerificationEmail(user, token);
 
   res.json({ ok: true });
 });
@@ -115,21 +97,28 @@ router.get('/me', authMiddleware, async (req, res) => {
   res.json(rows[0]);
 });
 
+// ── 2FA-verificatie (TOTP + e-mailcode) ───────────────────────────────────────
+
+// Validates the short-lived pre-auth token issued after the first login
+// step. Returns its payload, or null when missing/invalid/expired.
+function verifyPreAuthToken(preAuthToken) {
+  try {
+    const payload = verify(preAuthToken);
+    return payload.preAuth ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
 router.post('/verify-totp', async (req, res) => {
   const { preAuthToken, code } = req.body;
   if (!preAuthToken || !code) {
     return res.status(400).json({ error: 'Token en code zijn verplicht' });
   }
 
-  let payload;
-  try {
-    payload = verify(preAuthToken);
-  } catch {
+  const payload = verifyPreAuthToken(preAuthToken);
+  if (!payload) {
     return res.status(401).json({ error: 'Ongeldig of verlopen token' });
-  }
-
-  if (!payload.preAuth) {
-    return res.status(401).json({ error: 'Ongeldig pre-auth token' });
   }
 
   const { rows } = await db.query(
@@ -141,13 +130,39 @@ router.post('/verify-totp', async (req, res) => {
     return res.status(401).json({ error: 'Ongeldige aanvraag' });
   }
 
-  const valid = speakeasy.totp.verify({ secret: user.totp_secret, encoding: 'base32', token: code, window: 1 });
-  if (!valid) {
+  if (!verifyTotpCode(user.totp_secret, code)) {
     return res.status(401).json({ error: 'Ongeldige code' });
   }
 
-  const token = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
-  res.json({ token });
+  res.json({ token: signSessionToken(user) });
+});
+
+router.post('/verify-email-2fa', async (req, res) => {
+  const { preAuthToken, code } = req.body;
+  if (!preAuthToken || !code) {
+    return res.status(400).json({ error: 'Token en code zijn verplicht' });
+  }
+
+  const payload = verifyPreAuthToken(preAuthToken);
+  if (!payload) {
+    return res.status(401).json({ error: 'Ongeldig of verlopen token' });
+  }
+
+  const { rows: codeRows } = await db.query(
+    `DELETE FROM email_2fa_codes
+     WHERE user_id = $1 AND code = $2 AND expires_at > NOW()
+     RETURNING user_id`,
+    [payload.id, code]
+  );
+  if (!codeRows.length) {
+    return res.status(401).json({ error: 'Ongeldige of verlopen code' });
+  }
+
+  const { rows: userRows } = await db.query(
+    'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
+    [payload.id]
+  );
+  res.json({ token: signSessionToken(userRows[0]) });
 });
 
 // ── E-mailverificatie ─────────────────────────────────────────────────────────
@@ -166,111 +181,45 @@ router.get('/verify-email', async (req, res) => {
   if (!rows.length) return res.status(400).json({ error: 'Ongeldig of verlopen token' });
 
   const user = rows[0];
-  const jwtToken = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
-  res.json({ token: jwtToken, user });
+  res.json({ token: signSessionToken(user), user });
 });
 
-// ── E-mail 2FA verificatie ────────────────────────────────────────────────────
+// ── OAuth (Google, GitHub) ────────────────────────────────────────────────────
+// Both providers share the same route pair: a redirect to the provider's
+// consent screen (with a CSRF state nonce) and a callback that exchanges
+// the code for a session or a TOTP pre-auth step.
 
-router.post('/verify-email-2fa', async (req, res) => {
-  const { preAuthToken, code } = req.body;
-  if (!preAuthToken || !code) {
-    return res.status(400).json({ error: 'Token en code zijn verplicht' });
-  }
+function mountOAuthRoutes(provider, label, strategy) {
+  const redirectUri = () => `${process.env.BASE_URL}/api/auth/${provider}/callback`;
 
-  let payload;
-  try {
-    payload = verify(preAuthToken);
-  } catch {
-    return res.status(401).json({ error: 'Ongeldig of verlopen token' });
-  }
-  if (!payload.preAuth) {
-    return res.status(401).json({ error: 'Ongeldig pre-auth token' });
-  }
-
-  const { rows: codeRows } = await db.query(
-    `DELETE FROM email_2fa_codes
-     WHERE user_id = $1 AND code = $2 AND expires_at > NOW()
-     RETURNING user_id`,
-    [payload.id, code]
-  );
-  if (!codeRows.length) {
-    return res.status(401).json({ error: 'Ongeldige of verlopen code' });
-  }
-
-  const { rows: userRows } = await db.query(
-    'SELECT id, name, plan, is_admin FROM users WHERE id = $1',
-    [payload.id]
-  );
-  const user = userRows[0];
-  const token = sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin });
-  res.json({ token });
-});
-
-// ── Google OAuth ──────────────────────────────────────────────────────────────
-
-router.get('/google', (req, res) => {
-  if (!google.isConfigured()) {
-    return res.status(501).json({ error: 'Google OAuth is niet geconfigureerd' });
-  }
-  cleanExpiredStates();
-  const state = generateState();
-  oauthStates.set(state, { provider: 'google', timestamp: Date.now() });
-  const redirectUri = `${process.env.BASE_URL}/api/auth/google/callback`;
-  res.redirect(google.getAuthUrl(state, redirectUri));
-});
-
-router.get('/google/callback', async (req, res) => {
-  const { code, state } = req.query;
-  if (!state || !oauthStates.has(state)) {
-    return res.redirect('/?error=oauth_state_invalid');
-  }
-  oauthStates.delete(state);
-  try {
-    const redirectUri = `${process.env.BASE_URL}/api/auth/google/callback`;
-    const result = await google.handleCallback(code, redirectUri);
-    if (result.requiresTotp) {
-      res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
-    } else {
-      res.redirect(`/dashboard.html?token=${result.token}`);
+  router.get(`/${provider}`, (req, res) => {
+    if (!strategy.isConfigured()) {
+      return res.status(501).json({ error: `${label} OAuth is niet geconfigureerd` });
     }
-  } catch (err) {
-    console.error('Google OAuth error:', err);
-    res.redirect('/?error=oauth_failed');
-  }
-});
+    const state = oauthStateStore.createState(provider);
+    res.redirect(strategy.getAuthUrl(state, redirectUri()));
+  });
 
-// ── GitHub OAuth ──────────────────────────────────────────────────────────────
-
-router.get('/github', (req, res) => {
-  if (!github.isConfigured()) {
-    return res.status(501).json({ error: 'GitHub OAuth is niet geconfigureerd' });
-  }
-  cleanExpiredStates();
-  const state = generateState();
-  oauthStates.set(state, { provider: 'github', timestamp: Date.now() });
-  const redirectUri = `${process.env.BASE_URL}/api/auth/github/callback`;
-  res.redirect(github.getAuthUrl(state, redirectUri));
-});
-
-router.get('/github/callback', async (req, res) => {
-  const { code, state } = req.query;
-  if (!state || !oauthStates.has(state)) {
-    return res.redirect('/?error=oauth_state_invalid');
-  }
-  oauthStates.delete(state);
-  try {
-    const redirectUri = `${process.env.BASE_URL}/api/auth/github/callback`;
-    const result = await github.handleCallback(code, redirectUri);
-    if (result.requiresTotp) {
-      res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
-    } else {
-      res.redirect(`/dashboard.html?token=${result.token}`);
+  router.get(`/${provider}/callback`, async (req, res) => {
+    const { code, state } = req.query;
+    if (!oauthStateStore.consumeState(state)) {
+      return res.redirect('/?error=oauth_state_invalid');
     }
-  } catch (err) {
-    console.error('GitHub OAuth error:', err);
-    res.redirect('/?error=oauth_failed');
-  }
-});
+    try {
+      const result = await strategy.handleCallback(code, redirectUri());
+      if (result.requiresTotp) {
+        res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
+      } else {
+        res.redirect(`/dashboard.html?token=${result.token}`);
+      }
+    } catch (err) {
+      console.error(`${label} OAuth error:`, err);
+      res.redirect('/?error=oauth_failed');
+    }
+  });
+}
+
+mountOAuthRoutes('google', 'Google', google);
+mountOAuthRoutes('github', 'GitHub', github);
 
 module.exports = router;

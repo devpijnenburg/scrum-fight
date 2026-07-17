@@ -1,5 +1,4 @@
-const db = require('../../config/database');
-const { sign } = require('../jwt');
+const { upsertOAuthUser, buildAuthResult } = require('./oauthAccount');
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -41,39 +40,11 @@ async function handleCallback(code, redirectUri) {
   });
   const profile = await infoRes.json();
 
-  const { rows: existing } = await db.query(
-    `SELECT id, name, email, plan, is_admin, totp_enabled FROM users
-     WHERE oauth_provider = 'google' AND oauth_id = $1`,
-    [profile.sub]
-  );
-
-  let user;
-  if (existing.length) {
-    user = existing[0];
-    await db.query(
-      `UPDATE users SET name = $1, updated_at = NOW() WHERE id = $2`,
-      [profile.name, user.id]
-    );
-    user.name = profile.name;
-  } else {
-    const { rows } = await db.query(
-      `INSERT INTO users (name, email, oauth_provider, oauth_id)
-       VALUES ($1, $2, 'google', $3)
-       RETURNING id, name, email, plan, is_admin, totp_enabled`,
-      [profile.name, profile.email, profile.sub]
-    );
-    user = rows[0];
-  }
-
-  if (user.totp_enabled) {
-    const preAuthToken = sign({ id: user.id, preAuth: true }, { expiresIn: '5m' });
-    return { user, preAuthToken, requiresTotp: true };
-  }
-
-  return {
-    user,
-    token: sign({ id: user.id, name: user.name, plan: user.plan, is_admin: user.is_admin }),
-  };
+  const user = await upsertOAuthUser('google', profile.sub, {
+    name: profile.name,
+    email: profile.email,
+  });
+  return buildAuthResult(user);
 }
 
 module.exports = { isConfigured, getAuthUrl, handleCallback };

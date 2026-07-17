@@ -13,7 +13,7 @@ const userRoutes = require('./src/routes/users');
 const adminRoutes = require('./src/routes/admin');
 const profileRoutes = require('./src/routes/profile');
 const setupSocket = require('./src/socket');
-require('./src/jobs/cleanup');
+const { startJobs } = require('./src/jobs');
 
 const app = express();
 const httpServer = createServer(app);
@@ -59,6 +59,7 @@ const PORT = process.env.PORT || 3000;
 
 runMigrations()
   .then(() => {
+    startJobs();
     httpServer.listen(PORT, () => {
       console.log(`[server] Listening on port ${PORT}`);
     });

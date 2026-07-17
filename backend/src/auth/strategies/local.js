@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('../../config/database');
-const { sign } = require('../jwt');
-const { sendMail } = require('../../config/email');
+const { signSessionToken, signPreAuthToken } = require('../jwt');
+const { sendVerificationEmail, sendLoginCodeEmail } = require('../../domain/users/userMailer');
 
 async function register(name, email, password) {
   const hash = await bcrypt.hash(password, 12);
@@ -16,12 +16,7 @@ async function register(name, email, password) {
   );
   const user = rows[0];
 
-  const baseUrl = process.env.BASE_URL || 'http://localhost';
-  await sendMail(
-    user.email,
-    'Bevestig je e-mailadres — Scrum Fight',
-    `Hoi ${user.name},\n\nKlik op de link hieronder om je e-mailadres te bevestigen:\n\n${baseUrl}/verify-email.html?token=${verificationToken}\n\nDeze link is eenmalig geldig.\n\nGroeten,\nScrum Fight`
-  );
+  await sendVerificationEmail(user, verificationToken);
 
   return { requiresVerification: true };
 }
@@ -49,8 +44,7 @@ async function login(email, password) {
   const { password_hash, totp_enabled, email_2fa_enabled, email_verified, ...safeUser } = user;
 
   if (totp_enabled) {
-    const preAuthToken = sign({ id: user.id, preAuth: true }, { expiresIn: '5m' });
-    return { user: safeUser, preAuthToken, requiresTotp: true };
+    return { user: safeUser, preAuthToken: signPreAuthToken(user.id), requiresTotp: true };
   }
 
   if (email_2fa_enabled) {
@@ -60,19 +54,11 @@ async function login(email, password) {
        VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`,
       [user.id, code]
     );
-    await sendMail(
-      user.email,
-      'Je inlogcode — Scrum Fight',
-      `Hoi ${user.name},\n\nJe inlogcode is: ${code}\n\nDeze code is 10 minuten geldig.\n\nGroeten,\nScrum Fight`
-    );
-    const preAuthToken = sign({ id: user.id, preAuth: true }, { expiresIn: '10m' });
-    return { user: safeUser, preAuthToken, requiresEmail2fa: true };
+    await sendLoginCodeEmail(user, code);
+    return { user: safeUser, preAuthToken: signPreAuthToken(user.id, '10m'), requiresEmail2fa: true };
   }
 
-  return {
-    user: safeUser,
-    token: sign({ id: safeUser.id, name: safeUser.name, plan: safeUser.plan, is_admin: safeUser.is_admin }),
-  };
+  return { user: safeUser, token: signSessionToken(safeUser) };
 }
 
 module.exports = { register, login };

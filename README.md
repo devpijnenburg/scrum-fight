@@ -61,6 +61,25 @@ docker compose up --build
 
 Open `http://localhost` in je browser.
 
+### Lokaal ontwikkelen met Aspire
+
+Als alternatief voor Docker Compose kun je lokaal ontwikkelen met [Aspire](https://aspire.dev). De backend draait dan direct op Node (geen image-build nodig) en wijzigingen in `frontend/public` zijn meteen zichtbaar.
+
+Vereisten: .NET 10 SDK, Node.js 20+, Docker en de Aspire CLI (`dotnet tool install -g Aspire.Cli`).
+
+```bash
+cd aspire
+aspire run
+```
+
+| Onderdeel | Adres |
+|-----------|-------|
+| App       | `http://localhost:8088` |
+| Dashboard | link verschijnt in de terminal (logs, traces, resources) |
+| Mailpit   | via het dashboard (`mailpit`) — alle uitgaande mail komt hier binnen |
+
+Postgres draait als persistente container met een eigen volume (`scrum-fight-postgres`), dus de data blijft bewaard tussen runs. Het `JWT_SECRET` wordt eenmalig gegenereerd en in user secrets opgeslagen. OAuth (Google/GitHub) is in deze opzet niet ingesteld.
+
 ## Configuratie
 
 Alle instellingen via `.env`:

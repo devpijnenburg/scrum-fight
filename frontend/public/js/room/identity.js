@@ -3,7 +3,11 @@
 
 import { state, ROOM_ID, FROM_JOIN_LINK, NAME_FROM_SESSION, $ } from './state.js';
 import { socket } from './socket.js';
-import { t, apiFetch, getCurrentUser, openModal, closeModal, showToast } from './globals.js';
+import { t } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { openModal, closeModal } from '../ui/modal.js';
+import { showToast } from '../ui/toast.js';
 import { showOverlay } from './overlays.js';
 
 const profileMenu = () => document.querySelector('profile-menu');

@@ -3,7 +3,8 @@
 
 import { state, ROOM_ID, $ } from './state.js';
 import { socket } from './socket.js';
-import { t, getCurrentUser } from './globals.js';
+import { t } from '../core/i18n.js';
+import { getCurrentUser } from '../core/auth.js';
 
 export function renderHeader(room) {
   $('roomNameDisplay').textContent = room.name;

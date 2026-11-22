@@ -1,5 +1,14 @@
-// Stats page — personal poker analytics
-// Badge definitions are in badges.js (loaded before this file)
+// Stats page — personal poker analytics (entry module of stats.html).
+
+import '../components/siteChrome.js';
+import { t, getLang } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { escapeHtml } from '../core/html.js';
+import { BADGES, BADGE_GROUPS, shieldSvg } from '../core/badges.js';
+
+// Chart.js is loaded from a CDN as a classic script; it may be missing.
+const { Chart } = window;
 
 // ── Chart defaults (dark theme) ───────────────────────────────────────────────
 
@@ -12,7 +21,6 @@ if (typeof Chart !== 'undefined') {
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
 const user = getCurrentUser();
-if (!user) window.location.href = '/login.html';
 
 // ── Badge rendering ───────────────────────────────────────────────────────────
 
@@ -265,7 +273,7 @@ function showBadgeToastsFromDb(earnedIds) {
     if (seen.size === 0) return;
     const newOnes = badgeIds.filter(id => !seen.has(id));
     const MAX = 3;
-    newOnes.slice(0, MAX).forEach((id, i) => setTimeout(() => showToast(id), i * 700));
+    newOnes.slice(0, MAX).forEach((id, i) => setTimeout(() => showBadgeToast(id), i * 700));
     const extra = newOnes.length - MAX;
     if (extra > 0) setTimeout(() => showToastSummary(extra), MAX * 700);
   } catch {
@@ -273,7 +281,7 @@ function showBadgeToastsFromDb(earnedIds) {
   }
 }
 
-function showToast(badgeId) {
+function showBadgeToast(badgeId) {
   const badge = BADGES.find(b => b.id === badgeId);
   if (!badge) return;
   const container = document.getElementById('toastContainer');
@@ -285,8 +293,9 @@ function showToast(badgeId) {
       <div class="badge-toast-label">${t('stats.toast_unlocked')}</div>
       <div class="badge-toast-name">${localText(badge.name)}</div>
     </div>
-    <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
+    <button class="badge-toast-close" type="button">✕</button>
   `;
+  toast.querySelector('.badge-toast-close').addEventListener('click', () => toast.remove());
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('badge-toast-hide');
@@ -304,8 +313,9 @@ function showToastSummary(count) {
     <div class="badge-toast-body" style="padding:.6rem 0">
       <div class="badge-toast-label">🏅 ${label}</div>
     </div>
-    <button class="badge-toast-close" onclick="this.closest('.badge-toast-item').remove()">✕</button>
+    <button class="badge-toast-close" type="button">✕</button>
   `;
+  toast.querySelector('.badge-toast-close').addEventListener('click', () => toast.remove());
   container.appendChild(toast);
   setTimeout(() => {
     toast.classList.add('badge-toast-hide');
@@ -445,7 +455,5 @@ async function loadStats() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  updateNavbar();
-  loadStats();
-});
+if (!user) window.location.href = '/login.html';
+else loadStats();

@@ -1,21 +1,11 @@
-// Landing page logic
+// Landing page: create a room or join one by code (entry module of index.html).
 
-const ADJECTIVES = [
-  'Fluffy','Cosmic','Epic','Ninja','Turbo','Legendary','Quantum','Sneaky',
-  'Blazing','Mysterious','Glittery','Thunderous','Magical','Hyper','Radical',
-  'Zesty','Wobbly','Sparkly','Grumpy','Jolly','Speedy','Funky','Mighty',
-];
-const NOUNS = [
-  'Unicorn','Dragon','Penguin','Elephant','Phoenix','Narwhal','Llama',
-  'Gecko','Panda','Kraken','Platypus','Hamster','Octopus','Dinosaur','Giraffe',
-  'Axolotl','Capybara','Quokka','Meerkat','Sloth','Dodo','Narwhal',
-];
-const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Session'];
-
-function generateRoomName() {
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  return `${pick(ADJECTIVES)} ${pick(NOUNS)} ${pick(SUFFIXES)}`;
-}
+import '../components/siteChrome.js';
+import '../ui/methodSelect.js';
+import { t } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { generateRoomName } from '../core/roomNames.js';
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -30,8 +20,6 @@ document.getElementById('randomNameBtn').addEventListener('click', () => {
   document.getElementById('createRoomName').value = generateRoomName();
   document.getElementById('createRoomName').focus();
 });
-
-updateNavbar();
 
 const user = getCurrentUser();
 if (user) {

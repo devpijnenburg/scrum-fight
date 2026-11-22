@@ -1,10 +1,21 @@
-'use strict';
+// Shared UI building blocks in public/js/ui (ES modules, run in jsdom).
+import { jest } from '@jest/globals';
 
-// Shared UI building blocks in public/js/ui (classic scripts, run in jsdom).
+// The auth panel talks to the API; mock that module before importing it.
+const apiFetch = jest.fn();
+jest.unstable_mockModule('../public/js/core/api.js', () => ({
+  apiFetch,
+  initOAuthButtons: jest.fn(),
+  getOAuthProviders: jest.fn().mockResolvedValue({}),
+  apiErrorMessage: jest.fn(),
+  getToken: jest.fn(),
+}));
 
-const { openModal, closeModal, isModalOpen, confirmDialog } = require('../public/js/ui/modal.js');
-const { showToast } = require('../public/js/ui/toast.js');
-const settings = require('../public/js/ui/../settings.js');
+const { openModal, closeModal, isModalOpen, confirmDialog } = await import('../public/js/ui/modal.js');
+const { showToast } = await import('../public/js/ui/toast.js');
+const settings = await import('../public/js/core/settings.js');
+const { fillMethodSelect } = await import('../public/js/ui/methodSelect.js');
+await import('../public/js/ui/authPanel.js');
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -153,12 +164,6 @@ describe('settings', () => {
 });
 
 describe('method select', () => {
-  let fillMethodSelect;
-  beforeAll(() => {
-    global.loadSettings = settings.loadSettings;
-    document.body.innerHTML = '';
-    ({ fillMethodSelect } = require('../public/js/ui/methodSelect.js'));
-  });
   beforeEach(() => localStorage.clear());
 
   it('lists all methods and defaults to Fibonacci+', () => {
@@ -183,10 +188,6 @@ describe('method select', () => {
 });
 
 describe('<sf-auth-panel>', () => {
-  beforeAll(() => {
-    require('../public/js/ui/authPanel.js');
-  });
-
   function mount(attrs = '') {
     document.body.innerHTML = `<div class="auth-card"><sf-auth-panel ${attrs}></sf-auth-panel></div>`;
     return document.querySelector('sf-auth-panel');
@@ -205,7 +206,7 @@ describe('<sf-auth-panel>', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    global.apiFetch = jest.fn();
+    apiFetch.mockReset();
   });
 
   it('switches tabs', () => {

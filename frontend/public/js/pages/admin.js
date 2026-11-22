@@ -1,9 +1,13 @@
-// Admin portal — requires is_admin claim in JWT
+// Admin portal — requires is_admin claim in JWT (entry module of admin.html).
+
+import '../components/siteChrome.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { escapeHtml } from '../core/html.js';
+import { openModal, closeModal, confirmDialog } from '../ui/modal.js';
+import { showToast } from '../ui/toast.js';
 
 const user = getCurrentUser();
-if (!user || !user.is_admin) window.location.href = '/';
-
-updateNavbar();
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 
@@ -31,8 +35,16 @@ function debounce(fn, ms) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-// Confirmation uses the shared dialog from ui/modal.js.
 const showConfirm = (message) => confirmDialog(message);
+
+// Buttons inside rendered tables/lists carry data-action (+ data-id);
+// one delegated listener per container handles them.
+function onAction(containerId, handlers) {
+  document.getElementById(containerId).addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (btn && !btn.disabled && handlers[btn.dataset.action]) handlers[btn.dataset.action](btn.dataset);
+  });
+}
 
 document.getElementById('userSearch').addEventListener('input', debounce((e) => {
   userSearch = e.target.value.trim();
@@ -70,7 +82,7 @@ function renderUserTable(users) {
       <td>${u.oauth_provider ? escapeHtml(u.oauth_provider) : 'e-mail'}</td>
       <td>${u.totp_enabled ? '✓' : '—'}</td>
       <td>${new Date(u.created_at).toLocaleDateString('nl-NL')}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openEditUser('${u.id}')">Bewerken</button></td>
+      <td><button class="btn btn-ghost btn-sm" data-action="edit" data-id="${escapeHtml(u.id)}">Bewerken</button></td>
     </tr>
   `).join('');
 }
@@ -80,9 +92,9 @@ function renderUserPagination() {
   const totalPages = Math.ceil(userTotal / USER_LIMIT);
   if (totalPages <= 1) { el.innerHTML = ''; return; }
   el.innerHTML = `
-    <button class="btn btn-ghost btn-sm" ${userPage === 0 ? 'disabled' : ''} onclick="goUserPage(${userPage - 1})">← Vorige</button>
+    <button class="btn btn-ghost btn-sm" ${userPage === 0 ? 'disabled' : ''} data-action="page" data-page="${userPage - 1}">← Vorige</button>
     <span class="text-muted" style="font-size:.85rem">Pagina ${userPage + 1} van ${totalPages}</span>
-    <button class="btn btn-ghost btn-sm" ${userPage >= totalPages - 1 ? 'disabled' : ''} onclick="goUserPage(${userPage + 1})">Volgende →</button>
+    <button class="btn btn-ghost btn-sm" ${userPage >= totalPages - 1 ? 'disabled' : ''} data-action="page" data-page="${userPage + 1}">Volgende →</button>
   `;
 }
 
@@ -202,9 +214,9 @@ function renderOrgTable(orgs) {
       <td>${o.member_count} / ${o.max_members}</td>
       <td>${o.owner_name ? escapeHtml(o.owner_name) : '—'}</td>
       <td class="admin-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openOrgModal('${o.id}')">Bewerken</button>
-        <button class="btn btn-ghost btn-sm" onclick="openMembers('${o.id}', ${JSON.stringify(o.name)})">Leden</button>
-        <button class="btn btn-ghost btn-sm admin-del" onclick="deleteOrg('${o.id}')">Verwijderen</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${escapeHtml(o.id)}">Bewerken</button>
+        <button class="btn btn-ghost btn-sm" data-action="members" data-id="${escapeHtml(o.id)}">Leden</button>
+        <button class="btn btn-ghost btn-sm admin-del" data-action="delete" data-id="${escapeHtml(o.id)}">Verwijderen</button>
       </td>
     </tr>
   `).join('');
@@ -274,10 +286,6 @@ async function openMembers(orgId, orgName) {
   await loadMembers();
 }
 
-function closeMembers() {
-  closeModal('membersModal');
-}
-
 document.getElementById('membersModal').addEventListener('modal:close', () => { membersOrgId = null; });
 
 async function loadMembers() {
@@ -292,7 +300,7 @@ async function loadMembers() {
     list.innerHTML = members.map((m) => `
       <div class="member-row">
         <span>${escapeHtml(m.name)} <small class="text-muted">${escapeHtml(m.email || '')}</small></span>
-        <button class="btn btn-ghost btn-sm admin-del" onclick="removeMember('${m.id}')">Verwijderen</button>
+        <button class="btn btn-ghost btn-sm admin-del" data-action="remove" data-id="${escapeHtml(m.id)}">Verwijderen</button>
       </div>
     `).join('');
   } catch (ex) {
@@ -330,17 +338,26 @@ async function removeMember(userId) {
   }
 }
 
-// Expose internals for unit tests (Node.js / Jest only)
-/* istanbul ignore next */
-if (typeof module !== 'undefined') {
-  module.exports = {
-    filterOrgs,
-    openEditUser, closeEditUser, renderUserTable,
-    openOrgModal,  closeOrgModal,  renderOrgTable,
-    applyOrgFilter, loadOrgs, loadUsers,
-  };
-}
+// ── Delegated actions ─────────────────────────────────────────────────────────
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+onAction('userTableBody', { edit: ({ id }) => openEditUser(id) });
+onAction('userPagination', { page: ({ page }) => goUserPage(Number(page)) });
+onAction('orgTableBody', {
+  edit: ({ id }) => openOrgModal(id),
+  members: ({ id }) => openMembers(id, orgMap.get(id)?.name || ''),
+  delete: ({ id }) => deleteOrg(id),
+});
+onAction('membersList', { remove: ({ id }) => removeMember(id) });
 
-loadUsers();
+// Exported for unit tests.
+export {
+  filterOrgs,
+  openEditUser, closeEditUser, renderUserTable,
+  openOrgModal, closeOrgModal, renderOrgTable,
+  applyOrgFilter, loadOrgs, loadUsers,
+};
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+
+if (!user || !user.is_admin) window.location.href = '/';
+else loadUsers();

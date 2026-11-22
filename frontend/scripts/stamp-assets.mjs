@@ -6,7 +6,7 @@
 // still pick up every change immediately:
 //   *.html  <script src="/js/…">, <link href="/css/…">  (files served from public/ only)
 //   *.css   @import url('…')
-//   *.js    ES module imports: from './x.js', import('./x.js')
+//   *.js    ES module imports: from './x.js', import './x.js', import('./x.js')
 // A file's hash covers its own stamped content, so a change in an imported
 // module or stylesheet also changes the hash of everything importing it.
 //
@@ -20,7 +20,9 @@ const HASH_LENGTH = 10;
 
 const HTML_REF = /(<(?:script|link)\b[^>]*?\s(?:src|href)=")(\/(?:js|css)\/[^"?#]+\.(?:js|css))(?:\?v=[^"]*)?(")/g;
 const CSS_IMPORT = /(@import\s+url\(\s*['"]?)([^'")?]+\.css)(?:\?v=[^'")]*)?(['"]?\s*\))/g;
-const JS_IMPORT = /((?:\bfrom\s*|\bimport\s*\(\s*)['"])(\.{1,2}\/[^'"?]+\.js)(?:\?v=[^'"]*)?(['"])/g;
+// from './x.js' (import … from / export … from), import './x.js' (side effect), import('./x.js')
+const JS_IMPORT = /((?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"])(\.{1,2}\/[^'"?]+\.js)(?:\?v=[^'"]*)?(['"])/g;
+const UNSTAMPED_JS_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"]\.{1,2}\/[^'"?]+\.js['"]/;
 
 export function stampAssets(publicDir) {
   const root = resolve(publicDir);
@@ -71,7 +73,14 @@ export function stampAssets(publicDir) {
     const html = readFileSync(file, 'utf8');
     writeFileSync(file, rewrite(html, HTML_REF, dirname(file), file));
   }
-  for (const [file, { content }] of stamped) writeFileSync(file, content);
+  for (const [file, { content }] of stamped) {
+    // Safety net: an import the patterns above missed would load that
+    // module under a second URL — a duplicate instance with its own state.
+    if (file.endsWith('.js') && UNSTAMPED_JS_IMPORT.test(content)) {
+      throw new Error(`${relative(root, file)} has a relative import the stamper did not recognise`);
+    }
+    writeFileSync(file, content);
+  }
   return { html: htmlFiles.length, assets: stamped.size };
 }
 

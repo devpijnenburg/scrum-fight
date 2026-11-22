@@ -1,3 +1,7 @@
+import { t, applyTranslations } from '../core/i18n.js';
+import { apiFetch, initOAuthButtons } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+
 // <sf-auth-panel> — login, registration and the second login step in one
 // component, shared by login.html, the in-room auth modal and
 // totp-verify.html (OAuth + TOTP).
@@ -19,7 +23,7 @@ const AUTH_OAUTH_ICONS = {
 
 let _authPanelSeq = 0;
 
-class SfAuthPanel extends HTMLElement {
+export class SfAuthPanel extends HTMLElement {
   connectedCallback() {
     if (this._rendered) return;
     this._rendered = true;
@@ -35,8 +39,8 @@ class SfAuthPanel extends HTMLElement {
     } else {
       this.showTab(this.getAttribute('initial-tab') === 'register' ? 'register' : 'login');
     }
-    if (typeof initOAuthButtons === 'function') initOAuthButtons(this);
-    if (typeof applyTranslations === 'function') applyTranslations();
+    initOAuthButtons(this);
+    applyTranslations();
   }
 
   _id(name) {
@@ -118,7 +122,6 @@ class SfAuthPanel extends HTMLElement {
   }
 
   _text(key, fallback, vars) {
-    if (typeof t !== 'function') return fallback;
     const text = t(key, vars);
     return text === key ? fallback : text;
   }
@@ -167,7 +170,7 @@ class SfAuthPanel extends HTMLElement {
     for (const part of ['tabs', 'oauth-divider', 'oauth']) {
       this._part(part).classList.toggle('hidden', !visible);
     }
-    if (visible && typeof initOAuthButtons === 'function') initOAuthButtons(this);
+    if (visible) initOAuthButtons(this);
   }
 
   showTab(tab) {
@@ -317,14 +320,12 @@ class SfAuthPanel extends HTMLElement {
       return;
     }
     localStorage.setItem('token', token);
-    const sessionUser = user || (typeof getCurrentUser === 'function' ? getCurrentUser() : null);
+    const sessionUser = user || getCurrentUser();
     if (sessionUser?.name) localStorage.setItem('userName', sessionUser.name);
     this.dispatchEvent(new CustomEvent('auth-success', { bubbles: true, detail: { token, user: sessionUser } }));
   }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get('sf-auth-panel')) {
+if (!customElements.get('sf-auth-panel')) {
   customElements.define('sf-auth-panel', SfAuthPanel);
 }
-
-if (typeof module !== 'undefined') module.exports = { SfAuthPanel };

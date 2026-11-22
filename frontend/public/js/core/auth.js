@@ -1,6 +1,6 @@
-// Auth helpers shared across all pages.
+// Session helpers: the JWT in localStorage and the current user.
 
-function getCurrentUser() {
+export function getCurrentUser() {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
@@ -15,7 +15,7 @@ function getCurrentUser() {
   }
 }
 
-function logout() {
+export function logout() {
   localStorage.removeItem('token');
   window.location.href = '/';
 }
@@ -27,15 +27,4 @@ function initFooterAuth() {
   if (el) el.classList.add('hidden');
 }
 
-// Update navbar for logged-in state — no-op, handled by <site-nav> component
-function updateNavbar() {}
-
 document.addEventListener('DOMContentLoaded', initFooterAuth);
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}

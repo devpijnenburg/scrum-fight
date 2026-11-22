@@ -1,6 +1,6 @@
-// Shared badge definitions — loaded before stats.js and room.js
+// Badge catalogue and the SVG shield renderer (used by stats and room).
 
-const TIERS = {
+export const TIERS = {
   bronze:   ['#f5c97a', '#c47b2b', '#7c3a0a', '#fff3e0'],
   silver:   ['#f0f4f8', '#8896a8', '#4a5568', '#f0f4f8'],
   gold:     ['#fef3c7', '#d97706', '#78350f', '#fffbeb'],
@@ -29,7 +29,7 @@ function atLeast(getValue, target) {
   };
 }
 
-const BADGE_GROUPS = [
+export const BADGE_GROUPS = [
   {
     id: 'basics',
     icon: '♟',
@@ -244,11 +244,13 @@ const BADGE_GROUPS = [
   },
 ];
 
-const BADGES = BADGE_GROUPS.flatMap((g) => g.badges);
+export const BADGES = BADGE_GROUPS.flatMap((g) => g.badges);
+
+export const findBadge = (id) => BADGES.find((b) => b.id === id) || null;
 
 // ── SVG shield generator ──────────────────────────────────────────────────────
 
-function shieldSvg(tier, icon, unlocked, pct) {
+export function shieldSvg(tier, icon, unlocked, pct) {
   const [hi, mid, dark, txt] = TIERS[tier] || TIERS.bronze;
   const id = `sh-${Math.random().toString(36).slice(2, 7)}`;
 

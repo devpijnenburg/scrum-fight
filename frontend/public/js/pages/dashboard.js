@@ -1,21 +1,14 @@
-// Dashboard page logic
+// Dashboard: the user's saved rooms (entry module of dashboard.html).
 
-const ADJECTIVES = [
-  'Fluffy','Cosmic','Epic','Ninja','Turbo','Legendary','Quantum','Sneaky',
-  'Blazing','Mysterious','Glittery','Thunderous','Magical','Hyper','Radical',
-  'Zesty','Wobbly','Sparkly','Grumpy','Jolly',
-];
-const NOUNS = [
-  'Unicorn','Dragon','Penguin','Elephant','Phoenix','Narwhal','Llama',
-  'Gecko','Panda','Kraken','Platypus','Hamster','Octopus','Dinosaur','Giraffe',
-  'Axolotl','Capybara','Quokka','Meerkat','Sloth',
-];
-const SUFFIXES = ['Sprint','Planning','Refinement','Poker','Session'];
-
-function generateRoomName() {
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  return `${pick(ADJECTIVES)} ${pick(NOUNS)} ${pick(SUFFIXES)}`;
-}
+import '../components/siteChrome.js';
+import '../ui/methodSelect.js';
+import { t, getLang } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { escapeHtml } from '../core/html.js';
+import { generateRoomName } from '../core/roomNames.js';
+import { openModal, closeModal, confirmDialog } from '../ui/modal.js';
+import { showToast } from '../ui/toast.js';
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 const urlParams = new URLSearchParams(location.search);
@@ -26,28 +19,45 @@ if (oauthToken) {
 }
 
 const user = getCurrentUser();
-if (!user) {
-  window.location.href = '/login.html';
-}
 
 // ── Page init ─────────────────────────────────────────────────────────────────
 
-updateNavbar();
-document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
-document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
+function initDashboard() {
+  document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
+  document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
 
-document.querySelectorAll('.plan-card').forEach((card) => {
-  if (card.dataset.plan === user.plan) {
-    card.setAttribute('data-active', 'true');
-    const btn = card.querySelector('.plan-upgrade-btn');
-    if (btn) btn.remove();
-  }
-});
+  document.querySelectorAll('.plan-card').forEach((card) => {
+    if (card.dataset.plan === user.plan) {
+      card.setAttribute('data-active', 'true');
+      const btn = card.querySelector('.plan-upgrade-btn');
+      if (btn) btn.remove();
+    }
+  });
 
-document.getElementById('modalRoomName').value = generateRoomName();
-document.getElementById('modalRandomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();
-});
+  document.getElementById('modalRandomBtn').addEventListener('click', () => {
+    document.getElementById('modalRoomName').value = generateRoomName();
+  });
+
+  document.getElementById('roomList').innerHTML = [1, 2, 3].map(() => `
+    <div class="room-item-skeleton">
+      <div class="skeleton skeleton-line-lg"></div>
+      <div class="skeleton skeleton-line-sm"></div>
+      <div class="skeleton skeleton-line-md"></div>
+      <div class="skeleton skeleton-line-sm" style="width:40%"></div>
+    </div>
+  `).join('');
+
+  // Room card buttons (rendered as HTML) are handled by delegation.
+  document.getElementById('roomList').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'copy') copyCode(btn.dataset.id);
+    if (btn.dataset.action === 'delete') deleteRoom(btn.dataset.id);
+  });
+
+  loadRooms();
+}
 
 // ── Load rooms ────────────────────────────────────────────────────────────────
 
@@ -84,8 +94,8 @@ async function loadRooms() {
         <div class="text-muted" style="font-size:.8rem;">${t('dashboard.rooms.active', { date: formatDate(r.last_active) })}</div>
         <div class="room-item-actions">
           <a href="/room.html?id=${r.id}" class="btn btn-primary btn-sm">${t('dashboard.rooms.open')}</a>
-          <button class="btn btn-ghost btn-sm" onclick="copyCode('${r.id}')">📋 Code</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteRoom('${r.id}')">🗑</button>
+          <button class="btn btn-ghost btn-sm" data-action="copy" data-id="${escapeHtml(r.id)}">📋 Code</button>
+          <button class="btn btn-ghost btn-sm" data-action="delete" data-id="${escapeHtml(r.id)}">🗑</button>
         </div>
       </div>
     `).join('');
@@ -98,16 +108,6 @@ async function loadRooms() {
   }
 }
 
-document.getElementById('roomList').innerHTML = [1, 2, 3].map(() => `
-  <div class="room-item-skeleton">
-    <div class="skeleton skeleton-line-lg"></div>
-    <div class="skeleton skeleton-line-sm"></div>
-    <div class="skeleton skeleton-line-md"></div>
-    <div class="skeleton skeleton-line-sm" style="width:40%"></div>
-  </div>
-`).join('');
-
-loadRooms();
 
 // ── New room modal ────────────────────────────────────────────────────────────
 
@@ -199,10 +199,7 @@ function formatDate(iso) {
   });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// ── Start ─────────────────────────────────────────────────────────────────────
+
+if (!user) window.location.href = '/login.html';
+else initDashboard();

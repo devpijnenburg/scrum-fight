@@ -19,15 +19,6 @@
 
   <site-footer hide-auth></site-footer>
 
-  <script src="/js/i18n.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/auth.js"></script>
-  <script src="/js/ui/authPanel.js"></script>
-  <script src="/js/navbar.js"></script>
-  <script>
-    const panel = document.querySelector('sf-auth-panel');
-    if (location.hash === '#register') panel.showTab('register');
-    panel.addEventListener('auth-success', () => { window.location.href = '/dashboard.html'; });
-  </script>
+  <script type="module" src="/js/pages/login.js"></script>
 </body>
 </html>

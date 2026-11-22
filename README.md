@@ -145,12 +145,12 @@ PORT=80                             # poort voor de frontend-container
         │   ├── components/           # Gedeelde UI: knoppen, modal, toast, auth, navbar, …
         │   ├── pages/                # Stijlen per pagina
         │   └── responsive.css        # Breakpoints en reduced motion (laatst)
-        └── js/
-            ├── api.js, auth.js, i18n.js, settings.js   # Kern: API, sessie, vertalingen, voorkeuren
+        └── js/                       # Alles ES-modules; elke pagina laadt één entry
+            ├── core/                 # i18n, api, auth, settings, badges, html, roomNames
             ├── ui/                   # Herbruikbare UI: modal, toast, methodSelect, authPanel
-            ├── navbar.js             # <site-nav>, <profile-menu>, <site-footer>
-            ├── room/                 # Kamerpagina als ES-modules (entry: room/index.js)
-            └── dashboard.js, …       # Overige paginascripts
+            ├── components/           # siteChrome: <site-nav>, <profile-menu>, <site-footer>
+            ├── pages/                # Entry per pagina: landing, login, dashboard, profile, stats, admin, …
+            └── room/                 # Kamerpagina (entry: room/index.js)
 ```
 
 ## Socket.io events

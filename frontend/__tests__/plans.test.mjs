@@ -1,6 +1,7 @@
 // Pure helpers behind the subscription page: prices and what each plan
 // card offers to a given visitor.
-import { formatPrice, yearlySavingPercent, cardAction } from '../public/js/core/plans.js';
+import { existsSync } from 'node:fs';
+import { formatPrice, yearlySavingPercent, cardAction, planName, planShieldUrl } from '../public/js/core/plans.js';
 import { TRANSLATIONS } from '../public/js/core/i18n.js';
 
 const offers = {
@@ -62,4 +63,14 @@ test('every subscription text exists in both languages', () => {
     .sort();
   expect(keys('nl').length).toBeGreaterThan(30);
   expect(keys('en')).toEqual(keys('nl'));
+});
+
+test('every personal plan has a shield image, other plans have none', () => {
+  for (const plan of ['free', 'pro', 'premium']) {
+    expect(planName(plan)).toBeTruthy();
+    expect(existsSync(`public${planShieldUrl(plan)}`)).toBe(true);
+  }
+  expect(planName('org_starter')).toBeNull();
+  expect(planShieldUrl('org_starter')).toBeNull();
+  expect(planShieldUrl(undefined)).toBeNull();
 });

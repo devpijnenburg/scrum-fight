@@ -1,7 +1,7 @@
 # Productafbeeldingen voor Creem
 
-Afbeeldingen voor de abonnementsproducten in Creem. Ze worden niet door de app
-gebruikt; deze map is alleen de bewaarplaats.
+Afbeeldingen voor de abonnementsproducten in Creem. De productkaarten en
+emblemen hieronder worden niet door de app gebruikt; deze map is de bewaarplaats.
 
 | Bestand | Product | Tekst op de afbeelding |
 |---|---|---|
@@ -12,6 +12,12 @@ gebruikt; deze map is alleen de bewaarplaats.
 | `premium-embleem.webp` | Premium (zonder prijs) | "Premium" |
 | `premium-maandelijks.webp` | Premium, maandelijks | Unlimited saved rooms, unlimited participants per room, €9 per month |
 | `premium-jaarlijks.webp` | Premium, jaarlijks | Unlimited saved rooms, unlimited participants per room, €79 per year, Save 27% |
+
+Daarnaast staan hier de losse schilden zonder kaarten, tekst en lint, met een
+doorzichtige achtergrond: `free-schild.webp`, `pro-schild.webp` en
+`premium-schild.webp`. De app gebruikt verkleinde kopieën daarvan
+(`frontend/public/img/plans/<plan>-shield.webp`) op de profielpagina, de
+abonnementspagina en naast de kamernaam.
 
 De aantallen en prijzen staan in de afbeelding zelf. Verandert een limiet in
 `backend/src/domains/billing/plans.js` of een prijs in Creem, dan moeten de

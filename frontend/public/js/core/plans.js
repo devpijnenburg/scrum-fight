@@ -1,6 +1,16 @@
 // Paid plans: pure helpers shared by the subscription page (no DOM, no network).
 
 export const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
+
+const PLAN_NAMES = { free: 'Free', pro: 'Pro', premium: 'Premium' };
+
+// Display name of a personal plan, or null for anything else (e.g. an
+// organisation plan), which has no emblem.
+export const planName = (plan) => PLAN_NAMES[plan] ?? null;
+
+// The shield of a plan: wood with a dagger (Free), steel with a sword
+// (Pro), gold with crossed swords (Premium). Transparent background.
+export const planShieldUrl = (plan) => (planName(plan) ? `/img/plans/${plan}-shield.webp` : null);
 export const BILLING_PERIODS = ['monthly', 'yearly'];
 
 // "€ 4,00" for an offer ({ amount: cents, currency }), '' when the price is unknown.

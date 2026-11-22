@@ -5,6 +5,7 @@ import '../ui/methodSelect.js';
 import { t, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { paymentsEnabled } from '../core/payments.js';
+import { planName, planShieldUrl } from '../core/plans.js';
 import { getCurrentUser } from '../core/auth.js';
 import { loadSettings, saveSettings } from '../core/settings.js';
 import { showToast } from '../ui/toast.js';
@@ -66,6 +67,12 @@ async function loadProfile() {
     ? data.oauth_provider.charAt(0).toUpperCase() + data.oauth_provider.slice(1)
     : 'E-mail / wachtwoord';
   document.getElementById('profilePlan').textContent = data.plan.toUpperCase();
+  const emblem = document.getElementById('profilePlanEmblem');
+  if (planShieldUrl(data.plan)) {
+    emblem.src = planShieldUrl(data.plan);
+    emblem.alt = t('plans.emblem_alt', { plan: planName(data.plan) });
+    emblem.classList.remove('hidden');
+  }
   setTotpState(data.totp_enabled);
   loadSubscription(data.plan);
 

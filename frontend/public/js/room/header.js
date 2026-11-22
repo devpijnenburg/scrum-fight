@@ -6,12 +6,28 @@ import { send } from './connection.js';
 import { t } from '../core/i18n.js';
 import { errorText } from '../core/errors.js';
 import { getCurrentUser } from '../core/auth.js';
+import { planName, planShieldUrl } from '../core/plans.js';
 
 export function renderHeader(room) {
   $('roomNameDisplay').textContent = room.name;
   $('roomCodeDisplay').textContent = room.id;
   $('methodBadge').textContent = room.methodLabel;
   document.title = `${room.name} — Scrum Fight`;
+  renderPlanBadge(room.ownerPlan);
+}
+
+// A room of a paying owner carries that plan's shield; free rooms and
+// guest rooms show nothing.
+function renderPlanBadge(ownerPlan) {
+  const badge = $('roomPlanBadge');
+  const paid = ownerPlan === 'pro' || ownerPlan === 'premium';
+  badge.classList.toggle('hidden', !paid);
+  if (!paid) return;
+  const label = t('room.plan_badge', { plan: planName(ownerPlan) });
+  badge.src = planShieldUrl(ownerPlan);
+  badge.alt = label;
+  badge.title = label;
+  badge.dataset.plan = ownerPlan;
 }
 
 export function setRoomName(name) {

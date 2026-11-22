@@ -388,3 +388,12 @@ it('pushes a plan change only to the sockets watching that account', async () =>
   await sleep(50);
   expect(others).toEqual([]);
 });
+
+it("shows the owner's plan in the room state, and none for a guest room", async () => {
+  userRepository.getPlan.mockResolvedValue('premium');
+  const owned = await join('Alice', 'TEAM01');
+  expect(owned.state.ownerPlan).toBe('premium');
+
+  const guest = await join('Bob', 'GUEST1');
+  expect(guest.state.ownerPlan).toBeNull();
+});

@@ -38,10 +38,15 @@ async function resolveIdentity(token, playerName) {
   return { userId: user.id, name: user.name, emoticon: user.emoticon || '⚔️' };
 }
 
-async function participantLimit(dbRoom) {
-  if (dbRoom.is_guest || !dbRoom.owner_id) return Infinity;
-  const plan = await userRepository.getPlan(dbRoom.owner_id);
-  return PLAN_LIMITS[plan]?.maxParticipants ?? PLAN_LIMITS.free.maxParticipants;
+// Plan of the room's owner; null for a guest room or a room without owner.
+async function ownerPlanOf(dbRoom) {
+  if (dbRoom.is_guest || !dbRoom.owner_id) return null;
+  return userRepository.getPlan(dbRoom.owner_id);
+}
+
+function participantLimit(ownerPlan) {
+  if (!ownerPlan) return Infinity;
+  return PLAN_LIMITS[ownerPlan]?.maxParticipants ?? PLAN_LIMITS.free.maxParticipants;
 }
 
 // Socket.io room that every tab of one logged-in user can join.
@@ -136,7 +141,8 @@ function setupSocket(io, timing = {}) {
       const dbRoom = await roomRepository.findRoomById(id);
       if (!dbRoom) return sendError('ROOM_NOT_FOUND', 'Kamer niet gevonden');
 
-      const limit = await participantLimit(dbRoom);
+      const ownerPlan = await ownerPlanOf(dbRoom);
+      const limit = participantLimit(ownerPlan);
 
       // The socket may have gone away while we were waiting for the database;
       // adding it now would leave a ghost player nobody ever removes.
@@ -149,6 +155,7 @@ function setupSocket(io, timing = {}) {
       if (socket.disconnected) return rooms.playerLeft(id);
 
       // ── From here on everything is synchronous: no other event can interleave.
+      room.ownerPlan = ownerPlan; // read on every join, so an upgrade shows up
       // Stable per-tab key: a returning player gets their round state back.
       const key = str(playerKey, 64) || null;
       const rejoin = room.hasPlayer(socket.id);                       // same socket joins again

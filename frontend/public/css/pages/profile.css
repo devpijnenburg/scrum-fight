@@ -8,6 +8,11 @@
 }
 .profile-section h2 { margin-bottom: 1rem; font-size: 1.1rem; }
 
+/* Account details with the emblem of the current plan */
+.profile-account { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.profile-account-body { flex: 1; min-width: 240px; }
+.profile-plan-emblem { width: 104px; height: 104px; flex-shrink: 0; }
+
 .profile-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

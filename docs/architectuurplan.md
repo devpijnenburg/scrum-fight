@@ -67,11 +67,18 @@ frontend/public/
 | Fase | Status |
 |------|--------|
 | 1. Vangnet | ✅ uitgevoerd (PR #70) |
-| 2. Game-domein | ✅ uitgevoerd |
-| 3–6 | open |
+| 2. Game-domein | ✅ uitgevoerd (PR #71) |
+| 3. Data-integriteit | ✅ uitgevoerd |
+| 4–6 | open |
 
 ### Notities fase 2
 - Spelregels staan in `backend/src/domain/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
 - De mapnaam blijft voorlopig `domain/`; het hernoemen naar `domains/` en het verplaatsen van routes per domein hoort bij fase 4.
 - Lege permanente kamers verdwijnen 10 minuten na de laatste speler uit het geheugen. Gastkamers blijven tot hun inactiviteitstimer afloopt.
 - Een kamer die via de REST-API wordt verwijderd, krijgt direct `room-expired` (`reason: 'deleted'`).
+
+### Notities fase 3
+- Migraties: elk genummerd `.sql`-bestand in `backend/src/db/migrations/` draait precies één keer, in een eigen transactie, en wordt vastgelegd in `schema_migrations`. Een nieuwe migratie is alleen een nieuw bestand. Een advisory lock laat gelijktijdige starts op elkaar wachten.
+- Rondes worden in één transactie opgeslagen (ronde, stemmen per gebruiker, `last_active`).
+- In `round_history.votes` blijft het formaat `{ naam: stem }`, zodat de historie en de bestaande rijen blijven werken. Dubbele namen krijgen een achtervoegsel (`Alex (2)`) in plaats van elkaar te overschrijven.
+- De optionele stap "lopende ronde in Postgres bewaren" is bewust niet gedaan: een deploy wist nog steeds de stemmen van een lopende ronde (niet de historie). Oppakken als dat in de praktijk stoort.

@@ -1,4 +1,5 @@
 const db = require('../../config/database');
+const { withTransaction } = require('../../db/transaction');
 
 // All persistence for the rooms domain (rooms, round_history, user_votes).
 
@@ -94,28 +95,42 @@ async function getRoundHistory(roomId, limit = 20) {
   return rows;
 }
 
-// Persists a finished round: the vote snapshot plus per-user vote rows
-// for authenticated players, and bumps the room's activity timestamp.
-async function recordRound(roomId, roundName, players) {
+// Builds the vote snapshot stored in round_history.votes ({ name: vote }).
+// Players can share a display name, so duplicates get a numeric suffix
+// ("Alex", "Alex (2)") instead of silently overwriting each other.
+function buildVoteSnapshot(players) {
   const votes = {};
-  for (const p of players) votes[p.name] = p.vote;
-
-  const { rows } = await db.query(
-    `INSERT INTO round_history (room_id, votes, name) VALUES ($1, $2, $3) RETURNING id`,
-    [roomId, JSON.stringify(votes), roundName || null]
-  );
-  const roundId = rows[0].id;
-
   for (const p of players) {
-    if (p.userId && p.vote) {
-      await db.query(
-        `INSERT INTO user_votes (user_id, room_id, round_id, value) VALUES ($1, $2, $3, $4)`,
-        [p.userId, roomId, roundId, p.vote]
+    let key = p.name;
+    for (let n = 2; Object.prototype.hasOwnProperty.call(votes, key); n++) key = `${p.name} (${n})`;
+    votes[key] = p.vote;
+  }
+  return votes;
+}
+
+// Persists a finished round atomically: the vote snapshot, the per-user
+// vote rows for authenticated players and the room's activity timestamp
+// are written in one transaction, so a failure never leaves a half round.
+async function recordRound(roomId, roundName, players) {
+  return withTransaction(async (client) => {
+    const { rows } = await client.query(
+      `INSERT INTO round_history (room_id, votes, name) VALUES ($1, $2, $3) RETURNING id`,
+      [roomId, JSON.stringify(buildVoteSnapshot(players)), roundName || null]
+    );
+    const roundId = rows[0].id;
+
+    const userVotes = players.filter((p) => p.userId && p.vote);
+    if (userVotes.length) {
+      await client.query(
+        `INSERT INTO user_votes (user_id, room_id, round_id, value)
+         SELECT unnest($1::uuid[]), $2, $3, unnest($4::text[])`,
+        [userVotes.map((p) => p.userId), roomId, roundId, userVotes.map((p) => p.vote)]
       );
     }
-  }
 
-  await touchLastActive(roomId);
+    await client.query('UPDATE rooms SET last_active = NOW() WHERE id = $1', [roomId]);
+    return roundId;
+  });
 }
 
 module.exports = {
@@ -132,4 +147,5 @@ module.exports = {
   deleteStaleGuestRooms,
   getRoundHistory,
   recordRound,
+  buildVoteSnapshot,
 };

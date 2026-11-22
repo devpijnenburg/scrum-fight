@@ -2,7 +2,7 @@
 // Uses an in-process fake of the socket.io server/socket API, so no network
 // or database is needed.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn() }));
+jest.mock('../src/config/database', () => ({ query: jest.fn(), connect: jest.fn() }));
 
 const { EventEmitter } = require('events');
 const db = require('../src/config/database');
@@ -55,6 +55,8 @@ beforeEach(() => {
   errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   db.query.mockReset();
   db.query.mockResolvedValue({ rows: [] });
+  // Transactions run on a dedicated client that shares the same query mock
+  db.connect.mockImplementation(async () => ({ query: (...args) => db.query(...args), release: () => {} }));
 });
 
 afterEach(() => {

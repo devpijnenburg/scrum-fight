@@ -1,3 +1,4 @@
+const { randomInt } = require('crypto');
 const roomRepository = require('./roomRepository');
 const { PLAN_LIMITS } = require('../../config/plans');
 
@@ -7,7 +8,7 @@ const ROOM_ID_LENGTH = 6;
 function generateRoomId() {
   let id = '';
   for (let i = 0; i < ROOM_ID_LENGTH; i++) {
-    id += ROOM_ID_CHARS[Math.floor(Math.random() * ROOM_ID_CHARS.length)];
+    id += ROOM_ID_CHARS[randomInt(ROOM_ID_CHARS.length)];
   }
   return id;
 }

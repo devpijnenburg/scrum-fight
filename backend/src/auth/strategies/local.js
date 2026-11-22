@@ -48,7 +48,7 @@ async function login(email, password) {
   }
 
   if (email_2fa_enabled) {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     await db.query(
       `INSERT INTO email_2fa_codes (user_id, code, expires_at)
        VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`,

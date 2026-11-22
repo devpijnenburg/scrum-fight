@@ -6,7 +6,7 @@ const { deleteStaleGuestRooms } = require('../domain/rooms/roomRepository');
 const SCHEDULE = '0 3 * * *';
 
 function register() {
-  cron.schedule(SCHEDULE, async () => {
+  return cron.schedule(SCHEDULE, async () => {
     console.log('[jobs:room-cleanup] Running room cleanup...');
     try {
       const removed = await deleteStaleGuestRooms();

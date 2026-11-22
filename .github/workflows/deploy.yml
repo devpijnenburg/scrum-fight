@@ -9,8 +9,30 @@ env:
   OWNER: ${{ github.repository_owner }}
 
 jobs:
+  test:
+    name: Tests (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+
+      - run: npm ci
+      - run: npm test
+
   build:
     name: Build & Push Docker images
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -19,15 +19,17 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 - **Gastdeelname** — joinen zonder account is mogelijk
 - **Accounts & sessiebewaring** — inloggen via e-mail/wachtwoord of OAuth (Google / GitHub)
 - **Abonnementsplannen** — free, pro en premium met instelbare limieten; betalen via [Creem](https://creem.io)
-- **Automatische opruiming** — inactieve kamers worden na 30 dagen verwijderd (behalve premium)
+- **Automatische opruiming** — gastkamers verdwijnen na 1 uur inactiviteit; opgeslagen kamers blijven bewaard tot de eigenaar ze verwijdert
 
 ## Plannen
 
-| Plan    | Kamers | Deelnemers per kamer | Bewaring |
-|---------|--------|----------------------|----------|
-| Free    | 3      | 5                    | 30 dagen |
-| Pro     | 20     | 15                   | 30 dagen |
-| Premium | ∞      | ∞                    | Nooit    |
+| Plan    | Opgeslagen kamers | Deelnemers per kamer |
+|---------|-------------------|----------------------|
+| Free    | 3                 | 5                    |
+| Pro     | 20                | 15                   |
+| Premium | ∞                 | ∞                    |
+
+De limieten staan in `backend/src/domains/billing/plans.js`. Opgeslagen kamers worden in geen enkel plan automatisch verwijderd; alleen gastkamers (zonder account) verlopen na 1 uur inactiviteit.
 
 ## Technische stack
 

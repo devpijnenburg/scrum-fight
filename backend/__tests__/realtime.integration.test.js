@@ -355,3 +355,31 @@ describe('event-order races', () => {
     expect(result.stats).toMatchObject({ min: 3, max: 13 });
   });
 });
+
+// ── Account channel ───────────────────────────────────────────────────────────
+
+it('pushes a plan change only to the sockets watching that account', async () => {
+  const events = require('../src/shared/events');
+  const alice = connect();
+  const bob = connect();
+  const guest = connect();
+  await Promise.all([next(alice, 'connect'), next(bob, 'connect'), next(guest, 'connect')]);
+
+  alice.emit('watch-account', { token: sign({ id: 'user-alice' }) });
+  bob.emit('watch-account', { token: sign({ id: 'user-bob' }) });
+  guest.emit('watch-account', { token: 'not-a-token' });
+  // A 2FA pre-auth token is not a session and must not open the channel.
+  guest.emit('watch-account', { token: sign({ id: 'user-alice', preAuth: true }) });
+  await sleep(50);
+
+  const others = [];
+  bob.on('plan-updated', (p) => others.push(p));
+  guest.on('plan-updated', (p) => others.push(p));
+
+  const update = next(alice, 'plan-updated');
+  events.emit(events.PLAN_CHANGED, { userId: 'user-alice', plan: 'pro' });
+
+  expect(await update).toEqual({ plan: 'pro' });
+  await sleep(50);
+  expect(others).toEqual([]);
+});

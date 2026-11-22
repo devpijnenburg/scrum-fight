@@ -44,6 +44,9 @@ async function participantLimit(dbRoom) {
   return PLAN_LIMITS[plan]?.maxParticipants ?? PLAN_LIMITS.free.maxParticipants;
 }
 
+// Socket.io room that every tab of one logged-in user can join.
+const accountChannel = (userId) => `account:${userId}`;
+
 function setupSocket(io, timing = {}) {
   sessions = createRoomSessions(io, timing);
   const rooms = sessions;
@@ -52,6 +55,10 @@ function setupSocket(io, timing = {}) {
   events.removeAllListeners();
   events.on(events.ROOM_CLAIMED, ({ roomId }) => rooms.claim(roomId));
   events.on(events.ROOM_DELETED, ({ roomId }) => rooms.close(roomId, 'deleted'));
+  // A plan change (payment processed) reaches every open tab of that user.
+  events.on(events.PLAN_CHANGED, ({ userId, plan }) => {
+    io.to(accountChannel(userId)).emit('plan-updated', { plan });
+  });
 
   // Reveals the cards, broadcasts the result and persists the round.
   async function reveal(room) {
@@ -277,6 +284,20 @@ function setupSocket(io, timing = {}) {
 
       io.to(room.id).emit('room-name-updated', { name: newName });
       await roomRepository.updateRoomName(room.id, newName);
+    });
+
+    // ── watch-account ───────────────────────────────────────────────────────
+    // Pages outside a room (the subscription page) listen for changes to
+    // the logged-in user's account, e.g. 'plan-updated'.
+    on(socket, 'watch-account', ({ token }) => {
+      let payload;
+      try {
+        payload = verify(token);
+      } catch {
+        return; // not logged in: nothing to watch
+      }
+      if (payload.preAuth || !payload.id) return;
+      socket.join(accountChannel(payload.id));
     });
 
     // ── disconnect ──────────────────────────────────────────────────────────

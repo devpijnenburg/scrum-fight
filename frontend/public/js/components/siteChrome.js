@@ -224,6 +224,7 @@ class SiteFooter extends HTMLElement {
           </div>
           <nav class="footer-links">
             <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+            <a href="/subscription.html" data-i18n="footer.subscription">Abonnementen</a>
             <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
             ${showAuth ? `
             <span class="footer-auth" id="footerAuth">

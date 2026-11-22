@@ -96,6 +96,10 @@
 }
 
 /* ── Plan cards ─────────────────────────────────────────────────────────────── */
+.plan-info-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.plan-info-link { font-size: .85rem; color: var(--primary); text-decoration: none; }
+.plan-info-link:hover { text-decoration: underline; }
+.plan-card .btn { margin-top: auto; align-self: flex-start; }
 .plan-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

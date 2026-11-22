@@ -10,6 +10,7 @@ const roomRoutes = require('./domains/rooms/routes');
 const statsRoutes = require('./domains/stats/routes');
 const badgeRoutes = require('./domains/badges/routes');
 const adminRoutes = require('./domains/admin/routes');
+const billingRoutes = require('./domains/billing/routes');
 
 // Allowed browser origins. The frontend is served same-origin through nginx,
 // so CORS only matters for cross-origin setups; default to BASE_URL.
@@ -28,6 +29,8 @@ function createApp() {
   app.set('trust proxy', 1);
 
   app.use(cors({ origin: corsOrigin() }));
+  // Before express.json(): the payment webhook verifies the raw request body.
+  app.use('/api/payments/webhook', billingRoutes.webhookRouter);
   app.use(express.json({ limit: '100kb' }));
 
   app.use('/api/auth', identityRoutes);
@@ -35,6 +38,7 @@ function createApp() {
   app.use('/api/rooms', roomRoutes);
   app.use('/api/users', statsRoutes, badgeRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/payments', billingRoutes);
 
   // Liveness + readiness: reports unhealthy when the database is unreachable.
   app.get('/api/health', async (_req, res) => {

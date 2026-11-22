@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abonnement — Scrum Fight</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="page-dashboard">
+
+  <site-nav show-cta></site-nav>
+
+  <!-- Shown after returning from the checkout, until the plan is active -->
+  <div id="paymentProcessing" class="pay-proc hidden" role="status" aria-live="polite">
+    <div class="pay-proc-inner">
+      <div class="pay-proc-graphic">
+        <svg class="pay-proc-spinner" id="payProcSpinner" viewBox="0 0 96 96" aria-hidden="true">
+          <circle cx="48" cy="48" r="44" class="pay-proc-track" />
+          <circle cx="48" cy="48" r="44" class="pay-proc-arc" />
+        </svg>
+        <svg class="pay-proc-check hidden" id="payProcCheck" viewBox="0 0 96 96" aria-hidden="true">
+          <circle cx="48" cy="48" r="44" class="pay-proc-check-circle" />
+          <path d="M28 50l14 14 28-30" class="pay-proc-check-path" />
+        </svg>
+      </div>
+      <h2 class="pay-proc-title" id="payProcTitle" data-i18n="subscription.processing.title">Je abonnement wordt geactiveerd</h2>
+      <p class="pay-proc-subtitle" id="payProcSubtitle" data-i18n="subscription.processing.subtitle">Even geduld — dit duurt meestal maar een paar seconden.</p>
+      <div class="pay-proc-timeout hidden" id="payProcTimeout">
+        <p data-i18n="subscription.processing.timeout">We hebben nog geen bevestiging van je betaling ontvangen. Zodra die binnen is, wordt je plan automatisch bijgewerkt.</p>
+        <button class="btn btn-primary" id="payProcRetry" data-i18n="subscription.processing.retry">Opnieuw controleren</button>
+        <a class="btn btn-ghost" href="/dashboard.html" data-i18n="subscription.back">← Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="dashboard-main" id="subscriptionMain">
+    <div class="dashboard-header">
+      <div>
+        <h1 data-i18n="subscription.title">💳 Abonnement</h1>
+        <p class="text-muted" data-i18n="subscription.subtitle">Kies het plan dat bij je team past</p>
+      </div>
+      <a href="/dashboard.html" class="btn btn-ghost hidden" id="backToDashboard" data-i18n="subscription.back">← Dashboard</a>
+    </div>
+
+    <section class="plan-info">
+      <div id="subscriptionStatus" class="hidden"></div>
+      <p id="paymentsDisabled" class="plan-limit-notice hidden" data-i18n="subscription.disabled">Betalen is op dit moment niet beschikbaar. Probeer het later opnieuw.</p>
+
+      <div class="billing-toggle hidden" id="billingToggle" role="group">
+        <button type="button" class="billing-toggle-btn" data-billing="monthly" data-i18n="subscription.billing.monthly">Maandelijks</button>
+        <button type="button" class="billing-toggle-btn" data-billing="yearly">
+          <span data-i18n="subscription.billing.yearly">Jaarlijks</span>
+          <span class="billing-save-badge hidden" id="billingSaveBadge"></span>
+        </button>
+      </div>
+
+      <div class="plan-cards" id="planCards">
+        <div class="plan-card" data-plan="free">
+          <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>
+          <div class="plan-price" data-i18n="subscription.price.free">Gratis</div>
+          <ul class="plan-features">
+            <li data-i18n="dashboard.plan.rooms_3">✓ 3 kamers</li>
+            <li data-i18n="dashboard.plan.players_5">✓ 5 deelnemers</li>
+            <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
+          </ul>
+        </div>
+        <div class="plan-card" data-plan="pro">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price" data-price></div>
+          <ul class="plan-features">
+            <li data-i18n="dashboard.plan.rooms_20">✓ 20 kamers</li>
+            <li data-i18n="dashboard.plan.players_15">✓ 15 deelnemers</li>
+            <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
+          </ul>
+          <div class="plan-action" data-action></div>
+        </div>
+        <div class="plan-card plan-card-premium" data-plan="premium">
+          <div class="plan-badge">⭐ Premium</div>
+          <div class="plan-name">Premium</div>
+          <div class="plan-price" data-price></div>
+          <ul class="plan-features">
+            <li data-i18n="dashboard.plan.rooms_unlimited">✓ Onbeperkt kamers</li>
+            <li data-i18n="dashboard.plan.players_unlimited">✓ Onbeperkt deelnemers</li>
+            <li data-i18n="dashboard.plan.never_deleted">✓ Kamers nooit verwijderd</li>
+          </ul>
+          <div class="plan-action" data-action></div>
+        </div>
+      </div>
+
+      <p class="plan-support-note" data-i18n="subscription.support_note">Scrum Fight wordt gemaakt en onderhouden door één persoon. Een Pro- of Premium-abonnement helpt de server- en ontwikkelkosten te dekken. Dankjewel dat je het overweegt. 🙏</p>
+    </section>
+  </main>
+
+  <site-footer></site-footer>
+
+  <!-- Optional: without it the page falls back to polling after a payment -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/js/pages/subscription.js"></script>
+</body>
+</html>

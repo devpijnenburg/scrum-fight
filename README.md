@@ -18,7 +18,7 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 - **Meerdere kamers** — elk team heeft een eigen kamer met unieke toegangscode
 - **Gastdeelname** — joinen zonder account is mogelijk
 - **Accounts & sessiebewaring** — inloggen via e-mail/wachtwoord of OAuth (Google / GitHub)
-- **Abonnementsplannen** — free, pro en premium met instelbare limieten
+- **Abonnementsplannen** — free, pro en premium met instelbare limieten; betalen via [Creem](https://creem.io)
 - **Automatische opruiming** — inactieve kamers worden na 30 dagen verwijderd (behalve premium)
 
 ## Plannen
@@ -111,6 +111,18 @@ PORT=80                             # poort voor de frontend-container
 
 **GitHub:** registreer een OAuth app in [GitHub Developer Settings](https://github.com/settings/developers). Callback URL: `<BASE_URL>/api/auth/github/callback`.
 
+### Betalingen instellen (optioneel)
+
+Betaalde plannen lopen via [Creem](https://creem.io). Zonder configuratie staan betalingen uit en toont de abonnementspagina geen koopknoppen.
+
+1. Maak in Creem vier abonnementsproducten aan: Pro en Premium, elk maandelijks en jaarlijks. De prijzen op de abonnementspagina komen rechtstreeks uit Creem.
+2. Maak een webhook aan naar `<BASE_URL>/api/payments/webhook` en laat die in elk geval `checkout.completed` en alle `subscription.*`-events sturen.
+3. Zet de API-sleutel, het webhook-secret en de vier product-ID's in `.env` (zie `.env.example`). Voor de pipeline zijn dat de gelijknamige secrets per GitHub-omgeving (`test` en `production`).
+
+Een testsleutel (`creem_test_…`) gebruikt automatisch de sandbox van Creem, een live-sleutel de echte API.
+
+Hoe het werkt: "Upgraden" stuurt de klant naar de betaalpagina van Creem. Bij terugkomst controleert de backend de handtekening van de redirect en activeert het plan direct; de webhook houdt daarna verlengingen, opzeggingen en planwijzigingen bij. `users.plan` wordt altijd afgeleid van de abonnementen in de tabel `subscriptions`. Opzeggen en de betaalmethode wijzigen doet de klant in het klantportaal van Creem ("Abonnement beheren").
+
 ## Projectstructuur
 
 ```
@@ -126,7 +138,7 @@ PORT=80                             # poort voor de frontend-container
 │       │   ├── game/                 # Pure spelregels (GameRoom, statistieken)
 │       │   ├── stats/                # Persoonlijke statistieken en activiteit
 │       │   ├── badges/               # Badge-definities, -evaluatie en -opslag
-│       │   ├── billing/              # Plannen + betaal-adapter (Manual / Stripe-stub)
+│       │   ├── billing/              # Plannen, abonnementen en betalingen (Creem)
 │       │   └── admin/                # Gebruikers- en organisatiebeheer
 │       ├── realtime/                 # Socket.io-adapter + levenscyclus van live kamers
 │       ├── shared/                   # Database, transacties, fouten, events, mailer, rate limit

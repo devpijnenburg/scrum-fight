@@ -2,6 +2,7 @@
 
 import '../components/siteChrome.js';
 import '../ui/methodSelect.js';
+import { t, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { getCurrentUser } from '../core/auth.js';
 import { loadSettings, saveSettings } from '../core/settings.js';
@@ -65,11 +66,40 @@ async function loadProfile() {
     : 'E-mail / wachtwoord';
   document.getElementById('profilePlan').textContent = data.plan.toUpperCase();
   setTotpState(data.totp_enabled);
+  loadSubscription(data.plan);
 
   _currentEmoticon = data.emoticon || '⚔️';
   document.getElementById('emoticonPreviewIcon').textContent = _currentEmoticon;
   document.getElementById('emoticonPreviewName').textContent = data.name;
   updateEmoticonSelection(_currentEmoticon);
+}
+
+// ── Subscription ──────────────────────────────────────────────────────────────
+
+// A short summary; choosing, changing and cancelling happen on the subscription page.
+async function loadSubscription(plan) {
+  const textEl = document.getElementById('profileSubscriptionText');
+  const linkEl = document.getElementById('profileSubscriptionLink');
+  textEl.textContent = t('profile.subscription.free');
+  linkEl.textContent = t('profile.subscription.view');
+
+  let subscription = null;
+  try {
+    ({ subscription } = await apiFetch('/payments/subscription'));
+  } catch {
+    // Without subscription details the plan name below is still correct.
+  }
+
+  if (plan === 'free' && !subscription) return;
+  linkEl.textContent = t('subscription.manage');
+  const planName = (subscription?.plan || plan).toUpperCase();
+  let text = t('profile.subscription.paid', { plan: planName });
+  if (subscription?.currentPeriodEnd) {
+    const date = new Date(subscription.currentPeriodEnd).toLocaleDateString(
+      getLang() === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    text += ` ${t(subscription.endsAtPeriodEnd ? 'subscription.status.ends' : 'subscription.status.renews', { date })}`;
+  }
+  textEl.textContent = text;
 }
 
 // ── Emoticon picker ───────────────────────────────────────────────────────────

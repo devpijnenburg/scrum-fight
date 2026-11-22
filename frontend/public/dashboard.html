@@ -55,7 +55,10 @@
 
     <!-- Plan info -->
     <section class="plan-info">
-      <h2 data-i18n="dashboard.plan.title">Abonnement</h2>
+      <div class="plan-info-header">
+        <h2 data-i18n="dashboard.plan.title">Abonnement</h2>
+        <a href="/subscription.html" class="plan-info-link" data-i18n="dashboard.plan.manage">Abonnement bekijken →</a>
+      </div>
       <div class="plan-cards" id="planCards">
         <div class="plan-card" data-plan="free">
           <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>
@@ -72,7 +75,7 @@
             <li data-i18n="dashboard.plan.players_15">✓ 15 deelnemers</li>
             <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
           </ul>
-          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="pro" data-i18n="dashboard.plan.upgrade">Upgraden</button>
+          <a class="btn btn-primary btn-sm plan-upgrade-btn" href="/subscription.html?plan=pro" data-i18n="dashboard.plan.upgrade">Upgraden</a>
         </div>
         <div class="plan-card plan-card-premium" data-plan="premium">
           <div class="plan-badge">⭐ Premium</div>
@@ -82,7 +85,7 @@
             <li data-i18n="dashboard.plan.players_unlimited">✓ Onbeperkt deelnemers</li>
             <li data-i18n="dashboard.plan.never_deleted">✓ Kamers nooit verwijderd</li>
           </ul>
-          <button class="btn btn-primary btn-sm plan-upgrade-btn" data-target="premium" data-i18n="dashboard.plan.upgrade">Upgraden</button>
+          <a class="btn btn-primary btn-sm plan-upgrade-btn" href="/subscription.html?plan=premium" data-i18n="dashboard.plan.upgrade">Upgraden</a>
         </div>
       </div>
     </section>

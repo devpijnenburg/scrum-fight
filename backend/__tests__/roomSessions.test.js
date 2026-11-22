@@ -1,12 +1,12 @@
 // Room lifecycle tests: timers, eviction and REST-triggered changes.
 // Uses fake timers and a recording fake of io.to(room).emit().
 
-jest.mock('../src/domain/rooms/roomRepository', () => ({
+jest.mock('../src/domains/rooms/roomRepository', () => ({
   deleteRoom: jest.fn().mockResolvedValue(),
   touchLastActive: jest.fn().mockResolvedValue(),
 }));
 
-const roomRepository = require('../src/domain/rooms/roomRepository');
+const roomRepository = require('../src/domains/rooms/roomRepository');
 const { createRoomSessions } = require('../src/realtime/roomSessions');
 
 function fakeIo() {

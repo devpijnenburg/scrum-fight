@@ -1,13 +1,13 @@
 // Migration runner and transactional round persistence.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn(), connect: jest.fn() }));
+jest.mock('../src/shared/database', () => ({ query: jest.fn(), connect: jest.fn() }));
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const pool = require('../src/config/database');
+const pool = require('../src/shared/database');
 const { runMigrations, listMigrationFiles } = require('../src/db/migrate');
-const { recordRound, buildVoteSnapshot } = require('../src/domain/rooms/roomRepository');
+const { recordRound, buildVoteSnapshot } = require('../src/domains/rooms/roomRepository');
 
 // A fake pg client that records every query and answers via `respond`.
 function fakeClient(respond = () => ({ rows: [] })) {

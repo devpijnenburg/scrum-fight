@@ -1,13 +1,13 @@
 // Tests for the phase-1 safety net: rate limiting, JWT secret policy,
 // health check and the central error handler.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn() }));
+jest.mock('../src/shared/database', () => ({ query: jest.fn() }));
 
 const request = require('supertest');
 const express = require('express');
-const db = require('../src/config/database');
+const db = require('../src/shared/database');
 const { rateLimit } = require('../src/shared/rateLimit');
-const { resolveSecret } = require('../src/auth/jwt');
+const { resolveSecret } = require('../src/domains/identity/jwt');
 const { createApp, corsOrigin } = require('../src/app');
 
 afterEach(() => jest.clearAllMocks());

@@ -1,12 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 
-const pool = require('./config/database');
-const authRoutes = require('./routes/auth');
-const roomRoutes = require('./routes/rooms');
-const userRoutes = require('./routes/users');
-const adminRoutes = require('./routes/admin');
-const profileRoutes = require('./routes/profile');
+const pool = require('./shared/database');
+const { errorHandler } = require('./shared/errors');
+
+const identityRoutes = require('./domains/identity/routes');
+const profileRoutes = require('./domains/identity/profileRoutes');
+const roomRoutes = require('./domains/rooms/routes');
+const statsRoutes = require('./domains/stats/routes');
+const badgeRoutes = require('./domains/badges/routes');
+const adminRoutes = require('./domains/admin/routes');
 
 // Allowed browser origins. The frontend is served same-origin through nginx,
 // so CORS only matters for cross-origin setups; default to BASE_URL.
@@ -27,11 +30,11 @@ function createApp() {
   app.use(cors({ origin: corsOrigin() }));
   app.use(express.json({ limit: '100kb' }));
 
-  app.use('/api/auth', authRoutes);
-  app.use('/api/rooms', roomRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/admin', adminRoutes);
+  app.use('/api/auth', identityRoutes);
   app.use('/api/profile', profileRoutes);
+  app.use('/api/rooms', roomRoutes);
+  app.use('/api/users', statsRoutes, badgeRoutes);
+  app.use('/api/admin', adminRoutes);
 
   // Liveness + readiness: reports unhealthy when the database is unreachable.
   app.get('/api/health', async (_req, res) => {
@@ -44,21 +47,7 @@ function createApp() {
   });
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Niet gevonden', code: 'NOT_FOUND' }));
-
-  // Central error handler. Express 5 forwards rejected promises from async
-  // route handlers here, so a failing query never leaves a request hanging.
-  // eslint-disable-next-line no-unused-vars
-  app.use((err, req, res, _next) => {
-    if (err.type === 'entity.parse.failed') {
-      return res.status(400).json({ error: 'Ongeldige JSON', code: 'INVALID_JSON' });
-    }
-    if (err.type === 'entity.too.large') {
-      return res.status(413).json({ error: 'Verzoek te groot', code: 'PAYLOAD_TOO_LARGE' });
-    }
-    console.error(`[http] ${req.method} ${req.originalUrl} failed:`, err);
-    if (res.headersSent) return;
-    res.status(500).json({ error: 'Serverfout', code: 'SERVER_ERROR' });
-  });
+  app.use(errorHandler);
 
   return app;
 }

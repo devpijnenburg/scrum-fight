@@ -1,7 +1,7 @@
 // Auth flow integration tests.
 // Database and bcrypt are mocked so no real DB is needed.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn() }));
+jest.mock('../src/shared/database', () => ({ query: jest.fn() }));
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('$2a$12$hashed'),
   compare: jest.fn(),
@@ -16,15 +16,11 @@ jest.mock('qrcode', () => ({
 }));
 
 const request = require('supertest');
-const express = require('express');
-const db = require('../src/config/database');
+const db = require('../src/shared/database');
 const bcrypt = require('bcryptjs');
 
 function buildApp() {
-  const app = express();
-  app.use(express.json());
-  app.use('/api/auth', require('../src/routes/auth'));
-  return app;
+  return require('../src/app').createApp();
 }
 
 const app = buildApp();

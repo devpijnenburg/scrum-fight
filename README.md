@@ -113,17 +113,21 @@ PORT=80                             # poort voor de frontend-container
 ├── docker-compose.yml
 ├── .env.example
 ├── backend/
-│   ├── server.js                     # Express + Socket.io entrypoint
+│   ├── server.js                     # Opstart: migraties, Socket.io, jobs, graceful shutdown
 │   └── src/
-│       ├── config/
-│       │   ├── database.js           # PostgreSQL connection pool
-│       │   └── plans.js              # Plan-limieten en schattingsmethoden
-│       ├── auth/                     # JWT, bcrypt, OAuth strategies
-│       ├── payment/                  # Adapter patroon (Manual / Stripe stub)
-│       ├── routes/                   # REST API: auth, rooms
-│       ├── socket/                   # Socket.io event handlers
-│       ├── jobs/                     # Cron-job: opruimen inactieve kamers
-│       └── db/migrations/            # SQL schema
+│       ├── app.js                    # Express-app: routes per domein + centrale errorhandler
+│       ├── domains/                  # Eén map per domein: routes → service → repository
+│       │   ├── identity/             # Registratie, login, 2FA, OAuth, JWT, profiel
+│       │   ├── rooms/                # Kamers, claimen, plan-limieten, opruimjob
+│       │   ├── game/                 # Pure spelregels (GameRoom, statistieken)
+│       │   ├── stats/                # Persoonlijke statistieken en activiteit
+│       │   ├── badges/               # Badge-definities, -evaluatie en -opslag
+│       │   ├── billing/              # Plannen + betaal-adapter (Manual / Stripe-stub)
+│       │   └── admin/                # Gebruikers- en organisatiebeheer
+│       ├── realtime/                 # Socket.io-adapter + levenscyclus van live kamers
+│       ├── shared/                   # Database, transacties, fouten, events, mailer, rate limit
+│       ├── jobs/                     # Register van achtergrondjobs
+│       └── db/                       # Migratierunner + genummerde SQL-migraties
 └── frontend/
     ├── nginx.conf
     └── public/

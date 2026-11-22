@@ -68,12 +68,13 @@ frontend/public/
 |------|--------|
 | 1. Vangnet | ✅ uitgevoerd (PR #70) |
 | 2. Game-domein | ✅ uitgevoerd (PR #71) |
-| 3. Data-integriteit | ✅ uitgevoerd |
-| 4–6 | open |
+| 3. Data-integriteit | ✅ uitgevoerd (PR #72) |
+| 4. Backend-domeinen | ✅ uitgevoerd |
+| 5–6 | open |
 
 ### Notities fase 2
-- Spelregels staan in `backend/src/domain/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
-- De mapnaam blijft voorlopig `domain/`; het hernoemen naar `domains/` en het verplaatsen van routes per domein hoort bij fase 4.
+- Spelregels staan in `backend/src/domains/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
+- (Fase 4: `domain/` is hernoemd naar `domains/`, en de routes staan per domein.)
 - Lege permanente kamers verdwijnen 10 minuten na de laatste speler uit het geheugen. Gastkamers blijven tot hun inactiviteitstimer afloopt.
 - Een kamer die via de REST-API wordt verwijderd, krijgt direct `room-expired` (`reason: 'deleted'`).
 
@@ -82,3 +83,10 @@ frontend/public/
 - Rondes worden in één transactie opgeslagen (ronde, stemmen per gebruiker, `last_active`).
 - In `round_history.votes` blijft het formaat `{ naam: stem }`, zodat de historie en de bestaande rijen blijven werken. Dubbele namen krijgen een achtervoegsel (`Alex (2)`) in plaats van elkaar te overschrijven.
 - De optionele stap "lopende ronde in Postgres bewaren" is bewust niet gedaan: een deploy wist nog steeds de stemmen van een lopende ronde (niet de historie). Oppakken als dat in de praktijk stoort.
+
+### Notities fase 4
+- Elk domein in `backend/src/domains/<domein>/` heeft dezelfde lagen: `routes.js` (alleen HTTP), een service (regels en validatie, gooit `AppError`), en een repository (alle SQL).
+- Afhankelijkheden lopen één kant op: `identity` en `billing` zijn de basis, en daar bouwen `rooms`, `game`, `stats`, `badges` en `admin` op. Geen enkel domein kent socket.io.
+- REST-wijzigingen die live clients moeten zien (kamer geclaimd of verwijderd) gaan via `shared/events.js`; `realtime/` luistert daarop.
+- Fouten: services gooien `AppError(status, code, message)`. De API antwoordt met `{ error, code, ...details }`. De frontend vertaalt `code` via `errors.<CODE>` in `i18n.js`, met `error` als fallback.
+- Nog niet vertaald: de `planLimitWarning` bij het aanmaken van een kamer (een succesantwoord) en de foutteksten van de socket-laag. Pak dit op in fase 5/6, samen met de frontend.

@@ -1,18 +1,14 @@
 // Rooms route integration tests.
 // Database is mocked so no real DB is needed.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn() }));
+jest.mock('../src/shared/database', () => ({ query: jest.fn() }));
 
 const request = require('supertest');
-const express = require('express');
-const db = require('../src/config/database');
-const { sign } = require('../src/auth/jwt');
+const db = require('../src/shared/database');
+const { sign } = require('../src/domains/identity/jwt');
 
 function buildApp() {
-  const app = express();
-  app.use(express.json());
-  app.use('/api/rooms', require('../src/routes/rooms'));
-  return app;
+  return require('../src/app').createApp();
 }
 
 const app = buildApp();

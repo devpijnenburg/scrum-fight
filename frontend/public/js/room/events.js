@@ -4,6 +4,7 @@
 import { state, $ } from './state.js';
 import { socket } from './socket.js';
 import { t } from '../core/i18n.js';
+import { errorText } from '../core/errors.js';
 import { refreshPlayers, renderTable, updateVoteStatus } from './table.js';
 import { clearPickerSelection, updateSpectatorUI } from './picker.js';
 import { applyRoomState, applyReveal, applyRoundReset } from './rounds.js';
@@ -97,11 +98,12 @@ export function registerSocketEvents() {
       reason === 'inactivity' ? t('room.expired_inactivity') : t('room.expired_other'));
   });
 
-  socket.on('error', ({ code, message }) => {
-    if (code === 'ROOM_NOT_FOUND') showOverlay('🚫', t('room.not_found'), t('room.not_found_msg'));
-    else if (code === 'ROOM_FULL') showOverlay('😶', t('room.full'), message);
-    else if (code === 'NAME_REQUIRED') showNameModal();
-    else showOverlay('⚠️', t('room.error'), message || t('room.error_unknown'));
+  // Errors carry { code, message, …details }; the text comes from i18n.
+  socket.on('error', (err = {}) => {
+    if (err.code === 'ROOM_NOT_FOUND') showOverlay('🚫', t('room.not_found'), t('room.not_found_msg'));
+    else if (err.code === 'ROOM_FULL') showOverlay('😶', t('room.full'), errorText(err));
+    else if (err.code === 'NAME_REQUIRED') showNameModal();
+    else showOverlay('⚠️', t('room.error'), errorText(err, t('room.error_unknown')));
   });
 
   socket.on('reaction', ({ name, emoji }) => spawnFloatingEmoji(emoji, name));

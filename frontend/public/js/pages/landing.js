@@ -57,7 +57,7 @@ document.getElementById('createRoomBtn').addEventListener('click', async () => {
       method: 'POST',
       body: JSON.stringify({ name: roomName, method }),
     });
-    if (room.planLimitWarning) sessionStorage.setItem('planLimitWarning', room.planLimitWarning);
+    if (room.planLimit) sessionStorage.setItem('planLimit', JSON.stringify(room.planLimit));
     sessionStorage.setItem('pendingName', name);
     window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {

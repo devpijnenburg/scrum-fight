@@ -107,7 +107,9 @@ function setupSocket(io, timing = {}) {
   }
 
   io.on('connection', (socket) => {
-    const sendError = (code, message) => socket.emit('error', { code, message });
+    // Same shape as REST errors: a stable code (translated by the client via
+    // i18n `errors.<CODE>`), a Dutch fallback message and optional details.
+    const sendError = (code, message, details = {}) => socket.emit('error', { code, message, ...details });
     // The room this socket is a player in, or null.
     const currentRoom = () => {
       const room = rooms.get(socket.data.roomId);
@@ -128,7 +130,7 @@ function setupSocket(io, timing = {}) {
       const limit = await participantLimit(dbRoom);
       const live = rooms.get(id);
       if ((live?.playerCount ?? 0) >= limit && !live?.hasPlayer(socket.id)) {
-        return sendError('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`);
+        return sendError('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`, { limit });
       }
 
       // A socket is a player in at most one room.

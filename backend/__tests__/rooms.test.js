@@ -153,6 +153,7 @@ describe('POST /api/rooms', () => {
     expect(res.status).toBe(201);
     expect(res.body.is_guest).toBe(false);
     expect(res.body.planLimitWarning).toBeUndefined();
+    expect(res.body.planLimit).toBeUndefined();
   });
 
   it('creates a guest room with a warning when the plan limit is reached', async () => {
@@ -171,6 +172,7 @@ describe('POST /api/rooms', () => {
     expect(res.status).toBe(201);
     expect(res.body.is_guest).toBe(true);
     expect(res.body.planLimitWarning).toMatch(/Maximaal/);
+    expect(res.body.planLimit).toEqual({ code: 'ROOM_LIMIT_REACHED', plan: 'free', max: 3 });
   });
 
   it('creates a guest room for unauthenticated users', async () => {

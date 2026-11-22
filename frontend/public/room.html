@@ -166,11 +166,15 @@
   </button>
 
   <!-- Analytics side panel -->
+  <div id="analyticsBackdrop" class="analytics-backdrop hidden"></div>
   <aside id="analyticsPanel" class="analytics-panel hidden" aria-label="Analyse">
-    <button id="analyticsPanelCloseBtn" class="analytics-panel-collapse-btn" aria-label="Sluiten">›</button>
+    <button id="analyticsPanelCloseBtn" class="analytics-panel-collapse-btn" type="button" aria-label="Sluiten" data-i18n-aria-label="room.analytics.close">›</button>
     <div class="analytics-panel-hd">
       <span class="analytics-panel-title" data-i18n="room.analytics.title">📊 Analyse</span>
-      <button class="analytics-panel-close-mobile btn-icon-sm" aria-label="Sluiten">✕</button>
+      <button id="analyticsCloseBtn" class="analytics-panel-close" type="button">
+        <span aria-hidden="true">✕</span>
+        <span data-i18n="room.analytics.close">Sluiten</span>
+      </button>
     </div>
     <div class="analytics-panel-body">
 

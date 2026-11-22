@@ -10,9 +10,28 @@ const ROUND_NAME_DEBOUNCE_MS = 400;
 
 let revealCoolingDown = false;
 
+// The round name is sent a moment after the last keystroke.
+let roundNameTimer = null;
+
+// Sends a pending round name right now (before a reveal, so the round is
+// recorded under the name that was just typed).
+function flushRoundName() {
+  if (!roundNameTimer) return;
+  clearTimeout(roundNameTimer);
+  roundNameTimer = null;
+  send('set-round-name', { name: state.currentRoundName });
+}
+
+// Drops a pending round name (the round it belonged to is over).
+export function cancelPendingRoundName() {
+  clearTimeout(roundNameTimer);
+  roundNameTimer = null;
+}
+
 function requestReveal() {
   const btn = $('revealBtn');
   if (btn.disabled || btn.classList.contains('hidden') || revealCoolingDown) return;
+  flushRoundName();
   if (!send('reveal')) return;
   revealCoolingDown = true;
   setTimeout(() => { revealCoolingDown = false; }, REVEAL_COOLDOWN_MS);
@@ -24,11 +43,10 @@ function requestNewRound() {
 }
 
 function wireRoundName() {
-  let timer = null;
   $('roundNameInput').addEventListener('input', (e) => {
     state.currentRoundName = e.target.value;
-    clearTimeout(timer);
-    timer = setTimeout(() => send('set-round-name', { name: state.currentRoundName }), ROUND_NAME_DEBOUNCE_MS);
+    clearTimeout(roundNameTimer);
+    roundNameTimer = setTimeout(flushRoundName, ROUND_NAME_DEBOUNCE_MS);
   });
 }
 

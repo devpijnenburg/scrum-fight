@@ -3,6 +3,10 @@
 // or database is needed.
 
 jest.mock('../src/shared/database', () => ({ query: jest.fn(), connect: jest.fn() }));
+jest.mock('../src/domains/game/liveRoundRepository', () => ({
+  loadLiveRound: jest.fn().mockResolvedValue(null),
+  saveLiveRound: jest.fn().mockResolvedValue(),
+}));
 
 const { EventEmitter } = require('events');
 const db = require('../src/shared/database');

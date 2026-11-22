@@ -206,7 +206,7 @@ describe('live round persistence', () => {
     await jest.advanceTimersByTimeAsync(50);
     expect(liveRounds.saveLiveRound).toHaveBeenCalledTimes(1);
     expect(liveRounds.saveLiveRound).toHaveBeenCalledWith('ROOM01', expect.objectContaining({
-      players: { k: { vote: '5', spectator: false } },
+      players: { k: expect.objectContaining({ vote: '5', spectator: false }) },
     }));
   });
 
@@ -217,7 +217,7 @@ describe('live round persistence', () => {
     sessions.persist('ROOM01');
     await sessions.flushAll();
     expect(liveRounds.saveLiveRound).toHaveBeenCalledWith('ROOM01', expect.objectContaining({
-      players: { k: { vote: '13', spectator: false } },
+      players: { k: expect.objectContaining({ vote: '13', spectator: false }) },
     }));
   });
 

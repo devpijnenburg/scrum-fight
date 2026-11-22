@@ -155,6 +155,8 @@ PORT=80                             # poort voor de frontend-container
 
 ## Socket.io events
 
+De volgorde van deze events per scenario (joinen, stemmen, onthullen, herverbinden, deploy) staat met sequence-diagrammen in [`docs/spelscenarios.md`](docs/spelscenarios.md).
+
 | Event               | Richting       | Beschrijving                                      |
 |---------------------|----------------|---------------------------------------------------|
 | `join-room`         | client → server| Kamer joinen met roomId + token/naam              |

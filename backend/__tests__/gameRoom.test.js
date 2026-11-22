@@ -204,7 +204,11 @@ describe('GameRoom — returning players and persistence', () => {
     const before = roomWithVotes();
     before.removePlayer('s2'); // Bob had not voted: nothing to remember
     const snapshot = before.snapshot();
-    expect(snapshot).toEqual({ roundName: 'Story 7', revealed: false, players: { 'k-alice': { vote: '5', spectator: false } } });
+    expect(snapshot).toEqual({
+      roundName: 'Story 7',
+      revealed: false,
+      players: { 'k-alice': { vote: '5', spectator: false, name: 'Alice', userId: null } },
+    });
 
     const after = makeRoom();
     after.restore(JSON.parse(JSON.stringify(snapshot)));
@@ -237,5 +241,65 @@ describe('GameRoom — returning players and persistence', () => {
     expect(room.absent.size).toBe(200);
     expect(room.absent.has('k249')).toBe(true);
     expect(room.absent.has('k0')).toBe(false);
+  });
+});
+
+describe('GameRoom — event-order hardening', () => {
+  it('counts the vote of a player who dropped out before the reveal', () => {
+    const room = makeRoom();
+    room.addPlayer('s1', { name: 'Alice', key: 'ka' });
+    room.addPlayer('s2', { name: 'Bob', key: 'kb', userId: 'u-bob' });
+    room.castVote('s1', '3');
+    room.castVote('s2', '8');
+    room.removePlayer('s2'); // connection lost
+
+    expect(room.revealMode()).toBe('immediate');
+    const snapshot = room.reveal();
+    expect(snapshot.players).toEqual([
+      { socketId: 's1', name: 'Alice', userId: null, vote: '3' },
+      { socketId: null, name: 'Bob', userId: 'u-bob', vote: '8' },
+    ]);
+    expect(snapshot.stats).toMatchObject({ min: 3, max: 8 });
+    // … and the stats stay the same when Bob returns
+    room.addPlayer('s3', { name: 'Bob', key: 'kb', userId: 'u-bob' });
+    expect(room.toClientState('s3').stats).toMatchObject({ min: 3, max: 8 });
+  });
+
+  it('does not count a person twice when they return under a new key', () => {
+    const room = makeRoom();
+    room.addPlayer('s1', { name: 'Guest', key: 'old-tab' });
+    room.castVote('s1', '5');
+    room.removePlayer('s1');
+    room.addPlayer('s2', { name: 'Guest', key: 'new-tab' }); // reopened the link in a new tab
+    room.castVote('s2', '13');
+    expect(room.reveal().players).toEqual([{ socketId: 's2', name: 'Guest', userId: null, vote: '13' }]);
+
+    const withAccount = makeRoom();
+    withAccount.addPlayer('a', { name: 'Eva', key: 'k1', userId: 'u1' });
+    withAccount.castVote('a', '2');
+    withAccount.removePlayer('a');
+    withAccount.addPlayer('b', { name: 'Eva (werk)', key: 'k2', userId: 'u1' });
+    expect(withAccount.absent.size).toBe(0);
+  });
+
+  it('finds a connected player by key and updates identity without losing the vote', () => {
+    const room = makeRoom();
+    room.addPlayer('s1', { name: 'Gast', key: 'k' });
+    room.castVote('s1', '5');
+    expect(room.findPlayerIdByKey('k')).toBe('s1');
+    expect(room.findPlayerIdByKey('other')).toBeNull();
+    expect(room.findPlayerIdByKey(null)).toBeNull();
+
+    const updated = room.updatePlayer('s1', { name: 'Eva', userId: 'u1', emoticon: '🦊' });
+    expect(updated).toMatchObject({ name: 'Eva', userId: 'u1', emoticon: '🦊', vote: '5', key: 'k' });
+    expect(room.updatePlayer('nope', { name: 'x' })).toBeNull();
+  });
+
+  it('ignores absent entries without a name from older snapshots when revealing', () => {
+    const room = makeRoom();
+    room.restore({ roundName: '', revealed: false, players: { old: { vote: '5', spectator: false } } });
+    room.addPlayer('s1', { name: 'Alice', key: 'ka' });
+    room.castVote('s1', '3');
+    expect(room.reveal().players).toHaveLength(1);
   });
 });

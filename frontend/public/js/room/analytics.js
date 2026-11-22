@@ -1,7 +1,7 @@
 // The analytics side panel (current round stats + round history), the
 // inline consensus badge and the mood-based reaction buttons.
 
-import { state, ROOM_ID, $ } from './state.js';
+import { ROOM_ID, $ } from './state.js';
 import { t } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { escapeHtml } from '../core/html.js';
@@ -19,7 +19,6 @@ export function isAnalyticsOpen() {
 export function openAnalyticsPanel() {
   $('analyticsPanel').classList.remove('hidden');
   $('analyticsTab').classList.add('panel-open');
-  if (!state.analyticsLoaded) loadHistory();
 }
 
 export function closeAnalyticsPanel() {
@@ -76,13 +75,18 @@ function buildHistoryRoundEl(votes, stats, createdAt, roundNum, roundName) {
   return el;
 }
 
-async function loadHistory() {
-  state.analyticsLoaded = true;
+// Replaces the round history with what the server has. Called on every
+// (re)join, so rounds played while this tab was offline show up as well.
+let historyRequest = 0;
+export async function syncHistory() {
+  const request = ++historyRequest;
   try {
     const rows = await apiFetch(`/rooms/${ROOM_ID}/history`, { method: 'GET' });
+    if (request !== historyRequest) return; // a newer sync is on its way
     const list = $('analyticsHistoryList');
-    if (!rows.length) { $('analyticsHistoryEmpty').classList.remove('hidden'); return; }
-    $('analyticsHistoryEmpty').classList.add('hidden');
+    list.querySelectorAll('.history-round').forEach((el) => el.remove());
+    const hasNotes = list.children.length > 0;
+    $('analyticsHistoryEmpty').classList.toggle('hidden', rows.length > 0 || hasNotes);
     rows.forEach((row, i) => {
       list.appendChild(buildHistoryRoundEl(row.votes, null, row.created_at, rows.length - i, row.name || ''));
     });
@@ -92,7 +96,6 @@ async function loadHistory() {
 }
 
 export function prependHistoryRound(players, stats, roundName) {
-  state.analyticsLoaded = true;
   const list = $('analyticsHistoryList');
   $('analyticsHistoryEmpty').classList.add('hidden');
 

@@ -19,6 +19,10 @@ export function setProfileName(name) {
 function joinAs(name, token = null) {
   state.myName = name;
   setProfileName(name);
+  // While disconnected socket.io would buffer this and send it on reconnect,
+  // right next to the join the 'connect' handler does: skip it, that handler
+  // joins with state.myName.
+  if (!socket.connected) return;
   socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token, playerKey: PLAYER_KEY });
 }
 
@@ -92,6 +96,10 @@ function onLoggedIn(user) {
   setProfileName(user?.name || getCurrentUser()?.name || '');
   profileMenu()?.refresh();
   $('footerAuth')?.classList.add('hidden');
+  // Join again as the account: the server links this seat to the user (so
+  // votes count for stats and badges) and keeps the current vote.
+  const account = getCurrentUser();
+  if (account) joinAs(account.name, localStorage.getItem('token'));
   if (state.room?.isGuest) claimRoomIfLoggedIn();
 }
 

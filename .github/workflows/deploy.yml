@@ -172,7 +172,25 @@ jobs:
             -p scrum-fight-test \
             -f ~/scrum-fight/docker-compose.test.yml \
             --env-file ~/scrum-fight/.env.test \
-            up -d
+            up -d || {
+              # Show why the stack did not start (the compose output only says "unhealthy").
+              echo "::group::Diagnose: database container"
+              docker ps -a --filter name=scrum-fight-test --format 'table {{.Names}}\t{{.Status}}'
+              docker logs --tail 40 scrum-fight-test-db 2>&1 || true
+              echo "::endgroup::"
+              echo "::group::Diagnose: disk"
+              df -h / /var/lib/docker 2>/dev/null || df -h
+              docker system df
+              echo "::endgroup::"
+              exit 1
+            }
+          # Oude images van eerdere deploys opruimen: elke push laat anders twee
+          # getagde images achter en de schijf loopt vol. `docker rmi` zonder -f
+          # laat images staan die nog door een container gebruikt worden.
+          docker images --format '{{.Repository}}:{{.Tag}}' \
+            | grep -E '/scrum-fight-(backend|frontend):' \
+            | grep -v ':latest$' \
+            | xargs -r -n1 docker rmi >/dev/null 2>&1 || true
           docker image prune -f
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
             -p scrum-fight-test \

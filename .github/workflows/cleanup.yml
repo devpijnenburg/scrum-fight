@@ -1,0 +1,91 @@
+name: Docker opruimen (server)
+
+# Ruimt ongebruikte Docker-images en gestopte containers op de server op.
+# Volumes (de databases) en draaiende containers worden nooit aangeraakt.
+#
+# - Handmatig: Actions → "Docker opruimen (server)" → Run workflow.
+# - Automatisch: elke nacht om 03:15 UTC.
+# - Bij een wijziging van dit bestand op een branch (om een aanpassing te testen).
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Wat opruimen'
+        required: true
+        default: 'scrum-fight'
+        type: choice
+        options:
+          - scrum-fight   # alleen images/containers van dit project
+          - alles         # alle ongebruikte images en gestopte containers op de server
+  schedule:
+    - cron: '15 3 * * *'
+  push:
+    branches-ignore: [main]
+    paths: ['.github/workflows/cleanup.yml']
+
+concurrency:
+  group: server-docker
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Opruimen
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Opruimen op de server
+        run: |
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+            SCOPE='${{ inputs.scope || 'scrum-fight' }}' bash -s << 'EOF'
+          set -uo pipefail
+
+          echo "::group::Voor het opruimen"
+          df -h /
+          docker system df
+          echo "::endgroup::"
+
+          echo "::group::Gestopte containers"
+          if [ "$SCOPE" = "alles" ]; then
+            docker container prune -f
+          else
+            # Alleen gestopte containers van dit project (nooit draaiende: geen -f op rm)
+            docker ps -a --filter name=scrum-fight --filter status=exited --filter status=dead -q \
+              | xargs -r docker rm
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Ongebruikte images"
+          if [ "$SCOPE" = "alles" ]; then
+            docker image prune -af
+          else
+            # Elke sha-tag van de scrum-fight-images (`latest` is van productie en blijft);
+            # `docker rmi` zonder -f weigert
+            # images die nog door een container gebruikt worden.
+            docker images --format '{{.Repository}}:{{.Tag}}' \
+              | grep -E '/scrum-fight-(backend|frontend):' \
+              | grep -v ':latest$' \
+              | while read -r image; do
+                  docker rmi "$image" >/dev/null 2>&1 && echo "verwijderd: $image" || echo "in gebruik:  $image"
+                done
+            docker image prune -f
+          fi
+          docker builder prune -f >/dev/null 2>&1 || true
+          echo "::endgroup::"
+
+          echo "::group::Na het opruimen"
+          df -h /
+          docker system df
+          echo "::endgroup::"
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

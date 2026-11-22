@@ -52,10 +52,14 @@ export function registerSocketEvents() {
     if (!state.room) return;
     // A returning player (refresh, reconnect, server restart) may already
     // have voted in this round.
-    state.room.players.push({
+    const player = {
       socketId, name, emoticon: emoticon || '', hasVoted: Boolean(hasVoted), vote: vote ?? null,
       spectator: spectator || false, joinedMidRound: state.room.revealed && !hasVoted,
-    });
+    };
+    // The same socket can join again (e.g. after logging in): replace, don't add a seat.
+    const index = state.room.players.findIndex((p) => p.socketId === socketId);
+    if (index === -1) state.room.players.push(player);
+    else state.room.players[index] = { ...player, isMe: state.room.players[index].isMe, joinedMidRound: state.room.players[index].joinedMidRound };
     refreshPlayers();
   });
 
@@ -103,6 +107,14 @@ export function registerSocketEvents() {
     stopConnectionStatus();
     showOverlay('😴', t('room.overlay.expired'),
       reason === 'inactivity' ? t('room.expired_inactivity') : t('room.expired_other'));
+  });
+
+  // This tab's seat was taken over by another tab with the same session
+  // (a duplicated tab). Stop here instead of fighting over the seat.
+  socket.on('session-replaced', () => {
+    stopConnectionStatus();
+    socket.disconnect();
+    showOverlay('🪟', t('room.replaced.title'), t('room.replaced.msg'));
   });
 
   // Errors carry { code, message, …details }; the text comes from i18n.

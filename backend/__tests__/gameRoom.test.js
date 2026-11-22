@@ -164,3 +164,78 @@ describe('isAllowedReaction', () => {
     expect(isAllowedReaction(undefined)).toBe(false);
   });
 });
+
+describe('GameRoom — returning players and persistence', () => {
+  function roomWithVotes() {
+    const room = makeRoom();
+    room.addPlayer('s1', { name: 'Alice', key: 'k-alice' });
+    room.addPlayer('s2', { name: 'Bob', key: 'k-bob' });
+    room.castVote('s1', '5');
+    room.setRoundName('Story 7');
+    return room;
+  }
+
+  it('a player who leaves and rejoins with the same key gets their vote back', () => {
+    const room = roomWithVotes();
+    room.removePlayer('s1');
+    const back = room.addPlayer('s9', { name: 'Alice', key: 'k-alice' });
+    expect(back.vote).toBe('5');
+    expect(room.absent.size).toBe(0);
+  });
+
+  it('a different key or no key starts without a vote', () => {
+    const room = roomWithVotes();
+    room.removePlayer('s1');
+    expect(room.addPlayer('s3', { name: 'Eve', key: 'other' }).vote).toBeNull();
+    expect(room.addPlayer('s4', { name: 'Guest' }).vote).toBeNull();
+  });
+
+  it('a new round forgets absent votes but remembers absent spectators', () => {
+    const room = roomWithVotes();
+    room.toggleSpectator('s2');
+    room.removePlayer('s1');
+    room.removePlayer('s2');
+    room.newRound();
+    expect(room.addPlayer('a', { name: 'Alice', key: 'k-alice' }).vote).toBeNull();
+    expect(room.addPlayer('b', { name: 'Bob', key: 'k-bob' }).spectator).toBe(true);
+  });
+
+  it('snapshot → restore brings back round name, reveal state and keyed votes', () => {
+    const before = roomWithVotes();
+    before.removePlayer('s2'); // Bob had not voted: nothing to remember
+    const snapshot = before.snapshot();
+    expect(snapshot).toEqual({ roundName: 'Story 7', revealed: false, players: { 'k-alice': { vote: '5', spectator: false } } });
+
+    const after = makeRoom();
+    after.restore(JSON.parse(JSON.stringify(snapshot)));
+    expect(after.roundName).toBe('Story 7');
+    expect(after.addPlayer('x', { name: 'Alice', key: 'k-alice' }).vote).toBe('5');
+    expect(after.toClientState('x')).toMatchObject({ myVote: '5', roundName: 'Story 7' });
+  });
+
+  it('restore drops votes that are not valid cards for the method', () => {
+    const room = makeRoom('tshirt');
+    room.restore({ roundName: 'x', revealed: false, players: { a: { vote: '13' }, b: { vote: 'M' } } });
+    expect(room.addPlayer('1', { name: 'A', key: 'a' }).vote).toBeNull();
+    expect(room.addPlayer('2', { name: 'B', key: 'b' }).vote).toBe('M');
+  });
+
+  it('restore tolerates missing or malformed snapshots', () => {
+    const room = makeRoom();
+    expect(() => room.restore(null)).not.toThrow();
+    expect(() => room.restore('garbage')).not.toThrow();
+    expect(room.revealed).toBe(false);
+  });
+
+  it('keeps the number of remembered absent players bounded', () => {
+    const room = makeRoom();
+    for (let i = 0; i < 250; i++) {
+      room.addPlayer(`s${i}`, { name: `P${i}`, key: `k${i}` });
+      room.castVote(`s${i}`, '3');
+      room.removePlayer(`s${i}`);
+    }
+    expect(room.absent.size).toBe(200);
+    expect(room.absent.has('k249')).toBe(true);
+    expect(room.absent.has('k0')).toBe(false);
+  });
+});

@@ -45,9 +45,15 @@ function shutdown(signal, exitCode = 0) {
   force.unref();
 
   stopJobs();
-  stopRealtime();
   // io.close() disconnects all sockets and closes the underlying HTTP server.
+  // Then save the rounds in progress (they are restored when players
+  // reconnect to the new process) before closing the DB pool.
   io.close(async () => {
+    try {
+      await stopRealtime();
+    } catch (err) {
+      console.error('[server] Error saving live rounds:', err);
+    }
     try {
       await pool.end();
     } catch (err) {

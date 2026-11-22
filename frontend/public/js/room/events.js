@@ -44,11 +44,13 @@ export function registerSocketEvents() {
     if (state.room) state.room.isGuest = false;
   });
 
-  socket.on('player-joined', ({ socketId, name, emoticon, spectator }) => {
+  socket.on('player-joined', ({ socketId, name, emoticon, spectator, hasVoted, vote }) => {
     if (!state.room) return;
+    // A returning player (refresh, reconnect, server restart) may already
+    // have voted in this round.
     state.room.players.push({
-      socketId, name, emoticon: emoticon || '', hasVoted: false, vote: null,
-      spectator: spectator || false, joinedMidRound: state.room.revealed,
+      socketId, name, emoticon: emoticon || '', hasVoted: Boolean(hasVoted), vote: vote ?? null,
+      spectator: spectator || false, joinedMidRound: state.room.revealed && !hasVoted,
     });
     refreshPlayers();
   });

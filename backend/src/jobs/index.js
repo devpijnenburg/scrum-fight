@@ -3,8 +3,9 @@
 // logging; this file decides which jobs run.
 const roomCleanupJob = require('../domains/rooms/roomCleanupJob');
 const loginCodeCleanupJob = require('../domains/identity/loginCodeCleanupJob');
+const liveRoundCleanupJob = require('../domains/game/liveRoundCleanupJob');
 
-const JOBS = [roomCleanupJob, loginCodeCleanupJob];
+const JOBS = [roomCleanupJob, loginCodeCleanupJob, liveRoundCleanupJob];
 
 // Scheduled tasks returned by each job's register(), so they can be stopped
 // on shutdown.

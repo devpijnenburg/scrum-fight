@@ -1,7 +1,7 @@
 // Who is playing: name resolution and joining, the name prompt, in-room
 // login for guests and claiming a guest room after login.
 
-import { state, ROOM_ID, FROM_JOIN_LINK, NAME_FROM_SESSION, $ } from './state.js';
+import { state, ROOM_ID, PLAYER_KEY, FROM_JOIN_LINK, NAME_FROM_SESSION, $ } from './state.js';
 import { socket } from './socket.js';
 import { t } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
@@ -19,7 +19,7 @@ export function setProfileName(name) {
 function joinAs(name, token = null) {
   state.myName = name;
   setProfileName(name);
-  socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token });
+  socket.emit('join-room', { roomId: ROOM_ID, playerName: name, token, playerKey: PLAYER_KEY });
 }
 
 // Called on every (re)connect. Order: account → name chosen earlier in this

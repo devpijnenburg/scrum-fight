@@ -57,6 +57,7 @@ function setupSocket(io, timing = {}) {
   async function reveal(room) {
     const snapshot = room.reveal();
     if (!snapshot) return;
+    rooms.persist(room.id);
 
     io.to(room.id).emit('cards-revealed', {
       players: snapshot.players.map(({ socketId, name, vote }) => ({ socketId, name, vote })),
@@ -103,6 +104,7 @@ function setupSocket(io, timing = {}) {
     if (!player) return;
 
     io.to(roomId).emit('player-left', { socketId: socket.id, name: player.name });
+    rooms.persist(roomId); // the leaver's vote is kept for the round
     rooms.playerLeft(roomId);
   }
 
@@ -117,7 +119,7 @@ function setupSocket(io, timing = {}) {
     };
 
     // ── join-room ───────────────────────────────────────────────────────────
-    on(socket, 'join-room', async ({ roomId, playerName, token }) => {
+    on(socket, 'join-room', async ({ roomId, playerName, token, playerKey }) => {
       const id = str(roomId, 20).toUpperCase();
       if (!id) return sendError('ROOM_NOT_FOUND', 'Kamer niet gevonden');
 
@@ -136,8 +138,10 @@ function setupSocket(io, timing = {}) {
       // A socket is a player in at most one room.
       if (socket.data.roomId && socket.data.roomId !== id) leaveCurrentRoom(socket);
 
-      const room = rooms.open(dbRoom);
-      room.addPlayer(socket.id, { name, userId, emoticon });
+      const room = await rooms.open(dbRoom);
+      // Stable per-tab key: a returning player gets their round state back.
+      const key = str(playerKey, 64) || null;
+      const player = room.addPlayer(socket.id, { name, userId, emoticon, key });
       socket.join(id);
       socket.data.roomId = id;
 
@@ -146,8 +150,9 @@ function setupSocket(io, timing = {}) {
         socketId: socket.id,
         name,
         emoticon,
-        hasVoted: false,
-        spectator: false,
+        hasVoted: player.vote !== null,
+        vote: room.revealed ? player.vote : null,
+        spectator: player.spectator,
       });
 
       rooms.touch(id);
@@ -158,6 +163,7 @@ function setupSocket(io, timing = {}) {
       const room = currentRoom();
       if (!room || !room.castVote(socket.id, value)) return;
       io.to(room.id).emit('player-voted', { socketId: socket.id });
+      rooms.persist(room.id);
       if (room.isGuest) rooms.touch(room.id);
     });
 
@@ -178,6 +184,7 @@ function setupSocket(io, timing = {}) {
       }
 
       io.to(room.id).emit('spectator-toggled', { socketId: socket.id, spectator });
+      rooms.persist(room.id);
     });
 
     // ── reveal ──────────────────────────────────────────────────────────────
@@ -209,6 +216,7 @@ function setupSocket(io, timing = {}) {
       if (rooms.cancelCountdown(room.id)) io.to(room.id).emit('countdown-cancelled');
       room.newRound();
       io.to(room.id).emit('round-reset');
+      rooms.persist(room.id);
       if (room.isGuest) rooms.touch(room.id);
     });
 
@@ -217,6 +225,7 @@ function setupSocket(io, timing = {}) {
       const room = currentRoom();
       if (!room || !room.setRoundName(str(name, 100))) return;
       socket.to(room.id).emit('round-name-set', { name: room.roundName });
+      rooms.persist(room.id);
     });
 
     // ── react ───────────────────────────────────────────────────────────────
@@ -259,8 +268,12 @@ function closeRoom(roomId) {
   sessions?.close(roomId, 'deleted');
 }
 
-function stopRealtime() {
-  sessions?.stopAll();
+// Graceful shutdown: write every pending live round, then drop all rooms.
+// Call after io.close() so the final disconnects are part of the saved state.
+async function stopRealtime() {
+  if (!sessions) return;
+  await sessions.flushAll();
+  sessions.stopAll();
 }
 
 module.exports = setupSocket;

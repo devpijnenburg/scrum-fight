@@ -1,12 +1,17 @@
 // Room lifecycle tests: timers, eviction and REST-triggered changes.
 // Uses fake timers and a recording fake of io.to(room).emit().
 
+jest.mock('../src/domains/game/liveRoundRepository', () => ({
+  loadLiveRound: jest.fn().mockResolvedValue(null),
+  saveLiveRound: jest.fn().mockResolvedValue(),
+}));
 jest.mock('../src/domains/rooms/roomRepository', () => ({
   deleteRoom: jest.fn().mockResolvedValue(),
   touchLastActive: jest.fn().mockResolvedValue(),
 }));
 
 const roomRepository = require('../src/domains/rooms/roomRepository');
+const liveRounds = require('../src/domains/game/liveRoundRepository');
 const { createRoomSessions } = require('../src/realtime/roomSessions');
 
 function fakeIo() {
@@ -25,7 +30,7 @@ let sessions;
 beforeEach(() => {
   jest.useFakeTimers();
   io = fakeIo();
-  sessions = createRoomSessions(io, { guestTtlMs: 1000, emptyRoomTtlMs: 500, countdownStepMs: 100 });
+  sessions = createRoomSessions(io, { guestTtlMs: 1000, emptyRoomTtlMs: 500, countdownStepMs: 100, persistDelayMs: 50 });
 });
 
 afterEach(() => {
@@ -35,17 +40,17 @@ afterEach(() => {
 });
 
 describe('open', () => {
-  it('reuses the live room on subsequent joins', () => {
-    const a = sessions.open(dbRoom());
+  it('reuses the live room on subsequent joins', async () => {
+    const a = await sessions.open(dbRoom());
     a.addPlayer('s1', { name: 'Alice' });
-    expect(sessions.open(dbRoom())).toBe(a);
+    expect(await sessions.open(dbRoom())).toBe(a);
     expect(sessions.size).toBe(1);
   });
 });
 
 describe('guest rooms', () => {
   it('expire after inactivity: clients are told and the DB row is deleted', async () => {
-    sessions.open(dbRoom({ is_guest: true }));
+    await sessions.open(dbRoom({ is_guest: true }));
     sessions.touch('ROOM01');
 
     await jest.advanceTimersByTimeAsync(1000);
@@ -56,7 +61,7 @@ describe('guest rooms', () => {
   });
 
   it('activity postpones the expiry', async () => {
-    sessions.open(dbRoom({ is_guest: true }));
+    await sessions.open(dbRoom({ is_guest: true }));
     sessions.touch('ROOM01');
     await jest.advanceTimersByTimeAsync(800);
     sessions.touch('ROOM01');
@@ -65,7 +70,7 @@ describe('guest rooms', () => {
   });
 
   it('stay in memory while empty (until the inactivity timer)', async () => {
-    const room = sessions.open(dbRoom({ is_guest: true }));
+    const room = await sessions.open(dbRoom({ is_guest: true }));
     room.addPlayer('s1', { name: 'Alice' });
     room.removePlayer('s1');
     sessions.playerLeft('ROOM01');
@@ -74,7 +79,7 @@ describe('guest rooms', () => {
   });
 
   it('claiming cancels the expiry and announces it', async () => {
-    const room = sessions.open(dbRoom({ is_guest: true }));
+    const room = await sessions.open(dbRoom({ is_guest: true }));
     room.addPlayer('s1', { name: 'Alice' });
     sessions.touch('ROOM01');
 
@@ -90,7 +95,7 @@ describe('guest rooms', () => {
 
 describe('permanent rooms', () => {
   it('are evicted from memory after the empty-room grace period', async () => {
-    const room = sessions.open(dbRoom());
+    const room = await sessions.open(dbRoom());
     room.addPlayer('s1', { name: 'Alice' });
     room.removePlayer('s1');
     sessions.playerLeft('ROOM01');
@@ -103,13 +108,13 @@ describe('permanent rooms', () => {
   });
 
   it('a rejoin within the grace period keeps the room', async () => {
-    const room = sessions.open(dbRoom());
+    const room = await sessions.open(dbRoom());
     room.addPlayer('s1', { name: 'Alice' });
     room.removePlayer('s1');
     sessions.playerLeft('ROOM01');
 
     await jest.advanceTimersByTimeAsync(300);
-    sessions.open(dbRoom()).addPlayer('s2', { name: 'Alice' });
+    (await sessions.open(dbRoom())).addPlayer('s2', { name: 'Alice' });
     await jest.advanceTimersByTimeAsync(1000);
 
     expect(sessions.get('ROOM01')).toBe(room);
@@ -118,7 +123,7 @@ describe('permanent rooms', () => {
 
 describe('countdown', () => {
   it('counts down and then calls onDone', async () => {
-    sessions.open(dbRoom());
+    await sessions.open(dbRoom());
     const onDone = jest.fn();
     expect(sessions.startCountdown('ROOM01', onDone)).toBe(true);
     expect(sessions.startCountdown('ROOM01', onDone)).toBe(false); // already running
@@ -132,7 +137,7 @@ describe('countdown', () => {
   });
 
   it('can be cancelled', async () => {
-    sessions.open(dbRoom());
+    await sessions.open(dbRoom());
     const onDone = jest.fn();
     sessions.startCountdown('ROOM01', onDone);
     expect(sessions.cancelCountdown('ROOM01')).toBe(true);
@@ -142,7 +147,7 @@ describe('countdown', () => {
   });
 
   it('is cancelled when the last player leaves', async () => {
-    const room = sessions.open(dbRoom());
+    const room = await sessions.open(dbRoom());
     room.addPlayer('s1', { name: 'Alice' });
     const onDone = jest.fn();
     sessions.startCountdown('ROOM01', onDone);
@@ -157,7 +162,7 @@ describe('countdown', () => {
 
 describe('close', () => {
   it('tells clients and forgets the room including its timers', async () => {
-    sessions.open(dbRoom({ is_guest: true }));
+    await sessions.open(dbRoom({ is_guest: true }));
     sessions.touch('ROOM01');
     sessions.startCountdown('ROOM01', jest.fn());
 
@@ -166,5 +171,71 @@ describe('close', () => {
     expect(io.emitted).toContainEqual({ room: 'ROOM01', event: 'room-expired', payload: { reason: 'deleted' } });
     expect(sessions.get('ROOM01')).toBeNull();
     expect(jest.getTimerCount()).toBe(0);
+  });
+});
+
+describe('live round persistence', () => {
+  it('restores the saved round when a room is opened', async () => {
+    liveRounds.loadLiveRound.mockResolvedValueOnce({ roundName: 'Saved', revealed: false, players: { k: { vote: '8' } } });
+    const room = await sessions.open(dbRoom());
+    expect(room.roundName).toBe('Saved');
+    expect(room.addPlayer('s1', { name: 'A', key: 'k' }).vote).toBe('8');
+  });
+
+  it('loads the saved round only once for concurrent joins', async () => {
+    const [a, b] = await Promise.all([sessions.open(dbRoom()), sessions.open(dbRoom())]);
+    expect(a).toBe(b);
+    expect(liveRounds.loadLiveRound).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts fresh when loading the saved round fails', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    liveRounds.loadLiveRound.mockRejectedValueOnce(new Error('db down'));
+    const room = await sessions.open(dbRoom());
+    expect(room.roundName).toBe('');
+    spy.mockRestore();
+  });
+
+  it('batches rapid changes into one save of the latest snapshot', async () => {
+    const room = await sessions.open(dbRoom());
+    room.addPlayer('s1', { name: 'A', key: 'k' });
+    room.castVote('s1', '3');
+    sessions.persist('ROOM01');
+    room.castVote('s1', '5');
+    sessions.persist('ROOM01');
+    await jest.advanceTimersByTimeAsync(50);
+    expect(liveRounds.saveLiveRound).toHaveBeenCalledTimes(1);
+    expect(liveRounds.saveLiveRound).toHaveBeenCalledWith('ROOM01', expect.objectContaining({
+      players: { k: { vote: '5', spectator: false } },
+    }));
+  });
+
+  it('flushAll writes pending saves immediately (graceful shutdown)', async () => {
+    const room = await sessions.open(dbRoom());
+    room.addPlayer('s1', { name: 'A', key: 'k' });
+    room.castVote('s1', '13');
+    sessions.persist('ROOM01');
+    await sessions.flushAll();
+    expect(liveRounds.saveLiveRound).toHaveBeenCalledWith('ROOM01', expect.objectContaining({
+      players: { k: { vote: '13', spectator: false } },
+    }));
+  });
+
+  it('evicting an empty room writes a pending save first; deleting it does not', async () => {
+    const room = await sessions.open(dbRoom());
+    room.addPlayer('s1', { name: 'A', key: 'k' });
+    room.castVote('s1', '2');
+    sessions.persist('ROOM01');
+    sessions.evict('ROOM01');
+    await sessions.flushAll();
+    expect(liveRounds.saveLiveRound).toHaveBeenCalledTimes(1);
+
+    liveRounds.saveLiveRound.mockClear();
+    const again = await sessions.open(dbRoom());
+    again.addPlayer('s2', { name: 'B', key: 'b' });
+    sessions.persist('ROOM01');
+    sessions.close('ROOM01');
+    await jest.advanceTimersByTimeAsync(100);
+    expect(liveRounds.saveLiveRound).not.toHaveBeenCalled();
   });
 });

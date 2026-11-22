@@ -2,7 +2,7 @@
   "name": "scrum-fight-frontend-tests",
   "private": true,
   "scripts": {
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "devDependencies": {
     "jest": "^30.4.2",
@@ -10,6 +10,15 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "testMatch": ["**/__tests__/**/*.test.js"]
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/__tests__/**/*.test.mjs"
+    ],
+    "transform": {},
+    "moduleFileExtensions": [
+      "js",
+      "mjs",
+      "json"
+    ]
   }
 }

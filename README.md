@@ -61,6 +61,10 @@ docker compose up --build
 
 Open `http://localhost` in je browser.
 
+### Cache busting
+
+Bij het bouwen van de frontend-image voegt `frontend/scripts/stamp-assets.mjs` aan elke CSS/JS-verwijzing een content-hash toe (`?v=…`). Dat gebeurt in de HTML, in de `@import`s van `styles.css` en in de imports tussen ES-modules. nginx laat bestanden met zo'n hash een jaar cachen; HTML en bestanden zonder hash worden altijd gerevalideerd. Je hoeft dus nooit meer met de hand een versie op te hogen. Lokaal (Aspire, zonder build-stap) worden de bestanden gewoon zonder hash en met `no-cache` geserveerd.
+
 ### Lokaal ontwikkelen met Aspire
 
 Als alternatief voor Docker Compose kun je lokaal ontwikkelen met [Aspire](https://aspire.dev). De backend draait dan direct op Node (geen image-build nodig) en wijzigingen in `frontend/public` zijn meteen zichtbaar.
@@ -145,7 +149,8 @@ PORT=80                             # poort voor de frontend-container
             ├── api.js, auth.js, i18n.js, settings.js   # Kern: API, sessie, vertalingen, voorkeuren
             ├── ui/                   # Herbruikbare UI: modal, toast, methodSelect, authPanel
             ├── navbar.js             # <site-nav>, <profile-menu>, <site-footer>
-            └── room.js, dashboard.js, …                # Paginascripts
+            ├── room/                 # Kamerpagina als ES-modules (entry: room/index.js)
+            └── dashboard.js, …       # Overige paginascripts
 ```
 
 ## Socket.io events

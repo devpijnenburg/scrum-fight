@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kamer — Scrum Fight</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/css/styles.css?v=dce8d7a" />
+  <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="page-room">
 
@@ -161,7 +161,7 @@
     <button id="analyticsPanelCloseBtn" class="analytics-panel-collapse-btn" aria-label="Sluiten">›</button>
     <div class="analytics-panel-hd">
       <span class="analytics-panel-title" data-i18n="room.analytics.title">📊 Analyse</span>
-      <button class="analytics-panel-close-mobile btn-icon-sm" onclick="document.getElementById('analyticsPanelCloseBtn').click()" aria-label="Sluiten">✕</button>
+      <button class="analytics-panel-close-mobile btn-icon-sm" aria-label="Sluiten">✕</button>
     </div>
     <div class="analytics-panel-body">
 
@@ -200,14 +200,14 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/i18n.js"></script>
-  <script src="/js/api.js?v=5454c58"></script>
-  <script src="/js/auth.js?v=bded843"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
   <script src="/js/settings.js"></script>
   <script src="/js/ui/modal.js"></script>
   <script src="/js/ui/toast.js"></script>
   <script src="/js/ui/authPanel.js"></script>
-  <script src="/js/navbar.js?v=a1f2026"></script>
-  <script src="/js/badges.js?v=b3a5c2f"></script>
-  <script src="/js/room.js?v=dce8d7a"></script>
+  <script src="/js/navbar.js"></script>
+  <script src="/js/badges.js"></script>
+  <script type="module" src="/js/room/index.js"></script>
 </body>
 </html>

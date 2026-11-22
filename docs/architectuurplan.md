@@ -70,8 +70,8 @@ frontend/public/
 | 2. Game-domein | ✅ uitgevoerd (PR #71) |
 | 3. Data-integriteit | ✅ uitgevoerd (PR #72) |
 | 4. Backend-domeinen | ✅ uitgevoerd (PR #73) |
-| 5. UI-bouwstenen | ✅ uitgevoerd |
-| 6 | open |
+| 5. UI-bouwstenen | ✅ uitgevoerd (PR #74) |
+| 6. Kamerpagina + cache busting | ✅ uitgevoerd |
 
 ### Notities fase 2
 - Spelregels staan in `backend/src/domains/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
@@ -101,3 +101,23 @@ frontend/public/
 - `js/settings.js` is de enige plek voor gebruikersvoorkeuren.
 - CSS: `styles.css` importeert `tokens` → `base` → `components/*` → `pages/*` → `responsive`. De pagina's zien er pixel voor pixel hetzelfde uit als voor de splitsing (gecontroleerd met screenshots).
 - **Bewust uitgesteld naar fase 6:** ES-modules. De scripts zijn nog klassiek (globals). De nieuwe UI-bestanden zijn zo geschreven dat ze later als module te exporteren zijn: geen afhankelijkheid van paginacode, en een `module.exports`-tak voor de tests.
+
+### Notities fase 6
+- De kamerpagina bestaat uit ES-modules in `frontend/public/js/room/`, met `index.js` als entry. Ze delen één `state`-object (`state.js`) en hebben één socket (`socket.js`). De bestanden splitsen de verantwoordelijkheden:
+  - identiteit en joinen;
+  - de socket-events;
+  - de rondecyclus;
+  - tafel, kaartkiezer en analysepaneel;
+  - header;
+  - bediening en sneltoetsen;
+  - vieringen en overlays.
+
+  De consensusregels staan puur in `consensus.js`, met unit-tests.
+- `room/globals.js` is de enige plek waar de kamermodules de klassieke helpers aanspreken (i18n, api, auth, settings, ui/*). Worden die helpers later modules, dan hoeft alleen dat bestand te veranderen.
+- Er zijn geen importcycli tussen de kamermodules. Het stempelscript faalt bewust bij een cyclus, omdat een module anders twee URL's (en twee instanties) zou krijgen.
+- Cache busting zit in de Docker-build (`scripts/stamp-assets.mjs`, multi-stage `Dockerfile`). nginx cachet bestanden met hash een jaar (`immutable`).
+
+### Wat nog kan (niet in dit plan)
+- De overige paginascripts (`dashboard.js`, `admin.js`, `stats.js`, `profile.js`, `main.js`) en de gedeelde helpers omzetten naar ES-modules, volgens hetzelfde patroon als `room/`.
+- De `planLimitWarning` en de foutteksten van de socket-laag ook als foutcode versturen en in de frontend vertalen.
+- De lopende ronde in Postgres bewaren, zodat een deploy geen stemmen van een actieve ronde wist.

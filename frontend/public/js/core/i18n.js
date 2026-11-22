@@ -195,6 +195,7 @@ const TRANSLATIONS = {
 
     'room.analytics.toggle_title': 'Analyse',
     'room.analytics.title': '📊 Analyse',
+    'room.analytics.close': 'Sluiten',
     'room.analytics.current_round': 'Huidige ronde',
     'room.analytics.history': 'Vorige rondes',
     'room.analytics.empty': 'Nog geen rondes gespeeld.',
@@ -577,6 +578,7 @@ const TRANSLATIONS = {
 
     'room.analytics.toggle_title': 'Analytics',
     'room.analytics.title': '📊 Analytics',
+    'room.analytics.close': 'Close',
     'room.analytics.current_round': 'Current round',
     'room.analytics.history': 'Previous rounds',
     'room.analytics.empty': 'No rounds played yet.',

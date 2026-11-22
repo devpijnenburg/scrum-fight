@@ -16,13 +16,22 @@ export function isAnalyticsOpen() {
   return !$('analyticsPanel').classList.contains('hidden');
 }
 
+// The side panel starts right below the sticky room header.
+function placeBelowHeader() {
+  const header = document.querySelector('.room-header');
+  if (header) $('analyticsPanel').style.setProperty('--room-header-h', `${header.offsetHeight}px`);
+}
+
 export function openAnalyticsPanel() {
+  placeBelowHeader();
   $('analyticsPanel').classList.remove('hidden');
+  $('analyticsBackdrop').classList.remove('hidden');
   $('analyticsTab').classList.add('panel-open');
 }
 
 export function closeAnalyticsPanel() {
   $('analyticsPanel').classList.add('hidden');
+  $('analyticsBackdrop').classList.add('hidden');
   $('analyticsTab').classList.remove('panel-open');
 }
 
@@ -37,7 +46,17 @@ export function wireAnalyticsPanel() {
     else openAnalyticsPanel();
   });
   $('analyticsPanelCloseBtn').addEventListener('click', closeAnalyticsPanel);
-  document.querySelector('.analytics-panel-close-mobile')?.addEventListener('click', closeAnalyticsPanel);
+  $('analyticsCloseBtn').addEventListener('click', closeAnalyticsPanel);
+  // The backdrop is only visible on small screens, where the panel is a sheet.
+  $('analyticsBackdrop').addEventListener('click', closeAnalyticsPanel);
+  window.addEventListener('resize', () => { if (isAnalyticsOpen()) placeBelowHeader(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !isAnalyticsOpen()) return;
+    // An open modal or a field being edited handles Escape itself.
+    if (document.querySelector('.modal:not(.hidden)')) return;
+    if (e.target instanceof Element && e.target.matches('input, textarea, select')) return;
+    closeAnalyticsPanel();
+  });
 }
 
 // ── History ─────────────────────────────────────────────────────────────────

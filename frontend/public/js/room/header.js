@@ -4,6 +4,7 @@
 import { state, ROOM_ID, $ } from './state.js';
 import { socket } from './socket.js';
 import { t } from '../core/i18n.js';
+import { errorText } from '../core/errors.js';
 import { getCurrentUser } from '../core/auth.js';
 
 export function renderHeader(room) {
@@ -99,12 +100,28 @@ export function initAdBanner() {
   $('adBanner').classList.toggle('hidden', plan === 'pro' || plan === 'premium');
 }
 
-// Shown once after creating a room beyond the plan limit (set by the creating page).
-export function initPlanLimitBanner() {
-  const warning = sessionStorage.getItem('planLimitWarning');
-  if (!warning) return;
+// Shown once after creating a room beyond the plan limit. The creating page
+// stores the API's planLimit ({ code, plan, max }) in sessionStorage.
+function takePlanLimitMessage() {
+  const raw = sessionStorage.getItem('planLimit');
+  sessionStorage.removeItem('planLimit');
+  if (raw) {
+    try {
+      return errorText(JSON.parse(raw));
+    } catch {
+      // ignore malformed data
+    }
+  }
+  // Older pages stored the backend's Dutch text directly.
+  const legacy = sessionStorage.getItem('planLimitWarning');
   sessionStorage.removeItem('planLimitWarning');
-  $('planLimitMsg').textContent = `${warning} `;
+  return legacy;
+}
+
+export function initPlanLimitBanner() {
+  const message = takePlanLimitMessage();
+  if (!message) return;
+  $('planLimitMsg').textContent = `${message} `;
   const banner = $('planLimitBanner');
   banner.classList.remove('hidden');
   $('planLimitClose').addEventListener('click', () => banner.classList.add('hidden'));

@@ -44,7 +44,9 @@ function roomLimitMessage(plan) {
 // Creates a room for a guest or an authenticated user.
 // Guests always get a temporary (is_guest) room; authenticated users get a
 // saved room unless their plan limit is reached, in which case a temporary
-// room is created instead and a warning is attached.
+// room is created instead and the response carries
+//   planLimit: { code: 'ROOM_LIMIT_REACHED', plan, max }  (translated by the client)
+//   planLimitWarning: '<Dutch text>'                        (fallback for older clients)
 async function createRoom(user, { name, method }) {
   const trimmedName = typeof name === 'string' ? name.trim().slice(0, MAX_ROOM_NAME) : '';
   if (!trimmedName) throw badRequest('ROOM_NAME_REQUIRED', 'Kamernaam is verplicht');
@@ -52,12 +54,12 @@ async function createRoom(user, { name, method }) {
 
   let ownerId = null;
   let isGuest = true;
-  let planLimitWarning = null;
+  let planLimit = null;
 
   if (user) {
     const plan = user.plan || 'free';
     if (await hasReachedRoomLimit(user.id, plan)) {
-      planLimitWarning = roomLimitMessage(plan);
+      planLimit = { code: 'ROOM_LIMIT_REACHED', plan, max: maxRoomsForPlan(plan) };
     } else {
       ownerId = user.id;
       isGuest = false;
@@ -66,7 +68,10 @@ async function createRoom(user, { name, method }) {
 
   const id = await generateUniqueRoomId();
   const room = await roomRepository.insertRoom({ id, name: trimmedName, ownerId, method, isGuest });
-  if (planLimitWarning) room.planLimitWarning = planLimitWarning;
+  if (planLimit) {
+    room.planLimit = planLimit;
+    room.planLimitWarning = roomLimitMessage(planLimit.plan);
+  }
   return room;
 }
 

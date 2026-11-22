@@ -119,7 +119,6 @@ frontend/public/
 - Cache busting zit in de Docker-build (`scripts/stamp-assets.mjs`, multi-stage `Dockerfile`). nginx cachet bestanden met hash een jaar (`immutable`).
 
 ### Wat nog kan (niet in dit plan)
-- De `planLimitWarning` en de foutteksten van de socket-laag ook als foutcode versturen en in de frontend vertalen.
 - De lopende ronde in Postgres bewaren, zodat een deploy geen stemmen van een actieve ronde wist.
 
 ### Notities fase 7 — alle pagina's als ES-modules
@@ -134,3 +133,8 @@ frontend/public/
 - `npm run lint` (ESLint, `no-undef`) draait in CI. Met modules faalt een vergeten import anders pas op het moment dat dat codepad draait.
 - Het stempelscript stempelt ook `import './x.js'` en `export … from`, en faalt bij een relatieve import zonder hash. Zo'n import zou een tweede module-instantie met eigen toestand opleveren.
 - Gerepareerd: de kamer-socket verbond soms vóórdat de event-handlers geregistreerd waren, waardoor de speler niet joinde (sinds fase 6). De socket verbindt nu pas als alle handlers klaarstaan.
+
+### Notities — vertaling van socket-fouten en planlimiet
+- Socket-fouten hebben dezelfde vorm als REST-fouten: `{ code, message, …details }`, bijvoorbeeld `{ code: 'ROOM_FULL', limit: 5 }`.
+- Een kamer die boven de limiet wordt aangemaakt, levert `planLimit: { code: 'ROOM_LIMIT_REACHED', plan, max }` op. Het oude tekstveld `planLimitWarning` blijft voorlopig mee komen voor oudere clients.
+- De frontend vertaalt alles via `js/core/errors.js` (`errorText`), met de i18n-entry `errors.<CODE>`. De planlimietbanner in de kamer en de waarschuwingen op het dashboard staan nu ook in NL en EN.

@@ -71,7 +71,7 @@ async function loadRooms() {
     _overLimitCount = rooms.filter((r) => r.over_limit).length;
 
     if (_overLimitCount > 0 && maxRooms !== null) {
-      notice.innerHTML = `⚠️ Je hebt ${rooms.length} kamer${rooms.length !== 1 ? 's' : ''}, maar je huidige abonnement staat er maximaal ${maxRooms} toe. Verwijder ${_overLimitCount} kamer${_overLimitCount !== 1 ? 's' : ''} om weer nieuwe kamers op te slaan.`;
+      notice.textContent = t('dashboard.plan_limit.notice', { count: rooms.length, max: maxRooms, excess: _overLimitCount });
       notice.classList.remove('hidden');
     } else {
       notice.classList.add('hidden');
@@ -85,7 +85,7 @@ async function loadRooms() {
       <div class="room-item fade-in${r.over_limit ? ' room-item-over-limit' : ''}" data-id="${r.id}">
         <div class="room-item-name">
           ${escapeHtml(r.name)}
-          ${r.over_limit ? '<span class="room-over-limit-badge">Boven limiet</span>' : ''}
+          ${r.over_limit ? `<span class="room-over-limit-badge">${t('dashboard.rooms.over_limit')}</span>` : ''}
         </div>
         <div class="room-item-meta">
           <span class="badge">${methodLabel(r.method)}</span>
@@ -115,7 +115,7 @@ document.getElementById('newRoomBtn').addEventListener('click', () => {
   document.getElementById('modalRoomName').value = generateRoomName();
   const errEl = document.getElementById('modalError');
   if (_overLimitCount > 0) {
-    errEl.textContent = 'Je hebt meer kamers dan je abonnement toestaat. Verwijder eerst kamers voordat je nieuwe aanmaakt.';
+    errEl.textContent = t('dashboard.plan_limit.create_blocked');
     errEl.classList.remove('hidden');
   } else {
     errEl.classList.add('hidden');
@@ -134,7 +134,7 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
   errEl.classList.add('hidden');
 
   if (_overLimitCount > 0) {
-    errEl.textContent = 'Je hebt meer kamers dan je abonnement toestaat. Verwijder eerst kamers voordat je nieuwe aanmaakt.';
+    errEl.textContent = t('dashboard.plan_limit.create_blocked');
     errEl.classList.remove('hidden');
     return;
   }
@@ -150,7 +150,7 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
       method: 'POST',
       body: JSON.stringify({ name, method }),
     });
-    if (room.planLimitWarning) sessionStorage.setItem('planLimitWarning', room.planLimitWarning);
+    if (room.planLimit) sessionStorage.setItem('planLimit', JSON.stringify(room.planLimit));
     closeModal('newRoomModal');
     window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {

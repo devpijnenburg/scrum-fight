@@ -199,7 +199,7 @@ it('enforces the participant limit of the owner plan', async () => {
   await next(sixth, 'connect');
   const error = next(sixth, 'error');
   sixth.emit('join-room', { roomId: 'TEAM01', playerName: 'Too many' });
-  expect(await error).toMatchObject({ code: 'ROOM_FULL' });
+  expect(await error).toMatchObject({ code: 'ROOM_FULL', limit: 5, message: expect.stringContaining('5') });
 });
 
 it('reports ROOM_NOT_FOUND for unknown rooms', async () => {

@@ -328,6 +328,13 @@ const TRANSLATIONS = {
     'errors.PAYLOAD_TOO_LARGE': 'Verzoek te groot',
     'errors.NOT_FOUND': 'Niet gevonden',
     'errors.SERVER_ERROR': 'Er ging iets mis op de server, probeer het opnieuw',
+    'errors.ROOM_FULL': 'Deze kamer is vol (max. {limit} deelnemers voor dit plan).',
+    'errors.NAME_REQUIRED': 'Vul een naam in',
+    'room.plan_limit.not_saved': 'Deze kamer wordt niet opgeslagen.',
+    'room.plan_limit.link': 'Verwijder een kamer of upgrade →',
+    'dashboard.rooms.over_limit': 'Boven limiet',
+    'dashboard.plan_limit.notice': '⚠️ Je hebt {count} kamers opgeslagen, maar je huidige abonnement staat er maximaal {max} toe. Verwijder er {excess} om weer nieuwe kamers op te slaan.',
+    'dashboard.plan_limit.create_blocked': 'Je hebt meer kamers dan je abonnement toestaat. Verwijder eerst kamers voordat je nieuwe aanmaakt.',
   },
   en: {
     'nav.login': 'Log in',
@@ -653,6 +660,13 @@ const TRANSLATIONS = {
     'errors.PAYLOAD_TOO_LARGE': 'Request too large',
     'errors.NOT_FOUND': 'Not found',
     'errors.SERVER_ERROR': 'Something went wrong on the server, please try again',
+    'errors.ROOM_FULL': 'This room is full (max. {limit} participants on this plan).',
+    'errors.NAME_REQUIRED': 'Please enter a name',
+    'room.plan_limit.not_saved': 'This room will not be saved.',
+    'room.plan_limit.link': 'Delete a room or upgrade →',
+    'dashboard.rooms.over_limit': 'Over limit',
+    'dashboard.plan_limit.notice': '⚠️ You have {count} saved rooms, but your current plan allows at most {max}. Delete {excess} to save new rooms again.',
+    'dashboard.plan_limit.create_blocked': 'You have more rooms than your plan allows. Delete rooms before creating new ones.',
   },
 };
 

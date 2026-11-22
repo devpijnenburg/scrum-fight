@@ -24,7 +24,7 @@ function _escapeToastText(str) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function showToast(text, { icon = '', html = null, duration = TOAST_DEFAULT_MS, variant = '' } = {}) {
+export function showToast(text, { icon = '', html = null, duration = TOAST_DEFAULT_MS, variant = '' } = {}) {
   const toast = document.createElement('div');
   toast.className = variant ? `toast toast-${variant}` : 'toast';
   toast.setAttribute('role', 'status');
@@ -41,5 +41,3 @@ function showToast(text, { icon = '', html = null, duration = TOAST_DEFAULT_MS, 
   }, duration);
   return toast;
 }
-
-if (typeof module !== 'undefined') module.exports = { showToast };

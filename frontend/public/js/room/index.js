@@ -6,8 +6,13 @@
 //   table.js       seats and vote progress    picker.js     card picker
 //   analytics.js   stats panel and history    consensus.js  pure consensus rules
 //   header.js      name, code, share, banners celebrations.js reactions and badges
-//   overlays.js    countdown and exit screens globals.js    seam to the classic helpers
+//   overlays.js    countdown and exit screens
+//
+// Shared helpers come from ../core (i18n, api, auth, settings, badges),
+// ../ui (modal, toast, auth panel) and ../components (page chrome).
 
+import '../components/siteChrome.js';
+import '../ui/authPanel.js';
 import { ROOM_ID } from './state.js';
 
 if (!ROOM_ID) {

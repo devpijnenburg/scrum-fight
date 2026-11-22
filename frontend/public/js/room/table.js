@@ -2,7 +2,7 @@
 // participant count.
 
 import { state, $ } from './state.js';
-import { t } from './globals.js';
+import { t } from '../core/i18n.js';
 
 const SEAT_RADIUS_X = 42; // % of the table
 const SEAT_RADIUS_Y = 38;

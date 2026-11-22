@@ -1,11 +1,16 @@
 // Shared page chrome — defines <profile-menu>, <site-nav> and <site-footer>.
-// Include this on every page.
+// Imported by every page entry (js/pages/*.js, js/room/index.js).
 //
 // Usage:
 //   <site-nav></site-nav>              — brand + profile if logged in, lang switcher if not
 //   <site-nav show-cta></site-nav>     — same + login/register buttons when not logged in
 //   <site-footer></site-footer>        — footer with login/register links when logged out
 //   <site-footer hide-auth></site-footer> — footer without the login/register links
+
+import { t, applyTranslations, buildLangDropdown } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser, logout } from '../core/auth.js';
+import { escapeHtml } from '../core/html.js';
 
 // ── ProfileMenu ───────────────────────────────────────────────────────────────
 
@@ -49,8 +54,8 @@ class ProfileMenu extends HTMLElement {
   }
 
   async _loadBadgeCount() {
-    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
-    if (!user || typeof apiFetch !== 'function') return;
+    const user = getCurrentUser();
+    if (!user) return;
     try {
       const rows = await apiFetch('/users/badges/recent?limit=50');
       // Badges earned since the last time the user saw the bell are "new".
@@ -67,7 +72,7 @@ class ProfileMenu extends HTMLElement {
   }
 
   _render() {
-    const user     = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const user     = getCurrentUser();
     const loggedIn = !!user;
     const name     = this._name || user?.name;
 
@@ -77,7 +82,7 @@ class ProfileMenu extends HTMLElement {
     }
 
     const bellHtml = loggedIn ? `
-      <button class="pm-bell _pm-bell" type="button" title="${typeof t === 'function' ? t('nav.badges_title') : 'Badges'}">
+      <button class="pm-bell _pm-bell" type="button" title="${t('nav.badges_title')}">
         🏅<span class="pm-bell-count hidden" id="pmBellCount">${this._badgeCount || 0}</span>
       </button>` : '';
 
@@ -86,7 +91,7 @@ class ProfileMenu extends HTMLElement {
         ${bellHtml}
         <button class="profile-menu-btn" type="button" aria-haspopup="true" aria-expanded="false">
           <span class="profile-avatar">👤</span>
-          <span class="profile-name-label">${typeof escapeHtml === 'function' ? escapeHtml(name || 'Profiel') : (name || 'Profiel')}</span>
+          <span class="profile-name-label">${escapeHtml(name || 'Profiel')}</span>
           <span class="profile-menu-arrow">▾</span>
         </button>
         <div class="profile-menu hidden">
@@ -134,10 +139,8 @@ class ProfileMenu extends HTMLElement {
 
     this._wire();
 
-    if (typeof buildLangDropdown === 'function') {
-      this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
-    }
-    if (typeof applyTranslations === 'function') applyTranslations();
+    this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    applyTranslations();
   }
 
   _wire() {
@@ -154,7 +157,7 @@ class ProfileMenu extends HTMLElement {
     menu.addEventListener('click', (e) => e.stopPropagation());
 
     this.querySelector('._pm-logout')?.addEventListener('click', () => {
-      if (typeof logout === 'function') logout();
+      logout();
     });
 
     this.querySelector('._pm-auth')?.addEventListener('click', () => {
@@ -169,7 +172,7 @@ class ProfileMenu extends HTMLElement {
   }
 }
 
-customElements.define('profile-menu', ProfileMenu);
+if (!customElements.get('profile-menu')) customElements.define('profile-menu', ProfileMenu);
 
 // ── SiteNav ───────────────────────────────────────────────────────────────────
 
@@ -179,7 +182,7 @@ class SiteNav extends HTMLElement {
   }
 
   _render() {
-    const user    = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const user    = getCurrentUser();
     const showCta = this.hasAttribute('show-cta');
 
     this.innerHTML = `
@@ -198,20 +201,18 @@ class SiteNav extends HTMLElement {
       </nav>
     `;
 
-    if (typeof buildLangDropdown === 'function') {
-      this.querySelectorAll('._nav-lang').forEach(buildLangDropdown);
-    }
-    if (typeof applyTranslations === 'function') applyTranslations();
+    this.querySelectorAll('._nav-lang').forEach(buildLangDropdown);
+    applyTranslations();
   }
 }
 
-customElements.define('site-nav', SiteNav);
+if (!customElements.get('site-nav')) customElements.define('site-nav', SiteNav);
 
 // ── SiteFooter ────────────────────────────────────────────────────────────────
 
 class SiteFooter extends HTMLElement {
   connectedCallback() {
-    const loggedIn = typeof getCurrentUser === 'function' && !!getCurrentUser();
+    const loggedIn = !!getCurrentUser();
     const showAuth = !this.hasAttribute('hide-auth') && !loggedIn;
 
     this.innerHTML = `
@@ -234,11 +235,11 @@ class SiteFooter extends HTMLElement {
       </footer>
     `;
 
-    if (typeof buildLangDropdown === 'function') {
-      this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
-    }
-    if (typeof applyTranslations === 'function') applyTranslations();
+    this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    applyTranslations();
   }
 }
 
-customElements.define('site-footer', SiteFooter);
+if (!customElements.get('site-footer')) customElements.define('site-footer', SiteFooter);
+
+export { ProfileMenu, SiteNav, SiteFooter };

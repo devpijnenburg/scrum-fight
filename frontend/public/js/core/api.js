@@ -1,9 +1,10 @@
 // Shared API helper used by all pages.
+import { t } from './i18n.js';
 const API_BASE = '/api';
 
 let _providersCache = null;
 
-async function getOAuthProviders() {
+export async function getOAuthProviders() {
   if (_providersCache) return _providersCache;
   try {
     _providersCache = await apiFetch('/auth/providers');
@@ -13,7 +14,7 @@ async function getOAuthProviders() {
   return _providersCache;
 }
 
-async function initOAuthButtons(scope = document) {
+export async function initOAuthButtons(scope = document) {
   const providers = await getOAuthProviders();
   let anyVisible = false;
 
@@ -31,8 +32,8 @@ async function initOAuthButtons(scope = document) {
 // Human-readable message for an API error body. The backend sends a stable
 // `code` plus a Dutch fallback in `error`; translate the code when the page
 // has i18n loaded and knows it. Extra body fields fill {placeholders}.
-function apiErrorMessage(body) {
-  if (body.code && typeof t === 'function') {
+export function apiErrorMessage(body) {
+  if (body.code) {
     const key = `errors.${body.code}`;
     const msg = t(key, body);
     if (msg !== key) return msg;
@@ -40,11 +41,11 @@ function apiErrorMessage(body) {
   return body.error || 'Verzoek mislukt';
 }
 
-function getToken() {
+export function getToken() {
   return localStorage.getItem('token');
 }
 
-async function apiFetch(path, options = {}) {
+export async function apiFetch(path, options = {}) {
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',

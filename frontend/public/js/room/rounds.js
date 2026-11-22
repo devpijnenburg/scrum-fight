@@ -2,7 +2,7 @@
 // and reset. Socket events and the initial room state go through here.
 
 import { state, $ } from './state.js';
-import { t } from './globals.js';
+import { t } from '../core/i18n.js';
 import { renderHeader } from './header.js';
 import { renderTable, updateVoteStatus, updatePlayerCount } from './table.js';
 import { renderPickerCards, setPickerDisabled, clearPickerSelection, updateSpectatorUI } from './picker.js';

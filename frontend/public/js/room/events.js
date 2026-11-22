@@ -3,7 +3,7 @@
 
 import { state, $ } from './state.js';
 import { socket } from './socket.js';
-import { t } from './globals.js';
+import { t } from '../core/i18n.js';
 import { refreshPlayers, renderTable, updateVoteStatus } from './table.js';
 import { clearPickerSelection, updateSpectatorUI } from './picker.js';
 import { applyRoomState, applyReveal, applyRoundReset } from './rounds.js';
@@ -112,4 +112,7 @@ export function registerSocketEvents() {
   });
 
   socket.on('badge-announced', ({ playerName, badgeId }) => announceBadge(playerName, badgeId));
+
+  // All handlers are in place: now connect (see socket.js).
+  socket.connect();
 }

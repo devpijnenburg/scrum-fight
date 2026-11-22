@@ -1,3 +1,5 @@
+import { t } from '../core/i18n.js';
+
 // Modal behaviour for the shared `.modal` markup:
 //
 //   <div id="fooModal" class="modal hidden">
@@ -34,12 +36,12 @@ function _wireModal(modal) {
   });
 }
 
-function isModalOpen(target) {
+export function isModalOpen(target) {
   const modal = _modalEl(target);
   return !!modal && !modal.classList.contains('hidden');
 }
 
-function openModal(target, { focus } = {}) {
+export function openModal(target, { focus } = {}) {
   const modal = _modalEl(target);
   if (!modal) return null;
   _wireModal(modal);
@@ -56,7 +58,7 @@ function openModal(target, { focus } = {}) {
   return modal;
 }
 
-function closeModal(target) {
+export function closeModal(target) {
   const modal = _modalEl(target);
   if (!modal || !isModalOpen(modal)) return;
   modal.classList.add('hidden');
@@ -85,7 +87,6 @@ document.addEventListener('keydown', (e) => {
 // Resolves true on confirm, false on cancel, backdrop click or Escape.
 
 function _uiText(key, fallback) {
-  if (typeof t !== 'function') return fallback;
   const text = t(key);
   return text === key ? fallback : text;
 }
@@ -109,7 +110,7 @@ function _confirmModal() {
   return modal;
 }
 
-function confirmDialog(message, { confirmLabel, cancelLabel, danger = true } = {}) {
+export function confirmDialog(message, { confirmLabel, cancelLabel, danger = true } = {}) {
   const modal = _confirmModal();
   modal.querySelector('.confirm-message').textContent = message;
   const ok = modal.querySelector('.confirm-ok');
@@ -128,5 +129,3 @@ function confirmDialog(message, { confirmLabel, cancelLabel, danger = true } = {
     openModal(modal, { focus: '.confirm-ok' });
   });
 }
-
-if (typeof module !== 'undefined') module.exports = { openModal, closeModal, isModalOpen, confirmDialog };

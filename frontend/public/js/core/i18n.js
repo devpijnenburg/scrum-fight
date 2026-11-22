@@ -1,4 +1,7 @@
-// i18n — NL / EN translations
+// i18n — NL / EN translations (ES module)
+//
+// t(key, vars) translates; elements with data-i18n / data-i18n-ph /
+// data-i18n-aria-label are translated by applyTranslations().
 
 const TRANSLATIONS = {
   nl: {
@@ -768,3 +771,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.lang-menu').forEach((m) => m.classList.add('hidden'));
   });
 });
+
+export { TRANSLATIONS, SUPPORTED, t, setLang, getLang, applyTranslations, buildLangDropdown };

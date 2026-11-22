@@ -3,12 +3,12 @@
 
 const SETTINGS_KEY = 'sfSettings';
 
-const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS = {
   analyticsAutoOpen: true, // open the analytics panel automatically on reveal
   defaultMethod: '',       // preferred estimation method for new rooms ('' = none)
 };
 
-function loadSettings() {
+export function loadSettings() {
   try {
     return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
   } catch {
@@ -16,7 +16,7 @@ function loadSettings() {
   }
 }
 
-function saveSettings(changes) {
+export function saveSettings(changes) {
   const next = { ...loadSettings(), ...changes };
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
@@ -26,4 +26,3 @@ function saveSettings(changes) {
   return next;
 }
 
-if (typeof module !== 'undefined') module.exports = { loadSettings, saveSettings, DEFAULT_SETTINGS };

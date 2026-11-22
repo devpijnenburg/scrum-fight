@@ -71,7 +71,8 @@ frontend/public/
 | 3. Data-integriteit | ✅ uitgevoerd (PR #72) |
 | 4. Backend-domeinen | ✅ uitgevoerd (PR #73) |
 | 5. UI-bouwstenen | ✅ uitgevoerd (PR #74) |
-| 6. Kamerpagina + cache busting | ✅ uitgevoerd |
+| 6. Kamerpagina + cache busting | ✅ uitgevoerd (PR #75) |
+| 7. Alle pagina's ES-modules | ✅ uitgevoerd |
 
 ### Notities fase 2
 - Spelregels staan in `backend/src/domains/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
@@ -118,6 +119,18 @@ frontend/public/
 - Cache busting zit in de Docker-build (`scripts/stamp-assets.mjs`, multi-stage `Dockerfile`). nginx cachet bestanden met hash een jaar (`immutable`).
 
 ### Wat nog kan (niet in dit plan)
-- De overige paginascripts (`dashboard.js`, `admin.js`, `stats.js`, `profile.js`, `main.js`) en de gedeelde helpers omzetten naar ES-modules, volgens hetzelfde patroon als `room/`.
 - De `planLimitWarning` en de foutteksten van de socket-laag ook als foutcode versturen en in de frontend vertalen.
 - De lopende ronde in Postgres bewaren, zodat een deploy geen stemmen van een actieve ronde wist.
+
+### Notities fase 7 — alle pagina's als ES-modules
+- Er zijn geen klassieke scripts en geen globals meer, op twee externe na: `socket.io.js` (geserveerd door de backend) en Chart.js (CDN). Elke pagina laadt precies één `<script type="module">`:
+  - `js/pages/<pagina>.js`;
+  - `js/room/index.js` voor de kamer.
+- Indeling:
+  - `js/core/`: i18n, api, auth, settings, badges, html, roomNames;
+  - `js/ui/`: modal, toast, methodSelect, authPanel;
+  - `js/components/siteChrome.js`: navigatie, profielmenu en footer.
+- Geen inline `onclick` meer. Knoppen in gegenereerde HTML gebruiken `data-action` met één gedelegeerde listener per container.
+- `npm run lint` (ESLint, `no-undef`) draait in CI. Met modules faalt een vergeten import anders pas op het moment dat dat codepad draait.
+- Het stempelscript stempelt ook `import './x.js'` en `export … from`, en faalt bij een relatieve import zonder hash. Zo'n import zou een tweede module-instantie met eigen toestand opleveren.
+- Gerepareerd: de kamer-socket verbond soms vóórdat de event-handlers geregistreerd waren, waardoor de speler niet joinde (sinds fase 6). De socket verbindt nu pas als alle handlers klaarstaan.

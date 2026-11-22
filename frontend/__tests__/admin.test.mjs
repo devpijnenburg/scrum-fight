@@ -1,45 +1,36 @@
-'use strict';
+// Admin page (ES module) — the API and session are mocked at module level.
+import { jest } from '@jest/globals';
+import { readFileSync } from 'node:fs';
 
-const fs   = require('fs');
-const path = require('path');
+// ── Module mocks (must be registered BEFORE admin.js is imported) ────────────
 
-// ── Parse admin.html (strip scripts so we control loading order) ──────────────
+const apiFetch = jest.fn().mockResolvedValue({ total: 0, users: [] });
+jest.unstable_mockModule('../public/js/core/api.js', () => ({
+  apiFetch,
+  initOAuthButtons: jest.fn(),
+  getOAuthProviders: jest.fn().mockResolvedValue({}),
+  apiErrorMessage: jest.fn(),
+  getToken: jest.fn(),
+}));
+jest.unstable_mockModule('../public/js/core/auth.js', () => ({
+  getCurrentUser: jest.fn(() => ({ id: 'u-admin', name: 'Admin', plan: 'free', is_admin: true })),
+  logout: jest.fn(),
+}));
+jest.unstable_mockModule('../public/js/ui/toast.js', () => ({ showToast: jest.fn() }));
 
-const adminHtml = fs.readFileSync(
-  path.resolve(__dirname, '../public/admin.html'), 'utf8'
-);
-const bodyContent = adminHtml
+// ── DOM from admin.html (scripts stripped; admin.js runs top-level listeners) ─
+
+const adminHtml = readFileSync(new URL('../public/admin.html', import.meta.url), 'utf8');
+document.body.innerHTML = adminHtml
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
   .match(/<body[^>]*>([\s\S]*)<\/body>/i)[1];
-
-// ── Global mocks (must be in place BEFORE admin.js is required) ──────────────
-
-global.getCurrentUser   = jest.fn(() => ({ id: 'u-admin', name: 'Admin', plan: 'free', is_admin: true }));
-global.updateNavbar     = jest.fn();
-global.applyTranslations  = jest.fn();
-global.buildLangDropdown  = jest.fn();
-global.logout           = jest.fn();
-global.openSettingsModal  = jest.fn();
-global.escapeHtml = (s) =>
-  String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-global.apiFetch = jest.fn().mockResolvedValue({ total: 0, users: [] });
-
-// Shared UI helpers that admin.js uses as page globals.
-Object.assign(global, require('../public/js/ui/modal.js'));
-global.showToast = jest.fn();
-
-// ── DOM setup (must exist BEFORE admin.js runs its top-level listeners) ───────
-
-document.body.innerHTML = bodyContent;
-
-// ── Load admin.js once — module cache keeps a single instance ─────────────────
 
 const {
   filterOrgs,
   openEditUser, closeEditUser, renderUserTable,
-  openOrgModal,  closeOrgModal,  renderOrgTable,
+  openOrgModal, closeOrgModal, renderOrgTable,
   applyOrgFilter, loadOrgs,
-} = require('../public/js/admin.js');
+} = await import('../public/js/pages/admin.js');
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -204,7 +195,7 @@ describe('Org search filter', () => {
     afterEach(() => jest.useRealTimers());
 
     test('typing in #orgSearch filters table after debounce', async () => {
-      global.apiFetch = jest.fn().mockResolvedValue(MOCK_ORGS);
+      apiFetch.mockResolvedValue(MOCK_ORGS);
       await loadOrgs(); // populates orgList
 
       jest.useFakeTimers();
@@ -219,7 +210,7 @@ describe('Org search filter', () => {
     });
 
     test('clearing search restores full list', async () => {
-      global.apiFetch = jest.fn().mockResolvedValue(MOCK_ORGS);
+      apiFetch.mockResolvedValue(MOCK_ORGS);
       await loadOrgs();
 
       jest.useFakeTimers();
@@ -237,7 +228,7 @@ describe('Org search filter', () => {
     });
 
     test('search by owner name works through debounce', async () => {
-      global.apiFetch = jest.fn().mockResolvedValue(MOCK_ORGS);
+      apiFetch.mockResolvedValue(MOCK_ORGS);
       await loadOrgs();
 
       jest.useFakeTimers();

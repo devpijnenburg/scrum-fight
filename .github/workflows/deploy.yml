@@ -29,6 +29,9 @@ jobs:
 
       - run: npm ci
       - run: npm test
+      - name: Lint (frontend modules)
+        if: matrix.package == 'frontend'
+        run: npm run lint
 
   build:
     name: Build & Push Docker images

@@ -1,7 +1,13 @@
-const user = getCurrentUser();
-if (!user) window.location.href = '/login.html';
+// Profile page: account details, emoticon, preferences and 2FA (entry module of profile.html).
 
-updateNavbar();
+import '../components/siteChrome.js';
+import '../ui/methodSelect.js';
+import { apiFetch } from '../core/api.js';
+import { getCurrentUser } from '../core/auth.js';
+import { loadSettings, saveSettings } from '../core/settings.js';
+import { showToast } from '../ui/toast.js';
+
+const user = getCurrentUser();
 
 // ── Emoji categories ──────────────────────────────────────────────────────────
 
@@ -68,11 +74,8 @@ async function loadProfile() {
 
 // ── Emoticon picker ───────────────────────────────────────────────────────────
 
-let _activeCategory = 0;
-
 function buildEmoticonPicker() {
   const tabsEl = document.getElementById('emoticonTabs');
-  const gridEl = document.getElementById('emoticonGrid');
 
   EMOJI_CATEGORIES.forEach((cat, idx) => {
     const tab = document.createElement('button');
@@ -80,7 +83,6 @@ function buildEmoticonPicker() {
     tab.textContent = cat.label.split(' ')[0];
     tab.title = cat.label;
     tab.addEventListener('click', () => {
-      _activeCategory = idx;
       tabsEl.querySelectorAll('.emoticon-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
       renderEmoticonGrid(idx);
     });
@@ -228,6 +230,10 @@ document.getElementById('totpDisableCode').addEventListener('keydown', (e) => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-buildEmoticonPicker();
-loadSettingsIntoForm();
-loadProfile();
+if (!user) {
+  window.location.href = '/login.html';
+} else {
+  buildEmoticonPicker();
+  loadSettingsIntoForm();
+  loadProfile();
+}

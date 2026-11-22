@@ -2,7 +2,10 @@
 // inline consensus badge and the mood-based reaction buttons.
 
 import { state, ROOM_ID, $ } from './state.js';
-import { t, apiFetch, escapeHtml, loadSettings } from './globals.js';
+import { t } from '../core/i18n.js';
+import { apiFetch } from '../core/api.js';
+import { escapeHtml } from '../core/html.js';
+import { loadSettings } from '../core/settings.js';
 import { consensusLevel, consensusLevelFromVotes, consensusLabelKey, reactionsFor } from './consensus.js';
 
 const consensusText = (level) => (level === 'neutral' ? '' : t(consensusLabelKey(level)));

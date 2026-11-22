@@ -1,7 +1,10 @@
 // Visual feedback: floating emoji reactions and badge celebrations.
 
 import { $ } from './state.js';
-import { t, getLang, escapeHtml, showToast, findBadge, shieldSvg } from './globals.js';
+import { t, getLang } from '../core/i18n.js';
+import { escapeHtml } from '../core/html.js';
+import { findBadge, shieldSvg } from '../core/badges.js';
+import { showToast } from '../ui/toast.js';
 import { prependHistoryNote } from './analytics.js';
 
 const REACTION_LIFETIME_MS = 2200;

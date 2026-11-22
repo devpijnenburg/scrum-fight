@@ -19,15 +19,17 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 - **Gastdeelname** — joinen zonder account is mogelijk
 - **Accounts & sessiebewaring** — inloggen via e-mail/wachtwoord of OAuth (Google / GitHub)
 - **Abonnementsplannen** — free, pro en premium met instelbare limieten; betalen via [Creem](https://creem.io)
-- **Automatische opruiming** — inactieve kamers worden na 30 dagen verwijderd (behalve premium)
+- **Automatische opruiming** — gastkamers verdwijnen na 1 uur inactiviteit; opgeslagen kamers blijven bewaard tot de eigenaar ze verwijdert
 
 ## Plannen
 
-| Plan    | Kamers | Deelnemers per kamer | Bewaring |
-|---------|--------|----------------------|----------|
-| Free    | 3      | 5                    | 30 dagen |
-| Pro     | 20     | 15                   | 30 dagen |
-| Premium | ∞      | ∞                    | Nooit    |
+| Plan    | Opgeslagen kamers | Deelnemers per kamer |
+|---------|-------------------|----------------------|
+| Free    | 3                 | 7                    |
+| Pro     | 20                | 15                   |
+| Premium | ∞                 | ∞                    |
+
+De limieten staan in `backend/src/domains/billing/plans.js`. Opgeslagen kamers worden in geen enkel plan automatisch verwijderd; alleen gastkamers (zonder account) verlopen na 1 uur inactiviteit.
 
 ## Technische stack
 
@@ -120,6 +122,12 @@ Betaalde plannen lopen via [Creem](https://creem.io). Zonder configuratie staan 
 3. Zet de API-sleutel, het webhook-secret en de vier product-ID's in `.env` (zie `.env.example`). Voor de pipeline zijn dat de gelijknamige secrets per GitHub-omgeving (`test` en `production`).
 
 Een testsleutel (`creem_test_…`) gebruikt automatisch de sandbox van Creem, een live-sleutel de echte API.
+
+**Aan en uit zetten.** `PAYMENTS_ENABLED=true` zet de verkoop aan; standaard staat die uit. Uit betekent: geen koopknoppen, geen nieuwe abonnementen en geen planwijzigingen. Webhooks en "Abonnement beheren" voor bestaande abonnees blijven werken. Op de server zet je de schakelaar om met de workflow **Betalingen aan/uit** (omgeving kiezen, dan `aan`, `uit` of `status`); de keuze blijft bij volgende deploys behouden. Een nieuwe omgeving start met test aan en productie uit.
+
+**Eigen sleutels per omgeving.** Zet de zes `CREEM_*`-secrets als *environment secrets* in de GitHub-omgevingen `test` (sandbox: testsleutel, het webhook-secret en de product-ID's uit Test Mode) en `production` (live). Laat ze niet ook op repository-niveau staan: een ontbrekend environment secret valt daar stil op terug. Als vangnet legt `PAYMENTS_MODE` in de compose-bestanden vast welke soort sleutel een omgeving accepteert (`test` of `live`); met de verkeerde soort staan betalingen daar uit en meldt de backend dat bij het opstarten.
+
+De API-sleutel heeft rechten nodig voor checkouts aanmaken, producten lezen, abonnementen wijzigen en het klantportaal (of "Full access").
 
 Hoe het werkt: "Upgraden" stuurt de klant naar de betaalpagina van Creem. Bij terugkomst controleert de backend de handtekening van de redirect en activeert het plan direct; de webhook houdt daarna verlengingen, opzeggingen en planwijzigingen bij. `users.plan` wordt altijd afgeleid van de abonnementen in de tabel `subscriptions`. Opzeggen en de betaalmethode wijzigen doet de klant in het klantportaal van Creem ("Abonnement beheren").
 

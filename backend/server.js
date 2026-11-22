@@ -7,6 +7,7 @@ const { runMigrations } = require('./src/db/migrate');
 const { createApp, corsOrigin } = require('./src/app');
 const { setupSocket, stopRealtime } = require('./src/realtime');
 const { startJobs, stopJobs } = require('./src/jobs');
+const { describeState } = require('./src/domains/billing/creemClient');
 
 // ── Process-level safety net ─────────────────────────────────────────────────
 // A stray rejection is logged instead of silently crashing the process.
@@ -72,6 +73,7 @@ const PORT = process.env.PORT || 3000;
 runMigrations(pool)
   .then(() => {
     startJobs();
+    console.log(`[billing] Betalingen: ${describeState()}`);
     httpServer.listen(PORT, () => {
       console.log(`[server] Listening on port ${PORT}`);
     });

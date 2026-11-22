@@ -31,6 +31,10 @@ const roomRepository = require('../src/domains/rooms/roomRepository');
 const userRepository = require('../src/domains/identity/userRepository');
 const { sign } = require('../src/domains/identity/jwt');
 const { setupSocket, closeRoom, claimGuestRoom } = require('../src/realtime');
+const { PLAN_LIMITS } = require('../src/domains/billing/plans');
+
+// The rooms in these tests belong to an owner on the free plan.
+const FREE_SEATS = PLAN_LIMITS.free.maxParticipants;
 
 const ROOMS = {
   TEAM01: { id: 'TEAM01', name: 'Team', method: 'fibonacci', is_guest: false, owner_id: 'owner-1' },
@@ -197,13 +201,14 @@ it('keeps the round going for a player who reconnects', async () => {
 });
 
 it('enforces the participant limit of the owner plan', async () => {
-  for (let i = 0; i < 5; i++) await join(`P${i}`);
+  expect(FREE_SEATS).toBe(7);
+  for (let i = 0; i < FREE_SEATS; i++) await join(`P${i}`);
 
-  const sixth = connect();
-  await next(sixth, 'connect');
-  const error = next(sixth, 'error');
-  sixth.emit('join-room', { roomId: 'TEAM01', playerName: 'Too many' });
-  expect(await error).toMatchObject({ code: 'ROOM_FULL', limit: 5, message: expect.stringContaining('5') });
+  const oneTooMany = connect();
+  await next(oneTooMany, 'connect');
+  const error = next(oneTooMany, 'error');
+  oneTooMany.emit('join-room', { roomId: 'TEAM01', playerName: 'Too many' });
+  expect(await error).toMatchObject({ code: 'ROOM_FULL', limit: 7, message: expect.stringContaining('7') });
 });
 
 it('reports ROOM_NOT_FOUND for unknown rooms', async () => {
@@ -297,14 +302,14 @@ describe('event-order races', () => {
   });
 
   it('a returning player is not refused when the room is full', async () => {
-    for (let i = 0; i < 4; i++) await join(`P${i}`);
-    await join('Eve', 'TEAM01', { playerKey: 'key-eve' }); // 5/5 on the free plan
+    for (let i = 0; i < FREE_SEATS - 1; i++) await join(`P${i}`);
+    await join('Eve', 'TEAM01', { playerKey: 'key-eve' }); // the room is now full
     const again = await join('Eve', 'TEAM01', { playerKey: 'key-eve' });
-    expect(again.state.players).toHaveLength(5);
+    expect(again.state.players).toHaveLength(FREE_SEATS);
   });
 
   it('two simultaneous joins for the last seat: exactly one gets in', async () => {
-    for (let i = 0; i < 4; i++) await join(`P${i}`);
+    for (let i = 0; i < FREE_SEATS - 1; i++) await join(`P${i}`);
     const a = connect();
     const b = connect();
     await Promise.all([next(a, 'connect'), next(b, 'connect')]);
@@ -316,7 +321,7 @@ describe('event-order races', () => {
     a.emit('join-room', { roomId: 'TEAM01', playerName: 'A' });
     b.emit('join-room', { roomId: 'TEAM01', playerName: 'B' });
     expect((await results).sort()).toEqual(['ROOM_FULL', 'joined']);
-    expect(sessions.get('TEAM01').playerCount).toBe(5);
+    expect(sessions.get('TEAM01').playerCount).toBe(FREE_SEATS);
   });
 
   it('joining twice from the same socket keeps the vote and does not add a seat', async () => {
@@ -382,4 +387,13 @@ it('pushes a plan change only to the sockets watching that account', async () =>
   expect(await update).toEqual({ plan: 'pro' });
   await sleep(50);
   expect(others).toEqual([]);
+});
+
+it("shows the owner's plan in the room state, and none for a guest room", async () => {
+  userRepository.getPlan.mockResolvedValue('premium');
+  const owned = await join('Alice', 'TEAM01');
+  expect(owned.state.ownerPlan).toBe('premium');
+
+  const guest = await join('Bob', 'GUEST1');
+  expect(guest.state.ownerPlan).toBeNull();
 });

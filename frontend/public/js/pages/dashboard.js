@@ -8,6 +8,7 @@ import { getCurrentUser } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
 import { generateRoomName } from '../core/roomNames.js';
 import { PLAN_RANK } from '../core/plans.js';
+import { paymentsEnabled, showSubscriptionLinks } from '../core/payments.js';
 import { openModal, closeModal, confirmDialog } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
 
@@ -33,6 +34,11 @@ function initDashboard() {
   document.querySelectorAll('.plan-card').forEach((card) => {
     if (card.dataset.plan === user.plan) card.setAttribute('data-active', 'true');
     if (PLAN_RANK[card.dataset.plan] <= rank) card.querySelector('.plan-upgrade-btn')?.remove();
+  });
+  // Without the payments feature the cards only compare the plans.
+  paymentsEnabled().then((enabled) => {
+    if (!enabled) document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => btn.remove());
+    document.getElementById('planInfoLink').classList.toggle('hidden', !showSubscriptionLinks(enabled, user));
   });
 
   document.getElementById('modalRoomName').value = generateRoomName();

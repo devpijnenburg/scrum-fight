@@ -35,6 +35,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.room-plan-badge { width: 28px; height: 28px; flex-shrink: 0; }
 .room-name-input {
   font-family: inherit;
   font-size: 1.1rem;

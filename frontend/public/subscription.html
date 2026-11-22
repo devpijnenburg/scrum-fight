@@ -45,7 +45,7 @@
 
     <section class="plan-info">
       <div id="subscriptionStatus" class="hidden"></div>
-      <p id="paymentsDisabled" class="plan-limit-notice hidden" data-i18n="subscription.disabled">Betalen is op dit moment niet beschikbaar. Probeer het later opnieuw.</p>
+      <p id="paymentsDisabled" class="plan-limit-notice hidden" data-i18n="subscription.disabled">Abonnementen zijn op dit moment niet te koop.</p>
 
       <div class="billing-toggle hidden" id="billingToggle" role="group">
         <button type="button" class="billing-toggle-btn" data-billing="monthly" data-i18n="subscription.billing.monthly">Maandelijks</button>
@@ -57,15 +57,17 @@
 
       <div class="plan-cards" id="planCards">
         <div class="plan-card" data-plan="free">
+          <img class="plan-emblem" src="/img/plans/free-shield.webp" alt="" width="96" height="96" />
           <div class="plan-name" data-i18n="dashboard.plan.free">Free</div>
           <div class="plan-price" data-i18n="subscription.price.free">Gratis</div>
           <ul class="plan-features">
             <li data-i18n="dashboard.plan.rooms_3">✓ 3 kamers</li>
-            <li data-i18n="dashboard.plan.players_5">✓ 5 deelnemers</li>
+            <li data-i18n="dashboard.plan.players_7">✓ 7 deelnemers</li>
             <li data-i18n="dashboard.plan.days_30">✓ 30 dagen bewaard</li>
           </ul>
         </div>
         <div class="plan-card" data-plan="pro">
+          <img class="plan-emblem" src="/img/plans/pro-shield.webp" alt="" width="96" height="96" />
           <div class="plan-name">Pro</div>
           <div class="plan-price" data-price></div>
           <ul class="plan-features">
@@ -76,6 +78,7 @@
           <div class="plan-action" data-action></div>
         </div>
         <div class="plan-card plan-card-premium" data-plan="premium">
+          <img class="plan-emblem" src="/img/plans/premium-shield.webp" alt="" width="96" height="96" />
           <div class="plan-badge">⭐ Premium</div>
           <div class="plan-name">Premium</div>
           <div class="plan-price" data-price></div>

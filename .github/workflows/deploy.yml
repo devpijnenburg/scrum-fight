@@ -143,6 +143,10 @@ jobs:
           grep -q '^FRONTEND_TEST_PORT=' ~/scrum-fight/.env.test \
             && sed -i 's/^FRONTEND_TEST_PORT=.*/FRONTEND_TEST_PORT=8082/' ~/scrum-fight/.env.test \
             || echo 'FRONTEND_TEST_PORT=8082' >> ~/scrum-fight/.env.test
+          # Betalingen staan op test standaard aan; daarna beheert de workflow
+          # "Betalingen aan/uit" deze regel.
+          grep -q '^PAYMENTS_ENABLED=' ~/scrum-fight/.env.test \
+            || echo 'PAYMENTS_ENABLED=true' >> ~/scrum-fight/.env.test
           EOF
           {
             esc() { printf '%s' "$1" | sed 's/\$/\$\$/g'; }
@@ -272,6 +276,14 @@ jobs:
           } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env && chmod 600 ~/scrum-fight/.env"
+
+      # Betalingen staan op productie standaard uit; daarna beheert de workflow
+      # "Betalingen aan/uit" deze regel.
+      - name: Default payments toggle to off when not set yet
+        run: |
+          ssh -p 622 -i ~/.ssh/deploy_key \
+            ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+            "grep -q '^PAYMENTS_ENABLED=' ~/scrum-fight/.env || echo 'PAYMENTS_ENABLED=false' >> ~/scrum-fight/.env"
 
       - name: Deploy production on VM
         run: |

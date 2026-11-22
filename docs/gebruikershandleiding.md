@@ -52,7 +52,7 @@ Anonieme kamers worden na **1 uur inactiviteit** automatisch verwijderd.
 Met een account krijg je toegang tot:
 - Een persoonlijk dashboard met al jouw kamers
 - Statistieken en badges
-- Langere bewaring van kamers (afhankelijk van abonnement)
+- Kamers die bewaard blijven tot je ze zelf verwijdert (het aantal hangt af van je abonnement)
 
 Registreer via de **"Inloggen / Registreren"** knop, of gebruik Google / GitHub OAuth.
 
@@ -212,10 +212,9 @@ Badges verschijnen op de statistiekenpagina als heraldische schilden. Ontgrendel
 
 | Functie | Free | Pro | Premium |
 |---------|------|-----|---------|
-| Kamers | 3 | 20 | Onbeperkt |
-| Deelnemers per kamer | 5 | 15 | Onbeperkt |
-| Bewaring | 30 dagen | 30 dagen | Nooit verwijderd |
-| Advertenties | Ja | Nee | Nee |
+| Opgeslagen kamers | 3 | 20 | Onbeperkt |
+| Deelnemers per kamer | 7 | 15 | Onbeperkt |
+| Bewaring van opgeslagen kamers | Tot je ze verwijdert | Tot je ze verwijdert | Tot je ze verwijdert |
 | Statistieken & badges | Ja | Ja | Ja |
 | Ronde-geschiedenis | Ja | Ja | Ja |
 

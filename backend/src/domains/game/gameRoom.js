@@ -30,6 +30,9 @@ class GameRoom {
     this.name = name;
     this.method = method;
     this.isGuest = Boolean(isGuest);
+    // Plan of the room's owner (null for a room without an owner); shown
+    // as a badge in the room. Kept up to date by the realtime layer.
+    this.ownerPlan = null;
     this.revealed = false;
     this.roundName = '';
     this.players = new Map(); // playerId (socket id) → player
@@ -275,6 +278,7 @@ class GameRoom {
       methodLabel: this.methodLabel,
       cardValues: this.cardValues,
       isGuest: this.isGuest,
+      ownerPlan: this.ownerPlan,
       revealed: this.revealed,
       roundName: this.roundName,
       players,

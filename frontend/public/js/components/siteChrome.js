@@ -11,6 +11,7 @@ import { t, applyTranslations, buildLangDropdown } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { getCurrentUser, logout } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
+import { paymentsEnabled, showSubscriptionLinks } from '../core/payments.js';
 
 // ── ProfileMenu ───────────────────────────────────────────────────────────────
 
@@ -224,7 +225,7 @@ class SiteFooter extends HTMLElement {
           </div>
           <nav class="footer-links">
             <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
-            <a href="/subscription.html" data-i18n="footer.subscription">Abonnementen</a>
+            <a href="/subscription.html" class="hidden _footer-subscription" data-i18n="footer.subscription">Abonnementen</a>
             <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
             ${showAuth ? `
             <span class="footer-auth" id="footerAuth">
@@ -238,6 +239,12 @@ class SiteFooter extends HTMLElement {
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
     applyTranslations();
+
+    // Only shown where the payments feature is on (or to manage a paid plan).
+    paymentsEnabled().then((enabled) => {
+      const link = this.querySelector('._footer-subscription');
+      if (link && showSubscriptionLinks(enabled, getCurrentUser())) link.classList.remove('hidden');
+    });
   }
 }
 

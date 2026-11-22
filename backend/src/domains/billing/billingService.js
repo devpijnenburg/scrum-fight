@@ -38,6 +38,8 @@ const KNOWN_STATUSES = new Set(Object.values(STATUS_BY_EVENT));
 
 const notConfigured = () =>
   new AppError(503, 'PAYMENTS_NOT_CONFIGURED', 'Betalingen zijn momenteel niet beschikbaar');
+const sellingDisabled = () =>
+  new AppError(503, 'PAYMENTS_DISABLED', 'Abonnementen zijn op dit moment niet te koop');
 // 503 and not 502: a reverse proxy or CDN in front of the app may replace
 // the body of a 502 with its own error page, which hides this message.
 const providerError = () =>
@@ -96,7 +98,7 @@ async function loadPrices() {
 // What can be bought: { enabled, offers: { pro: { monthly: { amount, currency }, … }, … } }.
 // An offer without a configured product is absent; amount is in cents.
 async function getOffers() {
-  if (!creem.isConfigured()) return { enabled: false, offers: {} };
+  if (!creem.isSellingEnabled()) return { enabled: false, offers: {} };
 
   const prices = await loadPrices();
   const offers = {};
@@ -137,6 +139,7 @@ async function startCheckout(user, { plan, billing = 'yearly' } = {}) {
     throw badRequest('INVALID_BILLING_PERIOD', 'Ongeldige factureringsperiode');
   }
   if (!creem.isConfigured()) throw notConfigured();
+  if (!creem.isSellingEnabled()) throw sellingDisabled();
   const productId = creem.productIdFor(plan, billing);
   if (!productId) throw badRequest('PLAN_NOT_AVAILABLE', 'Dit plan is nu niet te koop');
 

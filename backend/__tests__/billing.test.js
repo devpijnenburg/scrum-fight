@@ -29,6 +29,8 @@ const ENV = {
   CREEM_PREMIUM_MONTHLY_PRODUCT_ID: 'prod_prem_m',
   CREEM_PREMIUM_YEARLY_PRODUCT_ID: 'prod_prem_y',
   BASE_URL: 'https://scrumfight.test',
+  PAYMENTS_ENABLED: 'true',
+  PAYMENTS_MODE: 'test',
 };
 
 // ── In-memory database ──────────────────────────────────────────────────────
@@ -317,6 +319,79 @@ describe('POST /api/payments/webhook', () => {
     const res = await request(app).post('/api/payments/webhook')
       .set('Content-Type', 'application/json').set('creem-signature', signature).send(body);
     expect(res.status).toBe(400);
+  });
+});
+
+// ── Feature toggle and key per environment ──────────────────────────────────
+
+describe('PAYMENTS_ENABLED and PAYMENTS_MODE', () => {
+  const checkout = () => request(app).post('/api/payments/checkout')
+    .set('Authorization', auth()).send({ plan: 'pro', billing: 'monthly' });
+
+  it.each([['false'], [undefined], ['']])('sells nothing when PAYMENTS_ENABLED is %p', async (value) => {
+    if (value === undefined) delete process.env.PAYMENTS_ENABLED;
+    else process.env.PAYMENTS_ENABLED = value;
+    mockCreem(() => null);
+
+    expect((await request(app).get('/api/payments/offers')).body).toEqual({ enabled: false, offers: {} });
+    const res = await checkout();
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('PAYMENTS_DISABLED');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('does not change an existing subscription while selling is off', async () => {
+    await webhook('subscription.paid', subscriptionObject());
+    process.env.PAYMENTS_ENABLED = 'false';
+    mockCreem(() => null);
+    const res = await request(app).post('/api/payments/checkout')
+      .set('Authorization', auth()).send({ plan: 'premium', billing: 'yearly' });
+    expect(res.body.code).toBe('PAYMENTS_DISABLED');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps webhooks and the customer portal working while selling is off', async () => {
+    process.env.PAYMENTS_ENABLED = 'false';
+    expect((await webhook('checkout.completed', checkoutCompleted())).status).toBe(200);
+    expect(planOf()).toBe('pro');
+
+    mockCreem(() => ({ body: { customer_portal_link: 'https://creem.test/portal/x' } }));
+    const portal = await request(app).post('/api/payments/portal').set('Authorization', auth());
+    expect(portal.body).toEqual({ url: 'https://creem.test/portal/x' });
+  });
+
+  it('refuses a live key in an environment that expects a test key', async () => {
+    process.env.CREEM_API_KEY = 'creem_live_key';
+    mockCreem(() => null);
+
+    expect(creem.isConfigured()).toBe(false);
+    expect((await request(app).get('/api/payments/offers')).body.enabled).toBe(false);
+    expect((await checkout()).body.code).toBe('PAYMENTS_NOT_CONFIGURED');
+    expect((await webhook('checkout.completed', checkoutCompleted())).status).toBe(503);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(creem.describeState()).toMatch(/verkeerde sleutel/);
+  });
+
+  it('refuses a test key in an environment that expects a live key', () => {
+    process.env.PAYMENTS_MODE = 'live';
+    expect(creem.isConfigured()).toBe(false);
+    process.env.CREEM_API_KEY = 'creem_live_key';
+    expect(creem.isSellingEnabled()).toBe(true);
+  });
+
+  it('accepts either kind of key when no mode is set', () => {
+    delete process.env.PAYMENTS_MODE;
+    expect(creem.isSellingEnabled()).toBe(true);
+    process.env.CREEM_API_KEY = 'creem_live_key';
+    expect(creem.isSellingEnabled()).toBe(true);
+  });
+
+  it('describes the state for the startup log', () => {
+    expect(creem.describeState()).toBe('aan — testsleutel (sandbox)');
+    process.env.PAYMENTS_ENABLED = 'false';
+    expect(creem.describeState()).toMatch(/^verkoop uit/);
+    delete process.env.CREEM_API_KEY;
+    expect(creem.describeState()).toMatch(/niet geconfigureerd/);
   });
 });
 

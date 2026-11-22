@@ -1,0 +1,114 @@
+name: Betalingen aan/uit
+
+# Zet de verkoop van abonnementen aan of uit op test of productie, of toont
+# alleen de huidige stand. De keuze staat in PAYMENTS_ENABLED in het
+# .env-bestand op de VM en blijft bij volgende deploys behouden.
+#
+# Uit betekent: geen koopknoppen en geen nieuwe abonnementen of
+# planwijzigingen. Webhooks en "Abonnement beheren" voor bestaande abonnees
+# blijven werken.
+#
+# Omzetten herstart de backend (enkele seconden); lopende rondes worden
+# daarbij bewaard, net als bij een deploy.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Omgeving'
+        required: true
+        default: 'test'
+        type: choice
+        options: [test, production]
+      action:
+        description: 'Wat wil je doen?'
+        required: true
+        default: 'status'
+        type: choice
+        options: [status, aan, uit]
+
+jobs:
+  toggle:
+    name: Betalingen ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Betalingen ${{ inputs.action }}
+        env:
+          PROJECT: ${{ inputs.environment == 'test' && 'scrum-fight-test' || 'scrum-fight' }}
+          COMPOSE_FILE: ${{ inputs.environment == 'test' && 'docker-compose.test.yml' || 'docker-compose.prod.yml' }}
+          ENV_FILE: ${{ inputs.environment == 'test' && '.env.test' || '.env' }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          ssh -p 622 -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+            "bash -s -- $(printf '%q ' "$PROJECT" "$COMPOSE_FILE" "$ENV_FILE" "$ACTION")" << 'EOF'
+          set -euo pipefail
+          PROJECT="$1"
+          COMPOSE_FILE="$HOME/scrum-fight/$2"
+          ENV_FILE="$HOME/scrum-fight/$3"
+          ACTION="$4"
+
+          backend() {
+            docker ps -q \
+              --filter "label=com.docker.compose.project=$PROJECT" \
+              --filter "label=com.docker.compose.service=backend" | head -n1
+          }
+          setting() { sed -n 's/^PAYMENTS_ENABLED=//p' "$ENV_FILE" | tail -n1; }
+
+          CONTAINER=$(backend)
+          if [ -z "$CONTAINER" ]; then
+            echo "Geen draaiende backend-container gevonden voor project $PROJECT."
+            exit 1
+          fi
+          echo "Ingesteld in $3: PAYMENTS_ENABLED=$(setting)"
+
+          if [ "$ACTION" = "aan" ] || [ "$ACTION" = "uit" ]; then
+            VALUE=false
+            [ "$ACTION" = "aan" ] && VALUE=true
+
+            sed -i '/^PAYMENTS_ENABLED=/d' "$ENV_FILE"
+            # Zorg dat de nieuwe regel op een eigen regel komt.
+            [ -z "$(tail -c1 "$ENV_FILE")" ] || echo >> "$ENV_FILE"
+            echo "PAYMENTS_ENABLED=$VALUE" >> "$ENV_FILE"
+            echo "Nieuw ingesteld: PAYMENTS_ENABLED=$VALUE"
+
+            # Alleen de backend opnieuw aanmaken, met het image dat nu draait
+            # (de teststack heeft per build een eigen tag).
+            IMAGE=$(docker inspect -f '{{.Config.Image}}' "$CONTAINER")
+            export IMAGE_TAG="${IMAGE##*:}"
+            docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps backend
+            # nginx onthoudt het adres van de backend; herstart zodat het de nieuwe container vindt.
+            docker compose -p "$PROJECT" -f "$COMPOSE_FILE" --env-file "$ENV_FILE" restart frontend
+            CONTAINER=$(backend)
+          fi
+
+          # Vraag de draaiende app zelf wat de stand is.
+          STATE=""
+          for attempt in $(seq 1 20); do
+            STATE=$(docker exec "$CONTAINER" node -e "fetch('http://localhost:' + (process.env.PORT || 3000) + '/api/payments/offers').then((r) => r.json()).then((j) => console.log(j.enabled ? 'aan' : 'uit')).catch(() => process.exit(1))" 2>/dev/null) && break
+            sleep 2
+          done
+          if [ -z "$STATE" ]; then
+            echo "De backend reageert niet. Laatste logregels:"
+            docker logs --tail 30 "$CONTAINER" 2>&1
+            exit 1
+          fi
+
+          echo "----"
+          echo "Verkoop van abonnementen staat nu: $STATE"
+          docker logs "$CONTAINER" 2>&1 | grep -F '[billing] Betalingen:' | tail -n1 || true
+          if [ "$ACTION" = "aan" ] && [ "$STATE" != "aan" ]; then
+            echo "Let op: de schakelaar staat aan, maar de app verkoopt niet. Zie de regel hierboven voor de reden (bijvoorbeeld een ontbrekende of verkeerde Creem-sleutel)."
+            exit 1
+          fi
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

@@ -11,17 +11,49 @@ const REQUEST_TIMEOUT_MS = 10_000;
 
 const env = () => process.env;
 
-// Payments are on only when both the API key and the webhook secret are set.
+const isTestKey = () => String(env().CREEM_API_KEY || '').startsWith('creem_test_');
+
+// PAYMENTS_MODE pins which kind of key an environment may use: `test`
+// accepts only sandbox keys (creem_test_…), `live` only live keys. So the
+// test environment can never charge real money, and production can never
+// hand out paid plans for sandbox payments. Unset = no check (local runs).
+function keyMismatch() {
+  const mode = env().PAYMENTS_MODE;
+  if (!env().CREEM_API_KEY || !mode) return null;
+  if (mode === 'test' && !isTestKey()) return 'PAYMENTS_MODE=test but CREEM_API_KEY is a live key';
+  if (mode === 'live' && isTestKey()) return 'PAYMENTS_MODE=live but CREEM_API_KEY is a test key';
+  return null;
+}
+
+// Creem can be used: API key and webhook secret are set and the key fits
+// this environment. Enough to process webhooks and to let existing
+// subscribers manage their subscription.
 function isConfigured() {
-  return Boolean(env().CREEM_API_KEY && env().CREEM_WEBHOOK_SECRET);
+  return Boolean(env().CREEM_API_KEY && env().CREEM_WEBHOOK_SECRET) && !keyMismatch();
+}
+
+// The feature toggle: new subscriptions and plan changes are only sold
+// when PAYMENTS_ENABLED=true. Off by default.
+function isSellingEnabled() {
+  return isConfigured() && String(env().PAYMENTS_ENABLED).toLowerCase() === 'true';
+}
+
+// One line for the startup log, so the state of an environment is visible.
+function describeState() {
+  const mismatch = keyMismatch();
+  if (mismatch) return `uit — verkeerde sleutel voor deze omgeving (${mismatch})`;
+  if (!isConfigured()) return 'uit — Creem is niet geconfigureerd';
+  const kind = isTestKey() ? 'testsleutel (sandbox)' : 'live-sleutel';
+  return isSellingEnabled()
+    ? `aan — ${kind}`
+    : `verkoop uit (PAYMENTS_ENABLED) — ${kind}; webhooks en beheer blijven werken`;
 }
 
 // Test keys (creem_test_…) talk to the sandbox API, live keys to the real
 // one. CREEM_API_URL overrides the choice.
 function apiBaseUrl() {
   if (env().CREEM_API_URL) return env().CREEM_API_URL.replace(/\/$/, '');
-  const sandbox = String(env().CREEM_API_KEY || '').startsWith('creem_test_');
-  return sandbox ? 'https://test-api.creem.io' : 'https://api.creem.io';
+  return isTestKey() ? 'https://test-api.creem.io' : 'https://api.creem.io';
 }
 
 // ── Products ────────────────────────────────────────────────────────────────
@@ -154,6 +186,8 @@ module.exports = {
   BILLING_PERIODS,
   CreemError,
   isConfigured,
+  isSellingEnabled,
+  describeState,
   apiBaseUrl,
   productIdFor,
   offerForProduct,

@@ -4,6 +4,7 @@ import '../components/siteChrome.js';
 import '../ui/methodSelect.js';
 import { t, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
+import { paymentsEnabled } from '../core/payments.js';
 import { getCurrentUser } from '../core/auth.js';
 import { loadSettings, saveSettings } from '../core/settings.js';
 import { showToast } from '../ui/toast.js';
@@ -90,7 +91,11 @@ async function loadSubscription(plan) {
     // Without subscription details the plan name below is still correct.
   }
 
-  if (plan === 'free' && !subscription) return;
+  if (plan === 'free' && !subscription) {
+    // Nothing to buy or manage while the payments feature is off.
+    linkEl.classList.toggle('hidden', !(await paymentsEnabled()));
+    return;
+  }
   linkEl.textContent = t('subscription.manage');
   const planName = (subscription?.plan || plan).toUpperCase();
   let text = t('profile.subscription.paid', { plan: planName });

@@ -1,6 +1,10 @@
 // End-to-end socket tests: a real socket.io server and real clients over
 // localhost. Only the repositories are mocked.
 
+jest.mock('../src/domains/game/liveRoundRepository', () => ({
+  loadLiveRound: jest.fn().mockResolvedValue(null),
+  saveLiveRound: jest.fn().mockResolvedValue(),
+}));
 jest.mock('../src/domains/rooms/roomRepository', () => ({
   findRoomById: jest.fn(),
   touchLastActive: jest.fn().mockResolvedValue(),
@@ -246,4 +250,108 @@ it('announces when a guest room is claimed', async () => {
   claimGuestRoom('GUEST1');
   await claimed;
   expect(sessions.get('GUEST1').isGuest).toBe(false);
+});
+
+// ── Event-order races ────────────────────────────────────────────────────────
+
+describe('event-order races', () => {
+  const playerNames = () => [...sessions.get('TEAM01').players.values()].map((p) => p.name);
+
+  it('does not leave a ghost when the socket disconnects while its join is still loading', async () => {
+    const alice = await join('Alice');
+    // Make the database slow for the next join
+    roomRepository.findRoomById.mockImplementationOnce(async (id) => { await sleep(100); return ROOMS[id]; });
+    const ghost = connect();
+    await next(ghost, 'connect');
+    ghost.emit('join-room', { roomId: 'TEAM01', playerName: 'Ghost' });
+    await sleep(20);
+    ghost.disconnect(); // tab closed / refreshed before the join finished
+    await sleep(200);
+
+    expect(playerNames()).toEqual(['Alice']);
+    expect(alice.client.connected).toBe(true);
+  });
+
+  it('a reconnect with the same key takes over from the old socket and keeps the vote', async () => {
+    const alice = await join('Alice');
+    const bobOld = await join('Bob', 'TEAM01', { playerKey: 'key-bob' });
+    bobOld.client.emit('vote', { value: '8' });
+    await next(alice.client, 'player-voted');
+
+    // Bob's network switched: the old socket is still open on the server
+    const left = next(alice.client, 'player-left');
+    const joined = next(alice.client, 'player-joined');
+    const replaced = next(bobOld.client, 'session-replaced');
+    const bobNew = await join('Bob', 'TEAM01', { playerKey: 'key-bob' });
+
+    expect(bobNew.state.myVote).toBe('8');
+    expect(await left).toMatchObject({ socketId: bobOld.client.id });
+    expect(await joined).toMatchObject({ socketId: bobNew.client.id, hasVoted: true });
+    await replaced;
+    expect(playerNames()).toEqual(['Alice', 'Bob']); // no duplicate seat
+
+    // The old socket can no longer act in the room
+    bobOld.client.emit('vote', { value: '1' });
+    await sleep(50);
+    expect(sessions.get('TEAM01').getPlayer(bobNew.client.id).vote).toBe('8');
+  });
+
+  it('a returning player is not refused when the room is full', async () => {
+    for (let i = 0; i < 4; i++) await join(`P${i}`);
+    await join('Eve', 'TEAM01', { playerKey: 'key-eve' }); // 5/5 on the free plan
+    const again = await join('Eve', 'TEAM01', { playerKey: 'key-eve' });
+    expect(again.state.players).toHaveLength(5);
+  });
+
+  it('two simultaneous joins for the last seat: exactly one gets in', async () => {
+    for (let i = 0; i < 4; i++) await join(`P${i}`);
+    const a = connect();
+    const b = connect();
+    await Promise.all([next(a, 'connect'), next(b, 'connect')]);
+    const outcome = (c) => Promise.race([
+      next(c, 'room-state').then(() => 'joined'),
+      next(c, 'error').then((e) => e.code),
+    ]);
+    const results = Promise.all([outcome(a), outcome(b)]);
+    a.emit('join-room', { roomId: 'TEAM01', playerName: 'A' });
+    b.emit('join-room', { roomId: 'TEAM01', playerName: 'B' });
+    expect((await results).sort()).toEqual(['ROOM_FULL', 'joined']);
+    expect(sessions.get('TEAM01').playerCount).toBe(5);
+  });
+
+  it('joining twice from the same socket keeps the vote and does not add a seat', async () => {
+    const alice = await join('Alice');
+    const bob = await join('Bob');
+    bob.client.emit('vote', { value: '5' });
+    await next(alice.client, 'player-voted');
+
+    const rejoined = next(alice.client, 'player-joined');
+    const state = next(bob.client, 'room-state');
+    bob.client.emit('join-room', { roomId: 'TEAM01', playerName: 'Bobby' });
+
+    expect(await rejoined).toMatchObject({ socketId: bob.client.id, name: 'Bobby', hasVoted: true });
+    expect((await state).myVote).toBe('5');
+    expect(playerNames()).toEqual(['Alice', 'Bobby']);
+  });
+
+  it('the vote of a player who dropped out still counts at the reveal', async () => {
+    const alice = await join('Alice', 'TEAM01', { playerKey: 'ka' });
+    const bob = await join('Bob', 'TEAM01', { playerKey: 'kb' });
+    alice.client.emit('vote', { value: '3' });
+    bob.client.emit('vote', { value: '13' });
+    await nextN(alice.client, 'player-voted', 2);
+
+    const left = next(alice.client, 'player-left');
+    bob.client.disconnect();
+    await left;
+
+    const revealed = next(alice.client, 'cards-revealed');
+    alice.client.emit('reveal');
+    const result = await revealed;
+    expect(result.players).toEqual([
+      { socketId: alice.client.id, name: 'Alice', vote: '3' },
+      { socketId: null, name: 'Bob', vote: '13' },
+    ]);
+    expect(result.stats).toMatchObject({ min: 3, max: 13 });
+  });
 });

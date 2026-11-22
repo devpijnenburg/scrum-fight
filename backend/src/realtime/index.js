@@ -82,7 +82,7 @@ function setupSocket(io, timing = {}) {
         if (!p.userId || !p.vote) continue;
         const badgeIds = await evaluateBadgesForUser(p.userId);
         if (!badgeIds.length) continue;
-        io.to(p.socketId).emit('badge-earned', { badgeIds });
+        if (p.socketId) io.to(p.socketId).emit('badge-earned', { badgeIds });
         for (const badgeId of badgeIds) {
           io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
         }
@@ -130,30 +130,58 @@ function setupSocket(io, timing = {}) {
       if (!dbRoom) return sendError('ROOM_NOT_FOUND', 'Kamer niet gevonden');
 
       const limit = await participantLimit(dbRoom);
-      const live = rooms.get(id);
-      if ((live?.playerCount ?? 0) >= limit && !live?.hasPlayer(socket.id)) {
-        return sendError('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`, { limit });
-      }
+
+      // The socket may have gone away while we were waiting for the database;
+      // adding it now would leave a ghost player nobody ever removes.
+      if (socket.disconnected) return;
 
       // A socket is a player in at most one room.
       if (socket.data.roomId && socket.data.roomId !== id) leaveCurrentRoom(socket);
 
       const room = await rooms.open(dbRoom);
+      if (socket.disconnected) return rooms.playerLeft(id);
+
+      // ── From here on everything is synchronous: no other event can interleave.
       // Stable per-tab key: a returning player gets their round state back.
       const key = str(playerKey, 64) || null;
-      const player = room.addPlayer(socket.id, { name, userId, emoticon, key });
+      const rejoin = room.hasPlayer(socket.id);                       // same socket joins again
+      const previousId = rejoin ? null : room.findPlayerIdByKey(key);  // same tab, older socket
+
+      if (!rejoin && !previousId && room.playerCount >= limit) {
+        rooms.playerLeft(id);
+        return sendError('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`, { limit });
+      }
+
+      if (previousId) {
+        // Take over from the older socket of this tab: a reconnect the server
+        // has not noticed yet (half-open connection) or a duplicated tab.
+        const previous = room.removePlayer(previousId); // keeps the vote under the key
+        io.to(id).emit('player-left', { socketId: previousId, name: previous.name });
+        const oldSocket = io.sockets?.sockets?.get(previousId);
+        if (oldSocket) {
+          oldSocket.data.roomId = null;
+          oldSocket.leave(id);
+          oldSocket.emit('session-replaced');
+        }
+      }
+
+      const player = rejoin
+        ? room.updatePlayer(socket.id, { name, userId, emoticon })
+        : room.addPlayer(socket.id, { name, userId, emoticon, key });
       socket.join(id);
       socket.data.roomId = id;
 
       socket.emit('room-state', room.toClientState(socket.id));
+      // Also sent on a rejoin: clients replace the entry with the same socketId.
       socket.to(id).emit('player-joined', {
         socketId: socket.id,
-        name,
-        emoticon,
+        name: player.name,
+        emoticon: player.emoticon,
         hasVoted: player.vote !== null,
         vote: room.revealed ? player.vote : null,
         spectator: player.spectator,
       });
+      rooms.persist(id);
 
       rooms.touch(id);
     }, { onError: () => sendError('SERVER_ERROR', 'Serverfout') });

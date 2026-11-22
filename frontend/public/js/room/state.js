@@ -45,7 +45,6 @@ export const state = {
   myVote: null,
   mySpectator: false,
   isRevealed: false,
-  analyticsLoaded: false,
   currentStats: null,
   currentRoundName: '',
 };

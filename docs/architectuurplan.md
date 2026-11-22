@@ -158,3 +158,12 @@ frontend/public/
   - komt er na 15 seconden een tip bij om de internetverbinding te controleren.
 - Bij een disconnect vanuit de server (shutdown tijdens een deploy) start de client zelf een nieuwe verbindingspoging; socket.io doet dat in dat geval niet vanzelf.
 - Alle spelacties lopen via `send()`. Zo kan socket.io geen acties bufferen die na het herverbinden vóór de nieuwe join aankomen en door de server worden genegeerd.
+
+### Notities — eventvolgorde en race-condities
+- De volgorde van events per scenario staat in [`spelscenarios.md`](spelscenarios.md), met sequence-diagrammen en een tabel van race-situaties en hun bescherming.
+- Belangrijkste regels:
+  - de server controleert na elke `await` in `join-room` of de socket er nog is;
+  - limietcontrole en toevoegen gebeuren in één synchroon stuk;
+  - een join met een bekende `playerKey` neemt de oude stoel over;
+  - `room-state` zet aan de clientkant altijd het hele scherm.
+- Stemmen van spelers die tijdens de ronde wegvallen tellen mee bij de reveal.

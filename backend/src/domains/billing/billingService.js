@@ -38,8 +38,10 @@ const KNOWN_STATUSES = new Set(Object.values(STATUS_BY_EVENT));
 
 const notConfigured = () =>
   new AppError(503, 'PAYMENTS_NOT_CONFIGURED', 'Betalingen zijn momenteel niet beschikbaar');
+// 503 and not 502: a reverse proxy or CDN in front of the app may replace
+// the body of a 502 with its own error page, which hides this message.
 const providerError = () =>
-  new AppError(502, 'PAYMENT_PROVIDER_ERROR', 'De betaaldienst reageert niet, probeer het later opnieuw');
+  new AppError(503, 'PAYMENT_PROVIDER_ERROR', 'De betaaldienst reageert niet, probeer het later opnieuw');
 
 const baseUrl = () => (process.env.BASE_URL || 'http://localhost').replace(/\/$/, '');
 const validDate = (value) => {

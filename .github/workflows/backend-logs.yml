@@ -1,0 +1,68 @@
+name: Backend logs
+
+# Toont logregels van de backend op de VM, zonder zelf in te hoeven loggen.
+# Alleen handmatig te starten via "Run workflow".
+#
+# Let op: een deploy maakt de containers opnieuw aan; de log begint dus bij
+# de laatste deploy van die omgeving.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Omgeving'
+        required: true
+        default: 'test'
+        type: choice
+        options: [test, production]
+      filter:
+        description: 'Alleen regels die hierop matchen (grep -E); leeg = alles'
+        required: false
+        default: '\[billing\]'
+      lines:
+        description: 'Maximaal aantal regels (de laatste)'
+        required: false
+        default: '100'
+
+jobs:
+  logs:
+    name: Backend logs (${{ inputs.environment }})
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Show backend logs
+        env:
+          PROJECT: ${{ inputs.environment == 'test' && 'scrum-fight-test' || 'scrum-fight' }}
+          FILTER: ${{ inputs.filter }}
+          LINES: ${{ inputs.lines }}
+        run: |
+          case "$LINES" in ''|*[!0-9]*) echo "Ongeldig aantal regels: $LINES"; exit 1 ;; esac
+
+          # De waarden gaan als argumenten mee, zodat het filter niet als
+          # shell-code op de VM wordt uitgevoerd.
+          ssh -p 622 -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+            "bash -s -- $(printf '%q ' "$PROJECT" "$FILTER" "$LINES")" << 'EOF'
+          CONTAINER=$(docker ps -q \
+            --filter "label=com.docker.compose.project=$1" \
+            --filter "label=com.docker.compose.service=backend" | head -n1)
+          if [ -z "$CONTAINER" ]; then
+            echo "Geen draaiende backend-container gevonden voor project $1."
+            exit 1
+          fi
+          echo "Container gestart op: $(docker inspect -f '{{.State.StartedAt}}' "$CONTAINER")"
+          echo "Filter: ${2:-geen} — laatste $3 regels"
+          echo "----"
+          docker logs --timestamps "$CONTAINER" 2>&1 | grep -E -- "$2" | tail -n "$3" > "/tmp/backend-logs.$$" || true
+          if [ -s "/tmp/backend-logs.$$" ]; then cat "/tmp/backend-logs.$$"; else echo "(geen regels gevonden)"; fi
+          rm -f "/tmp/backend-logs.$$"
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

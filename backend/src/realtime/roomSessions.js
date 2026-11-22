@@ -6,12 +6,14 @@
 
 const { GameRoom } = require('../domains/game/gameRoom');
 const roomRepository = require('../domains/rooms/roomRepository');
+const liveRounds = require('../domains/game/liveRoundRepository');
 
 const DEFAULT_TIMING = {
   guestTtlMs: 60 * 60 * 1000,      // guest room expires after 1h of inactivity
   emptyRoomTtlMs: 10 * 60 * 1000,  // permanent room leaves memory 10 min after the last player
   countdownStepMs: 1000,           // 3-2-1 reveal countdown
   countdownFrom: 3,
+  persistDelayMs: 200,             // batch rapid changes before writing the live round
 };
 
 function createRoomSessions(io, timingOverrides = {}) {
@@ -21,6 +23,9 @@ function createRoomSessions(io, timingOverrides = {}) {
   const guestTimers = new Map();  // roomId → timeout
   const emptyTimers = new Map();  // roomId → timeout
   const countdowns = new Map();   // roomId → timeout[]
+  const loading = new Map();      // roomId → Promise<GameRoom> while the saved round loads
+  const persistTimers = new Map();// roomId → timeout (debounced save)
+  const writes = new Map();       // roomId → Promise of the last save (keeps saves in order)
 
   const clear = (map, id) => {
     const handle = map.get(id);
@@ -34,24 +39,71 @@ function createRoomSessions(io, timingOverrides = {}) {
     return rooms.get(roomId) || null;
   }
 
-  // Returns the live room for a DB row, creating it on first join.
-  function open(dbRoom) {
-    let room = rooms.get(dbRoom.id);
-    if (!room) {
-      room = new GameRoom({
-        id: dbRoom.id,
-        name: dbRoom.name,
-        method: dbRoom.method,
-        isGuest: dbRoom.is_guest,
-      });
-      rooms.set(room.id, room);
+  // Returns the live room for a DB row. On first join the room is created
+  // and the round saved before a restart (if any) is restored into it.
+  async function open(dbRoom) {
+    const existing = rooms.get(dbRoom.id);
+    if (existing) {
+      clear(emptyTimers, existing.id);
+      return existing;
     }
+    if (!loading.has(dbRoom.id)) {
+      loading.set(dbRoom.id, (async () => {
+        const room = new GameRoom({
+          id: dbRoom.id,
+          name: dbRoom.name,
+          method: dbRoom.method,
+          isGuest: dbRoom.is_guest,
+        });
+        try {
+          room.restore(await liveRounds.loadLiveRound(room.id));
+        } catch (err) {
+          console.error('[realtime] Could not load saved round, starting fresh:', err);
+        }
+        rooms.set(room.id, room);
+        return room;
+      })().finally(() => loading.delete(dbRoom.id)));
+    }
+    const room = await loading.get(dbRoom.id);
     clear(emptyTimers, room.id);
     return room;
   }
 
-  // Drops a room from memory and cancels all of its timers.
-  function evict(roomId) {
+  // ── Live round persistence ────────────────────────────────────────────────
+
+  function writeNow(roomId) {
+    clear(persistTimers, roomId);
+    const room = rooms.get(roomId);
+    if (!room) return writes.get(roomId) || Promise.resolve();
+    const state = room.snapshot();
+    const previous = writes.get(roomId) || Promise.resolve();
+    const write = previous
+      .then(() => liveRounds.saveLiveRound(roomId, state))
+      .catch((err) => console.error('[realtime] Error saving live round:', err));
+    writes.set(roomId, write);
+    write.finally(() => { if (writes.get(roomId) === write) writes.delete(roomId); });
+    return write;
+  }
+
+  // Schedules a save of the room's round (debounced).
+  function persist(roomId) {
+    if (!rooms.has(roomId) || persistTimers.has(roomId)) return;
+    const timer = setTimeout(() => writeNow(roomId), timing.persistDelayMs);
+    timer.unref?.();
+    persistTimers.set(roomId, timer);
+  }
+
+  // Writes every pending save now and waits for all saves (used on shutdown).
+  async function flushAll() {
+    const pending = [...persistTimers.keys()].map((id) => writeNow(id));
+    await Promise.all([...pending, ...writes.values()]);
+  }
+
+  // Drops a room from memory and cancels all of its timers. A pending save
+  // is written first (unless the room itself was deleted).
+  function evict(roomId, { keepRound = true } = {}) {
+    if (keepRound && persistTimers.has(roomId)) writeNow(roomId);
+    clear(persistTimers, roomId);
     clear(guestTimers, roomId);
     clear(emptyTimers, roomId);
     clear(countdowns, roomId);
@@ -66,7 +118,7 @@ function createRoomSessions(io, timingOverrides = {}) {
       guestTimers.delete(roomId);
       if (!rooms.has(roomId)) return;
       io.to(roomId).emit('room-expired', { reason: 'inactivity' });
-      evict(roomId);
+      evict(roomId, { keepRound: false });
       try {
         await roomRepository.deleteRoom(roomId);
       } catch (err) {
@@ -155,7 +207,7 @@ function createRoomSessions(io, timingOverrides = {}) {
   function close(roomId, reason = 'deleted') {
     if (!rooms.has(roomId)) return;
     io.to(roomId).emit('room-expired', { reason });
-    evict(roomId);
+    evict(roomId, { keepRound: false });
   }
 
   function stopAll() {
@@ -167,6 +219,8 @@ function createRoomSessions(io, timingOverrides = {}) {
     get,
     open,
     evict,
+    persist,
+    flushAll,
     touch,
     playerLeft,
     hasCountdown,

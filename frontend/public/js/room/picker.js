@@ -42,6 +42,11 @@ export function setPickerDisabled(disabled) {
   });
 }
 
+// Marks the card with this value as the player's choice (e.g. after rejoining).
+export function showSelectedCard(value) {
+  pickerCards().forEach((c) => c.classList.toggle('selected', value !== null && c.dataset.value === value));
+}
+
 export function clearPickerSelection() {
   pickerCards().forEach((c) => c.classList.remove('selected'));
 }

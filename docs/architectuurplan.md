@@ -84,7 +84,7 @@ frontend/public/
 - Migraties: elk genummerd `.sql`-bestand in `backend/src/db/migrations/` draait precies één keer, in een eigen transactie, en wordt vastgelegd in `schema_migrations`. Een nieuwe migratie is alleen een nieuw bestand. Een advisory lock laat gelijktijdige starts op elkaar wachten.
 - Rondes worden in één transactie opgeslagen (ronde, stemmen per gebruiker, `last_active`).
 - In `round_history.votes` blijft het formaat `{ naam: stem }`, zodat de historie en de bestaande rijen blijven werken. Dubbele namen krijgen een achtervoegsel (`Alex (2)`) in plaats van elkaar te overschrijven.
-- De optionele stap "lopende ronde in Postgres bewaren" is bewust niet gedaan: een deploy wist nog steeds de stemmen van een lopende ronde (niet de historie). Oppakken als dat in de praktijk stoort.
+- De lopende ronde wordt inmiddels ook bewaard (zie "Notities — lopende ronde bewaren").
 
 ### Notities fase 4
 - Elk domein in `backend/src/domains/<domein>/` heeft dezelfde lagen: `routes.js` (alleen HTTP), een service (regels en validatie, gooit `AppError`), en een repository (alle SQL).
@@ -119,7 +119,6 @@ frontend/public/
 - Cache busting zit in de Docker-build (`scripts/stamp-assets.mjs`, multi-stage `Dockerfile`). nginx cachet bestanden met hash een jaar (`immutable`).
 
 ### Wat nog kan (niet in dit plan)
-- De lopende ronde in Postgres bewaren, zodat een deploy geen stemmen van een actieve ronde wist.
 
 ### Notities fase 7 — alle pagina's als ES-modules
 - Er zijn geen klassieke scripts en geen globals meer, op twee externe na: `socket.io.js` (geserveerd door de backend) en Chart.js (CDN). Elke pagina laadt precies één `<script type="module">`:
@@ -138,3 +137,15 @@ frontend/public/
 - Socket-fouten hebben dezelfde vorm als REST-fouten: `{ code, message, …details }`, bijvoorbeeld `{ code: 'ROOM_FULL', limit: 5 }`.
 - Een kamer die boven de limiet wordt aangemaakt, levert `planLimit: { code: 'ROOM_LIMIT_REACHED', plan, max }` op. Het oude tekstveld `planLimitWarning` blijft voorlopig mee komen voor oudere clients.
 - De frontend vertaalt alles via `js/core/errors.js` (`errorText`), met de i18n-entry `errors.<CODE>`. De planlimietbanner in de kamer en de waarschuwingen op het dashboard staan nu ook in NL en EN.
+
+### Notities — lopende ronde bewaren
+- Elke speler heeft per tabblad een stabiele `playerKey` (in `sessionStorage`). Die gaat mee met `join-room`.
+- `GameRoom` onthoudt de stem en de toeschouwerstand van spelers die even weg zijn, per sleutel. Wie terugkomt met dezelfde sleutel krijgt die terug. Dat geldt na een page refresh, na een reconnect en na een herstart van de server.
+- De rondestatus (`GameRoom#snapshot()`: rondenaam, onthuld, stemmen per sleutel) staat in de tabel `live_rounds` (migratie 011).
+  - Elke wijziging wordt na maximaal 200 ms weggeschreven, met de schrijfacties per kamer in volgorde.
+  - Bij SIGTERM schrijft `stopRealtime()` alles weg, na `io.close()` en vóór `pool.end()`.
+  - Bij het eerste join na een herstart laadt `roomSessions.open()` de ronde terug.
+- Een kamer die wordt verwijderd, wist zijn ronde mee (`ON DELETE CASCADE`). Een dagelijkse job ruimt rondes op die een dag niet zijn aangeraakt.
+- Beperkingen:
+  - Een lopende countdown gaat bij een herstart verloren; de stemmen niet.
+  - Pagina's die vóór deze deploy zijn geladen, sturen nog geen sleutel mee. Hun ronde blijft dus alleen bewaard vanaf de eerstvolgende deploy.

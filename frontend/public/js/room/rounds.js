@@ -5,7 +5,7 @@ import { state, $ } from './state.js';
 import { t } from '../core/i18n.js';
 import { renderHeader } from './header.js';
 import { renderTable, updateVoteStatus, updatePlayerCount } from './table.js';
-import { renderPickerCards, setPickerDisabled, clearPickerSelection, updateSpectatorUI } from './picker.js';
+import { renderPickerCards, setPickerDisabled, clearPickerSelection, showSelectedCard, updateSpectatorUI } from './picker.js';
 import {
   autoOpenAnalytics, updateAnalyticsCurrent, hideAnalyticsCurrent, prependHistoryRound,
   showConsensusInline, hideConsensusInline, setReactionBarEmojis,
@@ -32,11 +32,13 @@ export function applyRoomState(room) {
   state.isRevealed = room.revealed;
   state.currentRoundName = room.roundName || '';
   state.mySpectator = room.players.find((p) => p.isMe)?.spectator || false;
+  state.myVote = room.myVote ?? null;
   $('roundNameInput').value = state.currentRoundName;
 
   renderHeader(room);
   updatePlayerCount();
   renderPickerCards(room.cardValues);
+  showSelectedCard(state.myVote); // a vote restored after a refresh or restart
   // noAnim: on (re)connect show cards in their final state without the
   // 3-D flip, which can glitch when a mobile tab is restored.
   renderTable(true);

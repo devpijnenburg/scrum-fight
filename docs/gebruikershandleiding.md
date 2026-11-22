@@ -219,4 +219,4 @@ Badges verschijnen op de statistiekenpagina als heraldische schilden. Ontgrendel
 | Statistieken & badges | Ja | Ja | Ja |
 | Ronde-geschiedenis | Ja | Ja | Ja |
 
-> Upgraden kan via het dashboard onder **"Abonnement"**.
+> Upgraden kan op de pagina **Abonnementen** (link onderaan elke pagina, of via het dashboard). Je kiest daar per maand of per jaar betalen. Opzeggen of je betaalmethode wijzigen doe je via **Abonnement beheren** op dezelfde pagina.

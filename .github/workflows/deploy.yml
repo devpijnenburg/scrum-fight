@@ -129,6 +129,12 @@ jobs:
           SMTP_FROM: ${{ vars.SMTP_FROM }}
           SMTP_STARTTLS: ${{ vars.SMTP_STARTTLS }}
           SMTP_SSL_TLS: ${{ vars.SMTP_SSL_TLS }}
+          CREEM_API_KEY: ${{ secrets.CREEM_API_KEY }}
+          CREEM_WEBHOOK_SECRET: ${{ secrets.CREEM_WEBHOOK_SECRET }}
+          CREEM_PRO_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_MONTHLY_PRODUCT_ID }}
+          CREEM_PRO_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}
+          CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}
+          CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}
         run: |
           ssh -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
@@ -147,6 +153,12 @@ jobs:
             printf 'SMTP_FROM=%s\n'     "$(esc "${SMTP_FROM}")"
             printf 'SMTP_STARTTLS=%s\n' "$(esc "${SMTP_STARTTLS}")"
             printf 'SMTP_SSL_TLS=%s\n'  "$(esc "${SMTP_SSL_TLS}")"
+            printf 'CREEM_API_KEY=%s\n'        "$(esc "${CREEM_API_KEY}")"
+            printf 'CREEM_WEBHOOK_SECRET=%s\n' "$(esc "${CREEM_WEBHOOK_SECRET}")"
+            printf 'CREEM_PRO_MONTHLY_PRODUCT_ID=%s\n'     "$(esc "${CREEM_PRO_MONTHLY_PRODUCT_ID}")"
+            printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
+            printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
+            printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
           } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env.test && chmod 600 ~/scrum-fight/.env.test"
@@ -226,7 +238,7 @@ jobs:
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
-      - name: Write SMTP vars to .env on VM
+      - name: Write SMTP and payment vars to .env on VM
         env:
           SMTP_HOST: ${{ vars.SMTP_HOST }}
           SMTP_PORT: ${{ vars.SMTP_PORT }}
@@ -235,6 +247,12 @@ jobs:
           SMTP_FROM: ${{ vars.SMTP_FROM }}
           SMTP_STARTTLS: ${{ vars.SMTP_STARTTLS }}
           SMTP_SSL_TLS: ${{ vars.SMTP_SSL_TLS }}
+          CREEM_API_KEY: ${{ secrets.CREEM_API_KEY }}
+          CREEM_WEBHOOK_SECRET: ${{ secrets.CREEM_WEBHOOK_SECRET }}
+          CREEM_PRO_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_MONTHLY_PRODUCT_ID }}
+          CREEM_PRO_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}
+          CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}
+          CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}
         run: |
           {
             esc() { printf '%s' "$1" | sed 's/\$/\$\$/g'; }
@@ -245,6 +263,12 @@ jobs:
             printf 'SMTP_FROM=%s\n'     "$(esc "${SMTP_FROM}")"
             printf 'SMTP_STARTTLS=%s\n' "$(esc "${SMTP_STARTTLS}")"
             printf 'SMTP_SSL_TLS=%s\n'  "$(esc "${SMTP_SSL_TLS}")"
+            printf 'CREEM_API_KEY=%s\n'        "$(esc "${CREEM_API_KEY}")"
+            printf 'CREEM_WEBHOOK_SECRET=%s\n' "$(esc "${CREEM_WEBHOOK_SECRET}")"
+            printf 'CREEM_PRO_MONTHLY_PRODUCT_ID=%s\n'     "$(esc "${CREEM_PRO_MONTHLY_PRODUCT_ID}")"
+            printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
+            printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
+            printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
           } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env && chmod 600 ~/scrum-fight/.env"

@@ -140,6 +140,14 @@ async function getCurrentUser(userId) {
   return profile;
 }
 
+// The session token carries a copy of the plan; after a plan change the
+// client swaps its token for a fresh one.
+async function refreshSession(userId) {
+  const user = await users.findSessionUser(userId);
+  if (!user) throw notFound('USER_NOT_FOUND', 'Gebruiker niet gevonden');
+  return { token: signSessionToken(user) };
+}
+
 module.exports = {
   register,
   resendVerification,
@@ -148,4 +156,5 @@ module.exports = {
   completeTotpLogin,
   completeEmailCodeLogin,
   getCurrentUser,
+  refreshSession,
 };

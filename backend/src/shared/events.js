@@ -32,5 +32,6 @@ function removeAllListeners() {
 
 const ROOM_CLAIMED = 'room.claimed';
 const ROOM_DELETED = 'room.deleted';
+const PLAN_CHANGED = 'plan.changed';
 
-module.exports = { on, emit, removeAllListeners, ROOM_CLAIMED, ROOM_DELETED };
+module.exports = { on, emit, removeAllListeners, ROOM_CLAIMED, ROOM_DELETED, PLAN_CHANGED };

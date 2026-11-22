@@ -38,7 +38,7 @@ backend/src/
     game/             # pure spelstatus (stemmen, reveal, countdown, stats, consensus)
     stats/            # gebruikersstatistieken
     badges/
-    billing/          # plannen + payment-adapter
+    billing/          # plannen, abonnementen en betalingen (Creem)
     admin/            # gebruikers- en organisatiebeheer
   realtime/           # dunne socket-adapter: valideert payload → roept game aan → broadcast
 ```

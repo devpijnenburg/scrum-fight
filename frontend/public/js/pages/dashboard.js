@@ -7,6 +7,7 @@ import { apiFetch } from '../core/api.js';
 import { getCurrentUser } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
 import { generateRoomName } from '../core/roomNames.js';
+import { PLAN_RANK } from '../core/plans.js';
 import { openModal, closeModal, confirmDialog } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
 
@@ -26,12 +27,12 @@ function initDashboard() {
   document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
   document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
 
+  // The plan cards link to the subscription page; only plans above the
+  // current one keep their upgrade button.
+  const rank = PLAN_RANK[user.plan] ?? Infinity;
   document.querySelectorAll('.plan-card').forEach((card) => {
-    if (card.dataset.plan === user.plan) {
-      card.setAttribute('data-active', 'true');
-      const btn = card.querySelector('.plan-upgrade-btn');
-      if (btn) btn.remove();
-    }
+    if (card.dataset.plan === user.plan) card.setAttribute('data-active', 'true');
+    if (PLAN_RANK[card.dataset.plan] <= rank) card.querySelector('.plan-upgrade-btn')?.remove();
   });
 
   document.getElementById('modalRoomName').value = generateRoomName();

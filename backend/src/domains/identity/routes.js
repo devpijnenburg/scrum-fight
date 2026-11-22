@@ -47,6 +47,11 @@ router.get('/me', authMiddleware, async (req, res) => {
   res.json(await auth.getCurrentUser(req.user.id));
 });
 
+// A new session token carrying the user's current name, plan and role.
+router.post('/refresh', authMiddleware, async (req, res) => {
+  res.json(await auth.refreshSession(req.user.id));
+});
+
 // ── Second login step ───────────────────────────────────────────────────────
 
 router.post('/verify-totp', limiters.twoFactor, async (req, res) => {

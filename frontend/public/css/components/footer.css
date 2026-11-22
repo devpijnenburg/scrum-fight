@@ -1,0 +1,34 @@
+/* ── Footer ──────────────────────────────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: .9rem 1.5rem;
+  margin-top: auto;
+}
+.site-footer .lang-menu {
+  top: auto;
+  bottom: calc(100% + .4rem);
+}
+.footer-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.footer-left { display: flex; align-items: center; gap: .8rem; }
+.footer-copy { font-size: .8rem; color: var(--text-muted); }
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+.footer-links a { font-size: .8rem; color: var(--text-muted); transition: color .15s; }
+.footer-links a:hover { color: var(--primary); }
+.footer-auth { display: contents; }
+.footer-auth a { font-size: .8rem; color: var(--text-muted); transition: color .15s; }
+.footer-auth a:hover { color: var(--primary); }
+.footer-auth a:first-child::before { content: '·'; margin-right: 1.2rem; opacity: .4; }

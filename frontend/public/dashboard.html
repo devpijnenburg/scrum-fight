@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — Scrum Fight</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/css/styles.css?v=00f5a93" />
+  <link rel="stylesheet" href="/css/styles.css?v=dce8d7a" />
 </head>
 <body class="page-dashboard">
 
@@ -22,7 +22,7 @@
 
     <!-- New room modal -->
     <div id="newRoomModal" class="modal hidden">
-      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-backdrop"></div>
       <div class="modal-card">
         <h2 data-i18n="dashboard.modal.title">Nieuwe kamer aanmaken</h2>
         <div class="form-group">
@@ -34,16 +34,11 @@
         </div>
         <div class="form-group">
           <label for="modalMethod" data-i18n="dashboard.modal.method">Schattingsmethode</label>
-          <select id="modalMethod" class="input">
-            <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci</option>
-            <option value="modified_fibonacci" selected data-i18n="landing.create.method.modified_fibonacci">Fibonacci+</option>
-            <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
-            <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
-          </select>
+          <select id="modalMethod" class="input" data-method-select></select>
         </div>
         <p id="modalError" class="form-error hidden"></p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" id="modalCancelBtn" data-i18n="dashboard.modal.cancel">Annuleren</button>
+          <button class="btn btn-ghost" id="modalCancelBtn" data-modal-close data-i18n="dashboard.modal.cancel">Annuleren</button>
           <button class="btn btn-primary" id="modalCreateBtn" data-i18n="dashboard.modal.create">Aanmaken →</button>
         </div>
       </div>
@@ -98,7 +93,11 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js?v=5454c58"></script>
   <script src="/js/auth.js?v=bded843"></script>
+  <script src="/js/settings.js"></script>
+  <script src="/js/ui/modal.js"></script>
+  <script src="/js/ui/toast.js"></script>
+  <script src="/js/ui/methodSelect.js"></script>
   <script src="/js/navbar.js?v=a1f2026"></script>
-  <script src="/js/dashboard.js?v=bded843"></script>
+  <script src="/js/dashboard.js?v=dce8d7a"></script>
 </body>
 </html>

@@ -24,6 +24,10 @@ global.escapeHtml = (s) =>
   String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 global.apiFetch = jest.fn().mockResolvedValue({ total: 0, users: [] });
 
+// Shared UI helpers that admin.js uses as page globals.
+Object.assign(global, require('../public/js/ui/modal.js'));
+global.showToast = jest.fn();
+
 // ── DOM setup (must exist BEFORE admin.js runs its top-level listeners) ───────
 
 document.body.innerHTML = bodyContent;

@@ -1,0 +1,81 @@
+/* ── Landing page ───────────────────────────────────────────────────────────── */
+.page-landing { display: flex; flex-direction: column; min-height: 100vh; }
+
+.landing-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem 3rem;
+  gap: 2rem;
+}
+
+.landing-hero { text-align: center; }
+.landing-title {
+  font-size: clamp(2.2rem, 6vw, 3.5rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  margin-bottom: .5rem;
+}
+.landing-subtitle { color: var(--text-muted); font-size: 1.1rem; font-weight: 600; }
+.landing-anon-note {
+  margin-top: .6rem;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--success);
+  opacity: .85;
+}
+
+.landing-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 640px;
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: min(360px, 100%);
+  box-shadow: var(--shadow);
+}
+.form-card-wide { width: 100%; }
+.form-card-title { font-size: 1.15rem; font-weight: 800; }
+
+.create-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.create-fields .field-full { grid-column: 1 / -1; }
+@media (max-width: 560px) {
+  .create-fields { grid-template-columns: 1fr; }
+}
+
+.join-found-banner {
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: .6rem 1rem;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.join-step2-actions {
+  display: flex;
+  gap: .8rem;
+  margin-top: .6rem;
+}

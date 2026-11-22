@@ -1,0 +1,42 @@
+/* ── Modal ──────────────────────────────────────────────────────────────────── */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(2px);
+}
+.modal-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: var(--shadow);
+}
+.modal-card h2 { font-size: 1.3rem; font-weight: 800; }
+.modal-actions { display: flex; gap: .6rem; justify-content: space-between; flex-wrap: wrap; }
+.modal-actions > div { display: flex; gap: .6rem; }
+
+@media (max-width: 480px) {
+  .modal-card { padding: 1.25rem; }
+  .btn-label { display: none; }
+}
+.join-room-label { font-size: .8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .15rem; }
+
+/* Modal size/alignment modifiers */
+.modal-card-sm { width: min(380px, 92vw); }
+.modal-card-center { text-align: center; }
+.modal-actions-center { justify-content: center; }
+.confirm-message { font-size: 1rem; }

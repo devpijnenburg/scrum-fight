@@ -69,8 +69,9 @@ frontend/public/
 | 1. Vangnet | ✅ uitgevoerd (PR #70) |
 | 2. Game-domein | ✅ uitgevoerd (PR #71) |
 | 3. Data-integriteit | ✅ uitgevoerd (PR #72) |
-| 4. Backend-domeinen | ✅ uitgevoerd |
-| 5–6 | open |
+| 4. Backend-domeinen | ✅ uitgevoerd (PR #73) |
+| 5. UI-bouwstenen | ✅ uitgevoerd |
+| 6 | open |
 
 ### Notities fase 2
 - Spelregels staan in `backend/src/domains/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
@@ -90,3 +91,13 @@ frontend/public/
 - REST-wijzigingen die live clients moeten zien (kamer geclaimd of verwijderd) gaan via `shared/events.js`; `realtime/` luistert daarop.
 - Fouten: services gooien `AppError(status, code, message)`. De API antwoordt met `{ error, code, ...details }`. De frontend vertaalt `code` via `errors.<CODE>` in `i18n.js`, met `error` als fallback.
 - Nog niet vertaald: de `planLimitWarning` bij het aanmaken van een kamer (een succesantwoord) en de foutteksten van de socket-laag. Pak dit op in fase 5/6, samen met de frontend.
+
+### Notities fase 5
+- Herbruikbare UI staat in `frontend/public/js/ui/`:
+  - `modal.js`: `openModal`, `closeModal`, `confirmDialog`. Werkt met de bestaande `.modal`-markup en regelt backdrop, `[data-modal-close]`, Escape en focus. Met `data-modal-static` is een modal niet weg te klikken.
+  - `toast.js`: `showToast`.
+  - `methodSelect.js`: één lijst met schattingsmethodes. `<select data-method-select>` wordt automatisch gevuld en kiest de favoriete methode uit de instellingen voor.
+  - `authPanel.js`: `<sf-auth-panel>` met inloggen, registreren, de TOTP- of e-mailcodestap en het opnieuw sturen van de verificatiemail. Wordt gebruikt op `login.html`, in de kamer en op `totp-verify.html`.
+- `js/settings.js` is de enige plek voor gebruikersvoorkeuren.
+- CSS: `styles.css` importeert `tokens` → `base` → `components/*` → `pages/*` → `responsive`. De pagina's zien er pixel voor pixel hetzelfde uit als voor de splitsing (gecontroleerd met screenshots).
+- **Bewust uitgesteld naar fase 6:** ES-modules. De scripts zijn nog klassiek (globals). De nieuwe UI-bestanden zijn zo geschreven dat ze later als module te exporteren zijn: geen afhankelijkheid van paginacode, en een `module.exports`-tak voor de tests.

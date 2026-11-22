@@ -132,11 +132,20 @@ PORT=80                             # poort voor de frontend-container
     ├── nginx.conf
     └── public/
         ├── index.html                # Landingspagina
-        ├── login.html
+        ├── login.html                # <sf-auth-panel>
         ├── dashboard.html            # Kamerbeheer
         ├── room.html                 # Poker-tafel
-        ├── css/styles.css
-        └── js/                       # api.js, auth.js, room.js, ...
+        ├── css/
+        │   ├── styles.css            # Ingang: importeert de rest in vaste volgorde
+        │   ├── tokens.css, base.css  # Kleuren/variabelen, reset, animaties
+        │   ├── components/           # Gedeelde UI: knoppen, modal, toast, auth, navbar, …
+        │   ├── pages/                # Stijlen per pagina
+        │   └── responsive.css        # Breakpoints en reduced motion (laatst)
+        └── js/
+            ├── api.js, auth.js, i18n.js, settings.js   # Kern: API, sessie, vertalingen, voorkeuren
+            ├── ui/                   # Herbruikbare UI: modal, toast, methodSelect, authPanel
+            ├── navbar.js             # <site-nav>, <profile-menu>, <site-footer>
+            └── room.js, dashboard.js, …                # Paginascripts
 ```
 
 ## Socket.io events

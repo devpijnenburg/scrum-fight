@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Beheer — Scrum Fight</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/css/styles.css?v=00f5a93" />
+  <link rel="stylesheet" href="/css/styles.css?v=dce8d7a" />
 </head>
 <body class="page-dashboard">
 
@@ -77,7 +77,7 @@
 
   <!-- Edit user modal -->
   <div id="editUserModal" class="modal hidden">
-    <div class="modal-backdrop" id="editUserBackdrop"></div>
+    <div class="modal-backdrop"></div>
     <div class="modal-card">
       <h2>Gebruiker bewerken</h2>
       <div class="form-group">
@@ -108,7 +108,7 @@
           <span class="btn-label">Verwijderen</span> 🗑️
         </button>
         <div style="display:flex;gap:.5rem">
-          <button class="btn btn-ghost" id="editUserCancelBtn" title="Annuleren">
+          <button class="btn btn-ghost" id="editUserCancelBtn" data-modal-close title="Annuleren">
             <span class="btn-label">Annuleren</span> ✕
           </button>
           <button class="btn btn-primary" id="editUserSaveBtn" title="Opslaan">
@@ -121,7 +121,7 @@
 
   <!-- New/edit org modal -->
   <div id="orgModal" class="modal hidden">
-    <div class="modal-backdrop" id="orgModalBackdrop"></div>
+    <div class="modal-backdrop"></div>
     <div class="modal-card">
       <h2 id="orgModalTitle">Nieuwe organisatie</h2>
       <div class="form-group">
@@ -145,7 +145,7 @@
       </div>
       <p id="orgModalError" class="form-error hidden"></p>
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="orgCancelBtn" title="Annuleren">
+        <button class="btn btn-ghost" id="orgCancelBtn" data-modal-close title="Annuleren">
           <span class="btn-label">Annuleren</span> ✕
         </button>
         <button class="btn btn-primary" id="orgSaveBtn" title="Opslaan">
@@ -157,7 +157,7 @@
 
   <!-- Members modal -->
   <div id="membersModal" class="modal hidden">
-    <div class="modal-backdrop" id="membersModalBackdrop"></div>
+    <div class="modal-backdrop"></div>
     <div class="modal-card" style="max-width:520px">
       <h2 id="membersModalTitle">Leden beheren</h2>
       <div id="membersList" style="margin-bottom:1rem;max-height:260px;overflow-y:auto"></div>
@@ -170,19 +170,7 @@
       </div>
       <p id="membersError" class="form-error hidden"></p>
       <div class="modal-actions" style="margin-top:1rem">
-        <button class="btn btn-ghost" id="membersCancelBtn">Sluiten</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bevestigingsdialog (vervangt browser confirm()) -->
-  <div id="confirmModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card" style="max-width:380px;text-align:center">
-      <p id="confirmMessage" style="margin-bottom:1.5rem;font-size:1rem"></p>
-      <div class="modal-actions" style="justify-content:center">
-        <button class="btn btn-ghost" id="confirmCancelBtn">Annuleren</button>
-        <button class="btn btn-primary admin-del" id="confirmOkBtn">Verwijderen</button>
+        <button class="btn btn-ghost" id="membersCancelBtn" data-modal-close>Sluiten</button>
       </div>
     </div>
   </div>
@@ -190,7 +178,9 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js?v=5454c58"></script>
   <script src="/js/auth.js?v=bded843"></script>
+  <script src="/js/ui/modal.js"></script>
+  <script src="/js/ui/toast.js"></script>
   <script src="/js/navbar.js?v=a1f2026"></script>
-  <script src="/js/admin.js?v=bded843"></script>
+  <script src="/js/admin.js?v=dce8d7a"></script>
 </body>
 </html>

@@ -31,25 +31,8 @@ function debounce(fn, ms) {
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-function showConfirm(message) {
-  return new Promise((resolve) => {
-    document.getElementById('confirmMessage').textContent = message;
-    const modal = document.getElementById('confirmModal');
-    modal.classList.remove('hidden');
-    const ok = document.getElementById('confirmOkBtn');
-    const cancel = document.getElementById('confirmCancelBtn');
-    function cleanup(result) {
-      modal.classList.add('hidden');
-      ok.removeEventListener('click', onOk);
-      cancel.removeEventListener('click', onCancel);
-      resolve(result);
-    }
-    function onOk() { cleanup(true); }
-    function onCancel() { cleanup(false); }
-    ok.addEventListener('click', onOk);
-    cancel.addEventListener('click', onCancel);
-  });
-}
+// Confirmation uses the shared dialog from ui/modal.js.
+const showConfirm = (message) => confirmDialog(message);
 
 document.getElementById('userSearch').addEventListener('input', debounce((e) => {
   userSearch = e.target.value.trim();
@@ -121,16 +104,14 @@ function openEditUser(id) {
   document.getElementById('editUserPlan').value = u.plan;
   document.getElementById('editUserAdmin').checked = u.is_admin;
   document.getElementById('editUserError').classList.add('hidden');
-  document.getElementById('editUserModal').classList.remove('hidden');
+  openModal('editUserModal');
 }
 
 function closeEditUser() {
-  document.getElementById('editUserModal').classList.add('hidden');
-  editingUserId = null;
+  closeModal('editUserModal');
 }
 
-document.getElementById('editUserCancelBtn').addEventListener('click', closeEditUser);
-document.getElementById('editUserBackdrop').addEventListener('click', closeEditUser);
+document.getElementById('editUserModal').addEventListener('modal:close', () => { editingUserId = null; });
 
 document.getElementById('editUserSaveBtn').addEventListener('click', async () => {
   const err = document.getElementById('editUserError');
@@ -240,16 +221,14 @@ function openOrgModal(id) {
   document.getElementById('orgPlan').value = o?.plan || 'org_starter';
   document.getElementById('orgOwnerEmail').value = o?.owner_email || '';
   document.getElementById('orgModalError').classList.add('hidden');
-  document.getElementById('orgModal').classList.remove('hidden');
+  openModal('orgModal');
 }
 
 function closeOrgModal() {
-  document.getElementById('orgModal').classList.add('hidden');
-  editingOrgId = null;
+  closeModal('orgModal');
 }
 
-document.getElementById('orgCancelBtn').addEventListener('click', closeOrgModal);
-document.getElementById('orgModalBackdrop').addEventListener('click', closeOrgModal);
+document.getElementById('orgModal').addEventListener('modal:close', () => { editingOrgId = null; });
 
 document.getElementById('orgSaveBtn').addEventListener('click', async () => {
   const err = document.getElementById('orgModalError');
@@ -280,7 +259,7 @@ async function deleteOrg(id) {
     await apiFetch(`/admin/organizations/${id}`, { method: 'DELETE' });
     loadOrgs();
   } catch (ex) {
-    alert(ex.message);
+    showToast(ex.message, { icon: '⚠️' });
   }
 }
 
@@ -291,17 +270,15 @@ async function openMembers(orgId, orgName) {
   document.getElementById('membersModalTitle').textContent = `Leden — ${orgName}`;
   document.getElementById('memberEmail').value = '';
   document.getElementById('membersError').classList.add('hidden');
-  document.getElementById('membersModal').classList.remove('hidden');
+  openModal('membersModal', { focus: '#memberEmail' });
   await loadMembers();
 }
 
 function closeMembers() {
-  document.getElementById('membersModal').classList.add('hidden');
-  membersOrgId = null;
+  closeModal('membersModal');
 }
 
-document.getElementById('membersCancelBtn').addEventListener('click', closeMembers);
-document.getElementById('membersModalBackdrop').addEventListener('click', closeMembers);
+document.getElementById('membersModal').addEventListener('modal:close', () => { membersOrgId = null; });
 
 async function loadMembers() {
   const list = document.getElementById('membersList');
@@ -349,7 +326,7 @@ async function removeMember(userId) {
     await loadMembers();
     loadOrgs();
   } catch (ex) {
-    alert(ex.message);
+    showToast(ex.message, { icon: '⚠️' });
   }
 }
 

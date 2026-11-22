@@ -1,0 +1,53 @@
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .room-header { padding: .65rem .8rem; gap: .65rem; }
+  .room-name { font-size: 1rem; }
+  .profile-menu-btn { max-width: 160px; }
+  .profile-menu {
+    position: fixed;
+    top: 3.7rem;
+    left: .75rem;
+    right: .75rem;
+    width: auto;
+  }
+  .room-info-bar {
+    justify-content: flex-start;
+    padding: .65rem;
+  }
+  .share-wrap { position: static; }
+  .share-popover {
+    position: fixed;
+    left: .75rem;
+    right: .75rem;
+    top: 7.3rem;
+    min-width: 0;
+  }
+  .share-popover-row { flex-direction: column; }
+  .poker-table { border-width: 5px; }
+  .card-container { width: 42px; height: 63px; }
+  .card-spectator-placeholder { width: 42px; height: 63px; }
+  .card-value { font-size: 1.1rem; }
+  .picker-card { width: 40px; height: 60px; font-size: .95rem; }
+}
+
+/* ── Tablet breakpoint (768px–1024px) ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .room-header { gap: .5rem; padding: .6rem 1rem; }
+  .card-picker-row { justify-content: center; }
+  .picker-card { min-width: 52px; padding: .6rem .4rem; }
+  .stats-cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .stats-charts { grid-template-columns: 1fr; }
+  .room-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .plan-cards { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .analytics-panel { width: min(360px, 90vw); }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

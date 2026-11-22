@@ -21,18 +21,6 @@ let analyticsLoaded = false;
 let currentStats = null;
 let currentRoundName = '';
 
-// ── Settings (localStorage) ───────────────────────────────────────────────────
-
-const SETTINGS_KEY = 'sfSettings';
-
-function loadSettings() {
-  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
-}
-
-function saveSettings(s) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-}
-
 // ── Socket connection ─────────────────────────────────────────────────────────
 
 const socket = io();
@@ -93,8 +81,7 @@ function showNameModal(roomName, prefillName = '') {
     input.value = prefillName;
   }
 
-  document.getElementById('nameModal').classList.remove('hidden');
-  input.focus();
+  openModal('nameModal', { focus: '#nameInput' });
   if (prefillName) input.select();
 
   if (!_nameModalInited) {
@@ -110,7 +97,7 @@ function submitName() {
     document.getElementById('nameError').classList.remove('hidden');
     return;
   }
-  document.getElementById('nameModal').classList.add('hidden');
+  closeModal('nameModal');
   myName = name;
   setProfileName(name);
   localStorage.setItem('userName', name);
@@ -401,31 +388,15 @@ function prependBadgeToTimeline(playerName, badgeId) {
   }
 
   // Also show a brief room-level toast so everyone sees it regardless of panel state
-  const container = document.getElementById('roomToastContainer');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = 'badge-announced-toast';
-  toast.innerHTML = `<span class="badge-announced-icon">🏅</span>
-    <span class="badge-announced-text"><strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em></span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add('badge-toast-hide');
-    toast.addEventListener('animationend', () => toast.remove(), { once: true });
-  }, 4000);
+  showToast('', {
+    icon: '🏅',
+    variant: 'gold',
+    html: `<strong>${escapeHtml(playerName)}</strong> ${escapeHtml(announced)} <em>${escapeHtml(badgeName)}</em>`,
+  });
 }
 
 function showRoomToast(icon, text) {
-  const container = document.getElementById('roomToastContainer');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = 'badge-announced-toast';
-  toast.innerHTML = `<span class="badge-announced-icon">${icon}</span>
-    <span class="badge-announced-text">${escapeHtml(text)}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add('badge-toast-hide');
-    toast.addEventListener('animationend', () => toast.remove(), { once: true });
-  }, 4000);
+  showToast(text, { icon });
 }
 
 // Wire reaction buttons once
@@ -775,82 +746,27 @@ function initRoomAuth() {
   const user = getCurrentUser();
   if (user) {
     showRoomUserBadge(user.name);
-    initSettings();
+    refreshProfileMenu();
     return;
   }
 
-  // Guest: open in-room auth modal when profile menu fires the auth request
-  document.addEventListener('profile-auth-request', openRoomAuthModal, { once: false });
-
-  document.querySelectorAll('#roomAuthModal .auth-tab').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('#roomAuthModal .auth-tab').forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('roomLoginForm').classList.toggle('hidden', tab.dataset.tab !== 'login');
-      document.getElementById('roomRegisterForm').classList.toggle('hidden', tab.dataset.tab !== 'register');
-    });
-  });
-
-  document.getElementById('roomAuthBackdrop').addEventListener('click', closeRoomAuthModal);
-  initOAuthButtons(document.getElementById('roomAuthModal'));
-
-  document.getElementById('roomLoginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const err = document.getElementById('roomLoginError');
-    err.classList.add('hidden');
-    try {
-      const { user, token } = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: document.getElementById('roomLoginEmail').value,
-          password: document.getElementById('roomLoginPassword').value,
-        }),
-      });
-      onRoomAuthSuccess(user, token);
-    } catch (ex) {
-      err.textContent = ex.message;
-      err.classList.remove('hidden');
-    }
-  });
-
-  document.getElementById('roomRegisterForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const err = document.getElementById('roomRegError');
-    err.classList.add('hidden');
-    try {
-      await apiFetch('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: document.getElementById('roomRegName').value,
-          email: document.getElementById('roomRegEmail').value,
-          password: document.getElementById('roomRegPassword').value,
-        }),
-      });
-      err.classList.add('hidden');
-      document.getElementById('roomRegisterForm').innerHTML =
-        '<p style="text-align:center;padding:1rem">✉️ Controleer je e-mail voor een bevestigingslink.</p>';
-    } catch (ex) {
-      err.textContent = ex.message;
-      err.classList.remove('hidden');
-    }
+  // Guest: the profile menu asks for the in-room auth modal.
+  document.addEventListener('profile-auth-request', openRoomAuthModal);
+  document.querySelector('#roomAuthModal sf-auth-panel').addEventListener('auth-success', (e) => {
+    onRoomAuthSuccess(e.detail.user);
   });
 }
 
 function openRoomAuthModal() {
-  document.getElementById('roomAuthModal').classList.remove('hidden');
-  document.getElementById('roomLoginEmail').focus();
+  openModal('roomAuthModal');
+  document.querySelector('#roomAuthModal sf-auth-panel').focusFirstField();
 }
 
-function closeRoomAuthModal() {
-  document.getElementById('roomAuthModal').classList.add('hidden');
-}
-
-function onRoomAuthSuccess(user, token) {
-  localStorage.setItem('token', token);
-  localStorage.setItem('userName', user.name);
-  closeRoomAuthModal();
-  showRoomUserBadge(user.name);
-  initSettings();
+function onRoomAuthSuccess(user) {
+  closeModal('roomAuthModal');
+  showRoomUserBadge(user?.name || getCurrentUser()?.name || '');
+  refreshProfileMenu();
+  document.getElementById('footerAuth')?.classList.add('hidden');
   if (roomState?.isGuest) claimRoomIfLoggedIn();
 }
 
@@ -876,36 +792,9 @@ function initPlanLimitBanner() {
   });
 }
 
-// ── Settings (account users only) ────────────────────────────────────────────
-
-function initSettings() {
-  // Guard against double-init (e.g. after in-room login)
-  if (initSettings._done) return;
-  initSettings._done = true;
-
-  // Re-render the profile menu now that the user is logged in
+// Re-render the profile menu once a user is logged in (shows account items).
+function refreshProfileMenu() {
   document.querySelector('profile-menu')?.refresh();
-
-  document.getElementById('settingsBackdrop').addEventListener('click', closeSettingsModal);
-  document.getElementById('settingsCancelBtn').addEventListener('click', closeSettingsModal);
-  document.getElementById('settingsSaveBtn').addEventListener('click', () => {
-    const settings = loadSettings();
-    settings.analyticsAutoOpen = document.getElementById('settingAnalyticsAuto').checked;
-    settings.defaultMethod = document.getElementById('settingDefaultMethod').value;
-    saveSettings(settings);
-    closeSettingsModal();
-  });
-}
-
-function openSettingsModal() {
-  const settings = loadSettings();
-  document.getElementById('settingAnalyticsAuto').checked = settings.analyticsAutoOpen !== false;
-  document.getElementById('settingDefaultMethod').value = settings.defaultMethod || '';
-  document.getElementById('settingsModal').classList.remove('hidden');
-}
-
-function closeSettingsModal() {
-  document.getElementById('settingsModal').classList.add('hidden');
 }
 
 // ── Share / invite ────────────────────────────────────────────────────────────

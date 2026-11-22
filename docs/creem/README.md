@@ -5,6 +5,7 @@ gebruikt; deze map is alleen de bewaarplaats.
 
 | Bestand | Product | Tekst op de afbeelding |
 |---|---|---|
+| `free-embleem.webp` | Free (geen product in Creem) | "Free" |
 | `pro-embleem.webp` | Pro (zonder prijs) | "Pro" |
 | `pro-maandelijks.webp` | Pro, maandelijks | 20 saved rooms, up to 15 participants per room, €5 per month |
 | `pro-jaarlijks.webp` | Pro, jaarlijks | 20 saved rooms, up to 15 participants per room, €39 per year, Save 35% |

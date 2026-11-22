@@ -6,7 +6,7 @@ const path = require('path');
 
 const pool = require('./src/config/database');
 const { createApp, corsOrigin } = require('./src/app');
-const setupSocket = require('./src/socket');
+const { setupSocket, stopRealtime } = require('./src/realtime');
 const { startJobs, stopJobs } = require('./src/jobs');
 
 // ── Process-level safety net ─────────────────────────────────────────────────
@@ -66,6 +66,7 @@ function shutdown(signal, exitCode = 0) {
   force.unref();
 
   stopJobs();
+  stopRealtime();
   // io.close() disconnects all sockets and closes the underlying HTTP server.
   io.close(async () => {
     try {

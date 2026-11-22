@@ -66,5 +66,12 @@ frontend/public/
 
 | Fase | Status |
 |------|--------|
-| 1. Vangnet | ✅ uitgevoerd (zie PR) |
-| 2–6 | open |
+| 1. Vangnet | ✅ uitgevoerd (PR #70) |
+| 2. Game-domein | ✅ uitgevoerd |
+| 3–6 | open |
+
+### Notities fase 2
+- Spelregels staan in `backend/src/domain/game/` (`GameRoom`, `voteStats`); de socket-adapter in `backend/src/realtime/` (`index.js` voor events, `roomSessions.js` voor timers en levenscyclus). `src/socket/` is vervallen.
+- De mapnaam blijft voorlopig `domain/`; het hernoemen naar `domains/` en het verplaatsen van routes per domein hoort bij fase 4.
+- Lege permanente kamers verdwijnen 10 minuten na de laatste speler uit het geheugen. Gastkamers blijven tot hun inactiviteitstimer afloopt.
+- Een kamer die via de REST-API wordt verwijderd, krijgt direct `room-expired` (`reason: 'deleted'`).

@@ -6,7 +6,7 @@ jest.mock('../src/config/database', () => ({ query: jest.fn() }));
 
 const { EventEmitter } = require('events');
 const db = require('../src/config/database');
-const setupSocket = require('../src/socket');
+const setupSocket = require('../src/realtime');
 
 function createFakeIo() {
   const io = new EventEmitter();
@@ -46,17 +46,19 @@ const EVENTS = [
 const BAD_PAYLOADS = [undefined, null, 42, 'text', [], [1, 2], { value: 5 }, { name: {} }];
 
 let io;
+let sessions;
 let errorSpy;
 
 beforeEach(() => {
   io = createFakeIo();
-  setupSocket(io);
+  sessions = setupSocket(io);
   errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   db.query.mockReset();
   db.query.mockResolvedValue({ rows: [] });
 });
 
 afterEach(() => {
+  sessions.stopAll();
   errorSpy.mockRestore();
   jest.useRealTimers();
 });

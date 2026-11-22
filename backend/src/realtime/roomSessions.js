@@ -4,8 +4,8 @@
 // guest-room inactivity expiry and the eviction of empty permanent rooms —
 // so the socket handlers stay thin and no timer outlives its room.
 
-const { GameRoom } = require('../domain/game/gameRoom');
-const roomRepository = require('../domain/rooms/roomRepository');
+const { GameRoom } = require('../domains/game/gameRoom');
+const roomRepository = require('../domains/rooms/roomRepository');
 
 const DEFAULT_TIMING = {
   guestTtlMs: 60 * 60 * 1000,      // guest room expires after 1h of inactivity

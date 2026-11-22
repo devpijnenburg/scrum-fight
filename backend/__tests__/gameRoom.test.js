@@ -1,7 +1,7 @@
 // Unit tests for the pure game domain (no sockets, timers or DB).
 
-const { GameRoom, isAllowedReaction } = require('../src/domain/game/gameRoom');
-const { calculateStats, cardToNumber } = require('../src/domain/game/voteStats');
+const { GameRoom, isAllowedReaction } = require('../src/domains/game/gameRoom');
+const { calculateStats, cardToNumber } = require('../src/domains/game/voteStats');
 
 function makeRoom(method = 'fibonacci') {
   return new GameRoom({ id: 'ROOM01', name: 'Team', method, isGuest: false });

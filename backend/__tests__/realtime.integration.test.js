@@ -1,29 +1,31 @@
 // End-to-end socket tests: a real socket.io server and real clients over
 // localhost. Only the repositories are mocked.
 
-jest.mock('../src/domain/rooms/roomRepository', () => ({
+jest.mock('../src/domains/rooms/roomRepository', () => ({
   findRoomById: jest.fn(),
   touchLastActive: jest.fn().mockResolvedValue(),
   recordRound: jest.fn().mockResolvedValue(),
   updateRoomName: jest.fn().mockResolvedValue(),
   deleteRoom: jest.fn().mockResolvedValue(),
 }));
-jest.mock('../src/domain/users/userRepository', () => ({
+jest.mock('../src/domains/identity/userRepository', () => ({
   findById: jest.fn(),
   getPlan: jest.fn().mockResolvedValue('free'),
+}));
+jest.mock('../src/domains/stats/activityRepository', () => ({
   recordSpectatorSession: jest.fn().mockResolvedValue(),
   recordReaction: jest.fn().mockResolvedValue(),
 }));
-jest.mock('../src/domain/badges/badgeEvaluator', () => ({
+jest.mock('../src/domains/badges/badgeEvaluator', () => ({
   evaluateBadgesForUser: jest.fn().mockResolvedValue([]),
 }));
 
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { io: connectClient } = require('socket.io-client');
-const roomRepository = require('../src/domain/rooms/roomRepository');
-const userRepository = require('../src/domain/users/userRepository');
-const { sign } = require('../src/auth/jwt');
+const roomRepository = require('../src/domains/rooms/roomRepository');
+const userRepository = require('../src/domains/identity/userRepository');
+const { sign } = require('../src/domains/identity/jwt');
 const { setupSocket, closeRoom, claimGuestRoom } = require('../src/realtime');
 
 const ROOMS = {

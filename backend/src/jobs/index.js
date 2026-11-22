@@ -1,8 +1,8 @@
-// Central job registry. Every background job lives in its own module under
-// src/jobs/ and only handles scheduling + logging; the actual work is
-// delegated to the owning domain under src/domain/.
-const roomCleanupJob = require('./roomCleanupJob');
-const loginCodeCleanupJob = require('./loginCodeCleanupJob');
+// Central job registry. Every background job lives in the domain that owns
+// the work (src/domains/<domain>/*Job.js) and only handles scheduling and
+// logging; this file decides which jobs run.
+const roomCleanupJob = require('../domains/rooms/roomCleanupJob');
+const loginCodeCleanupJob = require('../domains/identity/loginCodeCleanupJob');
 
 const JOBS = [roomCleanupJob, loginCodeCleanupJob];
 

@@ -4,12 +4,14 @@
 // broadcast and persist. Game rules live in domain/game, timers and room
 // lifecycle in roomSessions.
 
-const { verify } = require('../auth/jwt');
-const { PLAN_LIMITS } = require('../config/plans');
-const { evaluateBadgesForUser } = require('../domain/badges/badgeEvaluator');
-const { isAllowedReaction } = require('../domain/game/gameRoom');
-const roomRepository = require('../domain/rooms/roomRepository');
-const userRepository = require('../domain/users/userRepository');
+const { verify } = require('../domains/identity/jwt');
+const { PLAN_LIMITS } = require('../domains/billing/plans');
+const { evaluateBadgesForUser } = require('../domains/badges/badgeEvaluator');
+const { isAllowedReaction } = require('../domains/game/gameRoom');
+const roomRepository = require('../domains/rooms/roomRepository');
+const userRepository = require('../domains/identity/userRepository');
+const activityRepository = require('../domains/stats/activityRepository');
+const events = require('../shared/events');
 const { on, str } = require('../shared/socketHandler');
 const { createRoomSessions } = require('./roomSessions');
 
@@ -30,6 +32,7 @@ async function resolveIdentity(token, playerName) {
   } catch {
     return fallback; // invalid/expired token — fall back to provided name
   }
+  if (payload.preAuth) return fallback; // a 2FA pre-auth token is not a session
   const user = await userRepository.findById(payload.id);
   if (!user) return fallback;
   return { userId: user.id, name: user.name, emoticon: user.emoticon || '⚔️' };
@@ -44,6 +47,11 @@ async function participantLimit(dbRoom) {
 function setupSocket(io, timing = {}) {
   sessions = createRoomSessions(io, timing);
   const rooms = sessions;
+
+  // REST-side changes to rooms are pushed to connected clients.
+  events.removeAllListeners();
+  events.on(events.ROOM_CLAIMED, ({ roomId }) => rooms.claim(roomId));
+  events.on(events.ROOM_DELETED, ({ roomId }) => rooms.close(roomId, 'deleted'));
 
   // Reveals the cards, broadcasts the result and persists the round.
   async function reveal(room) {
@@ -163,7 +171,7 @@ function setupSocket(io, timing = {}) {
         const now = Date.now();
         if (!player.lastSpectatorLog || now - player.lastSpectatorLog > SPECTATOR_LOG_INTERVAL_MS) {
           player.lastSpectatorLog = now;
-          userRepository.recordSpectatorSession(player.userId, room.id).catch(console.error);
+          activityRepository.recordSpectatorSession(player.userId, room.id).catch(console.error);
         }
       }
 
@@ -216,7 +224,7 @@ function setupSocket(io, timing = {}) {
 
       const player = room.getPlayer(socket.id);
       if (player.userId) {
-        userRepository.recordReaction(player.userId, room.id, emoji).catch(console.error);
+        activityRepository.recordReaction(player.userId, room.id, emoji).catch(console.error);
       }
       io.to(room.id).emit('reaction', { name: player.name, emoji });
     });

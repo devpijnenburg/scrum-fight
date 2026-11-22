@@ -2,7 +2,7 @@ require('dotenv').config();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
-const pool = require('./src/config/database');
+const pool = require('./src/shared/database');
 const { runMigrations } = require('./src/db/migrate');
 const { createApp, corsOrigin } = require('./src/app');
 const { setupSocket, stopRealtime } = require('./src/realtime');

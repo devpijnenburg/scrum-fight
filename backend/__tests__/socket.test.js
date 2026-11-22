@@ -2,10 +2,10 @@
 // Uses an in-process fake of the socket.io server/socket API, so no network
 // or database is needed.
 
-jest.mock('../src/config/database', () => ({ query: jest.fn(), connect: jest.fn() }));
+jest.mock('../src/shared/database', () => ({ query: jest.fn(), connect: jest.fn() }));
 
 const { EventEmitter } = require('events');
-const db = require('../src/config/database');
+const db = require('../src/shared/database');
 const setupSocket = require('../src/realtime');
 
 function createFakeIo() {

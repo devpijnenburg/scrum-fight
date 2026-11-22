@@ -8,8 +8,9 @@ gebruikt; deze map is alleen de bewaarplaats.
 | `pro-embleem.webp` | Pro (zonder prijs) | "Pro" |
 | `pro-maandelijks.webp` | Pro, maandelijks | 20 saved rooms, up to 15 participants per room, €5 per month |
 | `pro-jaarlijks.webp` | Pro, jaarlijks | 20 saved rooms, up to 15 participants per room, €39 per year, Save 35% |
-
-Premium (€9 per maand, €79 per jaar, 27% besparing) heeft nog geen afbeeldingen.
+| `premium-embleem.webp` | Premium (zonder prijs) | "Premium" |
+| `premium-maandelijks.webp` | Premium, maandelijks | Unlimited saved rooms, unlimited participants per room, €9 per month |
+| `premium-jaarlijks.webp` | Premium, jaarlijks | Unlimited saved rooms, unlimited participants per room, €79 per year, Save 27% |
 
 De aantallen en prijzen staan in de afbeelding zelf. Verandert een limiet in
 `backend/src/domains/billing/plans.js` of een prijs in Creem, dan moeten de

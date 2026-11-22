@@ -386,10 +386,11 @@ describe('POST /api/payments/checkout', () => {
     });
   });
 
-  it('reports a provider failure as 502 without leaking details', async () => {
+  it('reports a provider failure with its own error code, without leaking details', async () => {
     mockCreem(() => ({ status: 401, body: { message: 'bad key creem_test_key' } }));
     const res = await checkout({ plan: 'pro', billing: 'monthly' });
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('PAYMENT_PROVIDER_ERROR');
     expect(JSON.stringify(res.body)).not.toContain('creem_test_key');
   });
 

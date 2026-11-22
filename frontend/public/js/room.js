@@ -50,6 +50,12 @@ async function resolveAndJoin() {
     return;
   }
 
+  // Reconnect: rejoin with the name chosen earlier instead of asking again.
+  if (myName) {
+    joinRoomSocket(myName, null);
+    return;
+  }
+
   if (NAME_FROM_SESSION) {
     myName = NAME_FROM_SESSION;
     setProfileName(NAME_FROM_SESSION);
@@ -123,9 +129,15 @@ window.addEventListener('pageshow', (e) => {
 
 // ── Socket events ─────────────────────────────────────────────────────────────
 
+// One-time page setup. 'connect' also fires after every reconnect, and
+// these functions attach event listeners, so they must run only once.
+let _pageInitDone = false;
+
 socket.on('connect', () => {
   mySocketId = socket.id;
-  resolveAndJoin();
+  resolveAndJoin(); // (re)join the room on every (re)connect
+  if (_pageInitDone) return;
+  _pageInitDone = true;
   initRoomAuth();
   initAdBanner();
   initPlanLimitBanner();

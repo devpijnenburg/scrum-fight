@@ -5,7 +5,7 @@ const { VALID_METHODS } = require('../config/plans');
 const roomRepository = require('../domain/rooms/roomRepository');
 const roomService = require('../domain/rooms/roomService');
 const { getPlan } = require('../domain/users/userRepository');
-const { claimGuestRoom } = require('../socket');
+const { claimGuestRoom, closeRoom } = require('../realtime');
 
 // ── Create room ───────────────────────────────────────────────────────────────
 // Both guests and authenticated users can create rooms.
@@ -90,8 +90,10 @@ router.post('/:id/claim', authMiddleware, async (req, res) => {
 // ── Delete room ───────────────────────────────────────────────────────────────
 
 router.delete('/:id', authMiddleware, async (req, res) => {
-  const deleted = await roomRepository.deleteOwnedRoom(req.params.id.toUpperCase(), req.user.id);
+  const roomId = req.params.id.toUpperCase();
+  const deleted = await roomRepository.deleteOwnedRoom(roomId, req.user.id);
   if (!deleted) return res.status(404).json({ error: 'Kamer niet gevonden of geen toegang' });
+  closeRoom(roomId);
   res.json({ success: true });
 });
 

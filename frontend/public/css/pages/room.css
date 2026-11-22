@@ -779,19 +779,52 @@ profile-menu { display: contents; }
   .analytics-panel-collapse-btn { display: none; }
 }
 
-.analytics-panel-close-mobile {
-  display: none;
+/* Close button in the panel header: icon + label, large enough to tap. */
+.analytics-panel-close {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 40px;
+  padding: .4rem .85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   color: var(--text);
+  font-family: inherit;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
 }
 
+.analytics-panel-close:hover,
+.analytics-panel-close:focus-visible {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* Dimmed area behind the bottom sheet on small screens; tapping it closes. */
+.analytics-backdrop { display: none; }
+
 @media (max-width: 600px) {
-  .analytics-panel-close-mobile { display: flex; }
+  .analytics-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0,0,0,.55);
+  }
+  .analytics-backdrop.hidden { display: none; }
+  .analytics-panel-close { min-height: 44px; padding: .5rem 1rem; }
 }
 
 /* ── Analytics side panel ────────────────────────────────────────────────────── */
 .analytics-panel {
   position: fixed;
-  top: 0;
+  /* Starts below the sticky room header (set by analytics.js), so the panel's
+     own header with the close button is never hidden behind it. */
+  top: var(--room-header-h, 0px);
   right: 0;
   bottom: 0;
   width: 320px;
@@ -808,6 +841,28 @@ profile-menu { display: contents; }
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Small screens: a bottom sheet above everything else in the room. Must come
+   after the base rule above, otherwise that one wins. */
+@media (max-width: 600px) {
+  .analytics-panel {
+    width: 100%;
+    top: auto;
+    height: 75vh;
+    max-height: calc(100dvh - 3rem);
+    z-index: 61;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    animation: slideUpSheet .2s ease;
+  }
+  .analytics-panel-hd { border-radius: 16px 16px 0 0; }
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .analytics-panel-hd {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scrum Fight — Story Estimator 2.0</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/css/styles.css?v=00f5a93" />
+  <link rel="stylesheet" href="/css/styles.css?v=dce8d7a" />
 </head>
 <body class="page-landing">
 
@@ -41,12 +41,7 @@
 
           <div class="form-group">
             <label for="createMethod" data-i18n="landing.create.method">Schattingsmethode</label>
-            <select id="createMethod" class="input">
-              <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci</option>
-              <option value="modified_fibonacci" selected data-i18n="landing.create.method.modified_fibonacci">Fibonacci+</option>
-              <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
-              <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
-            </select>
+            <select id="createMethod" class="input" data-method-select></select>
           </div>
         </div>
 
@@ -104,7 +99,9 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js?v=5454c58"></script>
   <script src="/js/auth.js?v=bded843"></script>
+  <script src="/js/settings.js"></script>
+  <script src="/js/ui/methodSelect.js"></script>
   <script src="/js/navbar.js?v=a1f2026"></script>
-  <script src="/js/main.js?v=bded843"></script>
+  <script src="/js/main.js?v=dce8d7a"></script>
 </body>
 </html>

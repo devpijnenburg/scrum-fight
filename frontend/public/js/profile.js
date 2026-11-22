@@ -129,21 +129,17 @@ async function selectEmoticon(emoji) {
 
 // ── Settings (merged) ─────────────────────────────────────────────────────────
 
-const SETTINGS_KEY = 'sfSettings';
-
 function loadSettingsIntoForm() {
-  let settings = {};
-  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { /* ignore */ }
+  const settings = loadSettings();
   document.getElementById('settingAnalyticsAuto').checked = settings.analyticsAutoOpen !== false;
   document.getElementById('settingDefaultMethod').value   = settings.defaultMethod || '';
 }
 
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-  let settings = {};
-  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { /* ignore */ }
-  settings.analyticsAutoOpen = document.getElementById('settingAnalyticsAuto').checked;
-  settings.defaultMethod     = document.getElementById('settingDefaultMethod').value;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  saveSettings({
+    analyticsAutoOpen: document.getElementById('settingAnalyticsAuto').checked,
+    defaultMethod:     document.getElementById('settingDefaultMethod').value,
+  });
 
   const statusEl = document.getElementById('settingsSaveStatus');
   statusEl.classList.remove('hidden');
@@ -169,7 +165,7 @@ document.getElementById('totpSetupBtn').addEventListener('click', async () => {
     document.getElementById('totpSecret').textContent = secret;
     document.getElementById('totpEnableCode').focus();
   } catch (ex) {
-    alert('Fout bij ophalen QR-code: ' + ex.message);
+    showToast('Fout bij ophalen QR-code: ' + ex.message, { icon: '⚠️' });
     setTotpState(false);
   }
 });

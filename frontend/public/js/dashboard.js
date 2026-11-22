@@ -120,16 +120,12 @@ document.getElementById('newRoomBtn').addEventListener('click', () => {
   } else {
     errEl.classList.add('hidden');
   }
-  document.getElementById('newRoomModal').classList.remove('hidden');
+  openModal('newRoomModal', { focus: '#modalRoomName' });
 });
 
-document.getElementById('modalBackdrop').addEventListener('click', closeModal);
-document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
-
-function closeModal() {
-  document.getElementById('newRoomModal').classList.add('hidden');
+document.getElementById('newRoomModal').addEventListener('modal:close', () => {
   document.getElementById('modalError').classList.add('hidden');
-}
+});
 
 document.getElementById('modalCreateBtn').addEventListener('click', async () => {
   const name = document.getElementById('modalRoomName').value.trim();
@@ -155,7 +151,7 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
       body: JSON.stringify({ name, method }),
     });
     if (room.planLimitWarning) sessionStorage.setItem('planLimitWarning', room.planLimitWarning);
-    closeModal();
+    closeModal('newRoomModal');
     window.location.href = `/room.html?id=${room.id}`;
   } catch (err) {
     if (err.status === 401) {
@@ -170,18 +166,18 @@ document.getElementById('modalCreateBtn').addEventListener('click', async () => 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 async function deleteRoom(id) {
-  if (!confirm(t('dashboard.rooms.delete_confirm'))) return;
+  if (!(await confirmDialog(t('dashboard.rooms.delete_confirm')))) return;
   try {
     await apiFetch(`/rooms/${id}`, { method: 'DELETE' });
     loadRooms();
   } catch (err) {
-    alert(t('dashboard.rooms.delete_error', { error: err.message }));
+    showToast(t('dashboard.rooms.delete_error', { error: err.message }), { icon: '⚠️' });
   }
 }
 
 function copyCode(id) {
   navigator.clipboard.writeText(id).catch(() => {});
-  alert(t('dashboard.rooms.copied', { id }));
+  showToast(t('dashboard.rooms.copied', { id }), { icon: '📋' });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

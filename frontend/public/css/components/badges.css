@@ -1,0 +1,179 @@
+/* ── Badges ──────────────────────────────────────────────────────────────────── */
+
+.stats-badges-section {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+.stats-badges-section h2 { font-size: 1.05rem; font-weight: 800; }
+.stats-badges-section .text-muted { font-size: .82rem; }
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: .4rem;
+}
+
+.badge-category {
+  background:
+    radial-gradient(circle at 20% 0, rgba(139,92,246,.12), transparent 32%),
+    var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .9rem;
+}
+
+.badge-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+
+.badge-category-header h3 {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0;
+  color: var(--primary-light);
+  font-size: .9rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.badge-category-count {
+  color: var(--text-muted);
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: .75rem;
+}
+
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: .75rem .5rem .6rem;
+  border-radius: var(--radius);
+  background: rgba(15, 23, 42, .58);
+  border: 1px solid var(--border);
+  cursor: default;
+  transition: transform .15s, box-shadow .15s;
+  text-align: center;
+  min-width: 0;
+}
+.badge-card.badge-unlocked:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+}
+.badge-card.badge-locked { opacity: .75; }
+
+.badge-card.badge-new {
+  box-shadow: 0 0 0 2px var(--gold, #f5c518), 0 4px 18px rgba(245,197,24,.25);
+}
+.badge-new-chip {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--gold, #f5c518);
+  color: #000;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.badge-card { position: relative; }
+
+.badge-shield {
+  width: 78px;
+  height: 94px;
+  flex-shrink: 0;
+}
+.badge-shield svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.badge-name {
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.badge-desc {
+  font-size: .65rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.badge-progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.badge-progress-bar {
+  width: 80%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.badge-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .4s;
+}
+.badge-progress-text {
+  font-size: .6rem;
+  color: var(--text-muted);
+}
+
+/* Tier progress-fill colours */
+.badge-progress-fill.tier-bronze          { background: #c47b2b; }
+.badge-progress-fill.tier-silver          { background: #8896a8; }
+.badge-progress-fill.tier-gold            { background: #d97706; }
+.badge-progress-fill.tier-diamond         { background: #5ec5f2; }
+.badge-progress-fill.tier-platinum        { background: #60a5fa; }
+.badge-progress-fill.tier-special_unicorn { background: #a855f7; }
+.badge-progress-fill.tier-special_zombie  { background: #16a34a; }
+.badge-progress-fill.tier-special_coffee  { background: #ea580c; }
+.badge-progress-fill.tier-special_speed   { background: #eab308; }
+
+.badge-tier-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 10px;
+}
+.badge-tier-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.25);
+}
+.badge-tier-dots .tier-bronze  { background: #c47b2b; }
+.badge-tier-dots .tier-silver  { background: #cbd5e1; }
+.badge-tier-dots .tier-gold    { background: #facc15; }
+.badge-tier-dots .tier-diamond { background: #7dd3fc; }

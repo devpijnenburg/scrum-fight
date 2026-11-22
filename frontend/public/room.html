@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kamer — Scrum Fight</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/css/styles.css?v=00f5a93" />
+  <link rel="stylesheet" href="/css/styles.css?v=dce8d7a" />
 </head>
 <body class="page-room">
 
   <!-- Name prompt modal -->
-  <div id="nameModal" class="modal hidden">
+  <div id="nameModal" class="modal hidden" data-modal-static>
     <div class="modal-backdrop"></div>
     <div class="modal-card">
       <div>
@@ -32,43 +32,6 @@
       <h2 id="overlayTitle" data-i18n="room.overlay.expired">Kamer verlopen</h2>
       <p id="overlayMessage" data-i18n="room.overlay.expired_msg">Deze kamer is niet meer beschikbaar.</p>
       <a href="/" class="btn btn-primary" data-i18n="room.overlay.home">Terug naar home →</a>
-    </div>
-  </div>
-
-  <!-- Settings modal (account users only) -->
-  <div id="settingsModal" class="modal hidden">
-    <div class="modal-backdrop" id="settingsBackdrop"></div>
-    <div class="modal-card">
-      <h2 data-i18n="room.settings.title">⚙️ Instellingen</h2>
-      <div class="settings-row">
-        <span class="settings-label" data-i18n="room.settings.analytics_auto">Analyse automatisch openen bij reveal</span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="settingAnalyticsAuto" />
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="settings-row">
-        <label class="settings-label" for="settingDefaultMethod" data-i18n="room.settings.default_method">Favoriete schattingsmethode</label>
-        <select id="settingDefaultMethod" class="input" style="width:auto;min-width:160px">
-          <option value="" data-i18n="room.settings.method_none">Geen voorkeur</option>
-          <option value="fibonacci" data-i18n="landing.create.method.fibonacci">Fibonacci</option>
-          <option value="modified_fibonacci" data-i18n="landing.create.method.modified_fibonacci">Fibonacci+</option>
-          <option value="tshirt" data-i18n="landing.create.method.tshirt">T-shirt maten</option>
-          <option value="powers_of_2" data-i18n="landing.create.method.powers_of_2">Powers of 2</option>
-        </select>
-      </div>
-      <div class="settings-kbd-section">
-        <p class="settings-label" data-i18n="room.settings.shortcuts_label">Toetsenbordsnelkoppelingen</p>
-        <div class="settings-kbd-list">
-          <span><kbd>1</kbd>–<kbd>9</kbd> <span data-i18n="room.settings.shortcut_cards">kaart kiezen</span></span>
-          <span><kbd>R</kbd> <span data-i18n="room.settings.shortcut_reveal">reveal</span></span>
-          <span><kbd>N</kbd> <span data-i18n="room.settings.shortcut_new">nieuwe ronde</span></span>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost btn-sm" id="settingsCancelBtn" data-i18n="dashboard.modal.cancel">Annuleren</button>
-        <button class="btn btn-primary btn-sm" id="settingsSaveBtn" data-i18n="room.settings.save">Opslaan</button>
-      </div>
     </div>
   </div>
 
@@ -123,54 +86,9 @@
 
   <!-- In-room auth modal -->
   <div id="roomAuthModal" class="modal hidden">
-    <div class="modal-backdrop" id="roomAuthBackdrop"></div>
-    <div class="modal-card auth-card" style="max-width:400px">
-      <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login" data-i18n="login.tab.login">Inloggen</button>
-        <button class="auth-tab" data-tab="register" data-i18n="login.tab.register">Registreren</button>
-      </div>
-
-      <form id="roomLoginForm" class="auth-form" autocomplete="on">
-        <div class="form-group">
-          <label data-i18n="login.email">E-mailadres</label>
-          <input id="roomLoginEmail" type="email" class="input" data-i18n-ph="login.email.ph" placeholder="naam@email.nl" required />
-        </div>
-        <div class="form-group">
-          <label data-i18n="login.password">Wachtwoord</label>
-          <input id="roomLoginPassword" type="password" class="input" data-i18n-ph="login.password.ph" placeholder="••••••••" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-full" data-i18n="login.btn">Inloggen →</button>
-        <p id="roomLoginError" class="form-error hidden"></p>
-      </form>
-
-      <form id="roomRegisterForm" class="auth-form hidden" autocomplete="on">
-        <div class="form-group">
-          <label data-i18n="login.register.name">Naam</label>
-          <input id="roomRegName" type="text" class="input" data-i18n-ph="login.register.name.ph" placeholder="Jouw naam" maxlength="50" autocomplete="name" required />
-        </div>
-        <div class="form-group">
-          <label data-i18n="login.email">E-mailadres</label>
-          <input id="roomRegEmail" type="email" class="input" data-i18n-ph="login.email.ph" placeholder="naam@email.nl" required />
-        </div>
-        <div class="form-group">
-          <label><span data-i18n="login.password">Wachtwoord</span> <small data-i18n="login.password.hint">(min. 8 tekens)</small></label>
-          <input id="roomRegPassword" type="password" class="input" data-i18n-ph="login.password.ph" placeholder="••••••••" minlength="8" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-full" data-i18n="login.register.btn">Account aanmaken →</button>
-        <p id="roomRegError" class="form-error hidden"></p>
-      </form>
-
-      <div class="oauth-divider"><span data-i18n="login.oauth.divider">of ga verder met</span></div>
-      <div class="oauth-buttons">
-        <a id="roomGoogleBtn" href="/api/auth/google" class="btn btn-oauth" data-oauth-provider="google">
-          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-          Google
-        </a>
-        <a id="roomGithubBtn" href="/api/auth/github" class="btn btn-oauth" data-oauth-provider="github">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub
-        </a>
-      </div>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card auth-card">
+      <sf-auth-panel></sf-auth-panel>
     </div>
   </div>
 
@@ -268,7 +186,6 @@
   <site-footer></site-footer>
 
   <!-- Room-level toast notifications (badge announcements etc.) -->
-  <div id="roomToastContainer" class="toast-container"></div>
 
   <!-- Badge celebration overlay -->
   <div id="badgeCelebration" class="badge-celebration hidden">
@@ -285,8 +202,12 @@
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js?v=5454c58"></script>
   <script src="/js/auth.js?v=bded843"></script>
+  <script src="/js/settings.js"></script>
+  <script src="/js/ui/modal.js"></script>
+  <script src="/js/ui/toast.js"></script>
+  <script src="/js/ui/authPanel.js"></script>
   <script src="/js/navbar.js?v=a1f2026"></script>
   <script src="/js/badges.js?v=b3a5c2f"></script>
-  <script src="/js/room.js?v=b89aeef"></script>
+  <script src="/js/room.js?v=dce8d7a"></script>
 </body>
 </html>

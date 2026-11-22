@@ -5,9 +5,18 @@ const roomCleanupJob = require('./roomCleanupJob');
 
 const JOBS = [roomCleanupJob];
 
+// Scheduled tasks returned by each job's register(), so they can be stopped
+// on shutdown.
+let tasks = [];
+
 function startJobs() {
-  for (const job of JOBS) job.register();
+  tasks = JOBS.map((job) => job.register());
   console.log(`[jobs] ${JOBS.length} background job(s) scheduled`);
 }
 
-module.exports = { startJobs };
+function stopJobs() {
+  for (const task of tasks) task?.stop();
+  tasks = [];
+}
+
+module.exports = { startJobs, stopJobs };

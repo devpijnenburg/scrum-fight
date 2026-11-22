@@ -10,6 +10,17 @@ const { verifyTotpCode } = require('../auth/totp');
 const oauthStateStore = require('../auth/oauthStateStore');
 const db = require('../config/database');
 const { sendVerificationEmail } = require('../domain/users/userMailer');
+const { rateLimit } = require('../shared/rateLimit');
+
+const MINUTE = 60 * 1000;
+
+// Brute-force protection on credential and code endpoints (per client IP).
+const limiters = {
+  login:    rateLimit({ name: 'login',    windowMs: 15 * MINUTE, max: 20 }),
+  register: rateLimit({ name: 'register', windowMs: 60 * MINUTE, max: 10 }),
+  resend:   rateLimit({ name: 'resend',   windowMs: 15 * MINUTE, max: 5 }),
+  twoFactor: rateLimit({ name: '2fa',     windowMs: 15 * MINUTE, max: 10 }),
+};
 
 // ── Provider discovery ────────────────────────────────────────────────────────
 
@@ -22,7 +33,7 @@ router.get('/providers', (req, res) => {
 
 // ── Email / password ──────────────────────────────────────────────────────────
 
-router.post('/register', async (req, res) => {
+router.post('/register', limiters.register, async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Naam, e-mail en wachtwoord zijn verplicht' });
@@ -41,7 +52,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', limiters.login, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'E-mail en wachtwoord zijn verplicht' });
@@ -59,7 +70,7 @@ router.post('/login', async (req, res) => {
 
 // ── Verificatiemail opnieuw sturen ────────────────────────────────────────────
 
-router.post('/resend-verification', async (req, res) => {
+router.post('/resend-verification', limiters.resend, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'E-mail is verplicht' });
 
@@ -110,7 +121,7 @@ function verifyPreAuthToken(preAuthToken) {
   }
 }
 
-router.post('/verify-totp', async (req, res) => {
+router.post('/verify-totp', limiters.twoFactor, async (req, res) => {
   const { preAuthToken, code } = req.body;
   if (!preAuthToken || !code) {
     return res.status(400).json({ error: 'Token en code zijn verplicht' });
@@ -137,7 +148,7 @@ router.post('/verify-totp', async (req, res) => {
   res.json({ token: signSessionToken(user) });
 });
 
-router.post('/verify-email-2fa', async (req, res) => {
+router.post('/verify-email-2fa', limiters.twoFactor, async (req, res) => {
   const { preAuthToken, code } = req.body;
   if (!preAuthToken || !code) {
     return res.status(400).json({ error: 'Token en code zijn verplicht' });
@@ -223,3 +234,4 @@ mountOAuthRoutes('google', 'Google', google);
 mountOAuthRoutes('github', 'GitHub', github);
 
 module.exports = router;
+module.exports.limiters = limiters;

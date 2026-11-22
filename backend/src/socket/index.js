@@ -3,6 +3,7 @@ const { ESTIMATION_METHODS, PLAN_LIMITS } = require('../config/plans');
 const { evaluateBadgesForUser } = require('../domain/badges/badgeEvaluator');
 const roomRepository = require('../domain/rooms/roomRepository');
 const userRepository = require('../domain/users/userRepository');
+const { on, str } = require('../shared/socketHandler');
 
 // roomId → { id, name, method, isGuest, revealed, players: Map<socketId, player> }
 const activeRooms = new Map();
@@ -138,15 +139,19 @@ async function doReveal(io, room, roomId) {
 
     // Fire-and-forget badge evaluation — only when votes were persisted successfully
     setImmediate(async () => {
-      for (const [socketId, p] of room.players) {
-        if (!p.userId || !p.vote) continue;
-        const newBadges = await evaluateBadgesForUser(p.userId);
-        if (newBadges.length > 0) {
-          io.to(socketId).emit('badge-earned', { badgeIds: newBadges });
-          for (const badgeId of newBadges) {
-            io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
+      try {
+        for (const [socketId, p] of room.players) {
+          if (!p.userId || !p.vote) continue;
+          const newBadges = await evaluateBadgesForUser(p.userId);
+          if (newBadges.length > 0) {
+            io.to(socketId).emit('badge-earned', { badgeIds: newBadges });
+            for (const badgeId of newBadges) {
+              io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
+            }
           }
         }
+      } catch (err) {
+        console.error('[socket] Badge evaluation failed:', err);
       }
     });
   } catch (err) {
@@ -169,32 +174,62 @@ async function deleteGuestRoom(io, roomId) {
   }
 }
 
+const ALLOWED_REACTIONS = new Set([
+  '🔥', '🤯', '😬', '👏', '🎉',
+  '🏆', '🥳', '🙌', '⭐', '💪', '🎯', '😊', '🤝',
+  '🤔', '💬', '🤷', '😅', '🧐', '☕', '💭',
+  '🚀', '😴', '💤', '😪', '🛋️', '❓',
+  '👍', '🎲', '💡', '👀', '⚠️', '🌊',
+]);
+
+// Removes a socket from the room it is currently in (if any) and tells the
+// remaining players. Used on disconnect and when a socket switches rooms.
+function leaveCurrentRoom(io, socket) {
+  const roomId = socket.data.roomId;
+  if (!roomId) return;
+  socket.data.roomId = null;
+  socket.leave(roomId);
+
+  const room = activeRooms.get(roomId);
+  if (!room) return;
+
+  const player = room.players.get(socket.id);
+  if (!room.players.delete(socket.id)) return;
+
+  io.to(roomId).emit('player-left', { socketId: socket.id, name: player?.name });
+  // Guest rooms remain available until their inactivity timer expires.
+}
+
+async function resolveIdentity(token, playerName) {
+  const fallback = { userId: null, name: str(playerName, 50), emoticon: '' };
+  if (typeof token !== 'string' || !token) return fallback;
+
+  let payload;
+  try {
+    payload = verify(token);
+  } catch {
+    return fallback; // invalid/expired token — fall back to provided name
+  }
+  const user = await userRepository.findById(payload.id);
+  if (!user) return fallback;
+  return { userId: user.id, name: user.name, emoticon: user.emoticon || '⚔️' };
+}
+
 function setupSocket(io) {
   ioInstance = io;
   io.on('connection', (socket) => {
+    const emitServerError = () =>
+      socket.emit('error', { code: 'SERVER_ERROR', message: 'Serverfout' });
 
     // ── join-room ─────────────────────────────────────────────────────────────
-    socket.on('join-room', async ({ roomId, playerName, token }) => {
-      const normalizedId = (roomId || '').toUpperCase().trim();
-
-      // Resolve player identity
-      let userId = null;
-      let name = (playerName || '').trim().slice(0, 50);
-      let emoticon = '';
-
-      if (token) {
-        try {
-          const payload = verify(token);
-          const user = await userRepository.findById(payload.id);
-          if (user) {
-            userId = user.id;
-            name = user.name;
-            emoticon = user.emoticon || '⚔️';
-          }
-        } catch {
-          // invalid token — fall back to provided name
-        }
+    on(socket, 'join-room', async ({ roomId, playerName, token }) => {
+      const normalizedId = str(roomId, 20).toUpperCase();
+      if (!normalizedId) {
+        socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Kamer niet gevonden' });
+        return;
       }
+
+      const { userId, name, emoticon } = await resolveIdentity(token, playerName);
 
       if (!name) {
         socket.emit('error', { code: 'NAME_REQUIRED', message: 'Voer een naam in' });
@@ -202,15 +237,9 @@ function setupSocket(io) {
       }
 
       // Verify room exists in DB
-      let dbRoom;
-      try {
-        dbRoom = await roomRepository.findRoomById(normalizedId);
-        if (!dbRoom) {
-          socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Kamer niet gevonden' });
-          return;
-        }
-      } catch (err) {
-        socket.emit('error', { code: 'SERVER_ERROR', message: 'Serverfout' });
+      const dbRoom = await roomRepository.findRoomById(normalizedId);
+      if (!dbRoom) {
+        socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Kamer niet gevonden' });
         return;
       }
 
@@ -229,6 +258,11 @@ function setupSocket(io) {
             return;
           }
         }
+      }
+
+      // A socket is in at most one room: leave the previous one first.
+      if (socket.data.roomId && socket.data.roomId !== normalizedId) {
+        leaveCurrentRoom(io, socket);
       }
 
       // Init in-memory room if this is the first connection
@@ -272,10 +306,10 @@ function setupSocket(io) {
       } else {
         resetGuestTimer(io, normalizedId);
       }
-    });
+    }, { onError: emitServerError });
 
     // ── vote ──────────────────────────────────────────────────────────────────
-    socket.on('vote', ({ value }) => {
+    on(socket, 'vote', ({ value }) => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room || room.revealed) return;
@@ -284,7 +318,7 @@ function setupSocket(io) {
       if (!player || player.spectator) return;
 
       const allowed = ESTIMATION_METHODS[room.method]?.values ?? [];
-      if (!allowed.includes(value)) return;
+      if (typeof value !== 'string' || !allowed.includes(value)) return;
 
       player.vote = value;
 
@@ -294,7 +328,7 @@ function setupSocket(io) {
     });
 
     // ── toggle-spectator ──────────────────────────────────────────────────────
-    socket.on('toggle-spectator', () => {
+    on(socket, 'toggle-spectator', () => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room || room.revealed) return;
@@ -321,7 +355,7 @@ function setupSocket(io) {
     });
 
     // ── reveal ────────────────────────────────────────────────────────────────
-    socket.on('reveal', async () => {
+    on(socket, 'reveal', async () => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room || room.revealed) return;
@@ -349,10 +383,13 @@ function setupSocket(io) {
         const timers = [];
         timers.push(setTimeout(() => io.to(roomId).emit('countdown', { count: 2 }), 1000));
         timers.push(setTimeout(() => io.to(roomId).emit('countdown', { count: 1 }), 2000));
-        timers.push(setTimeout(async () => {
+        timers.push(setTimeout(() => {
           countdownTimers.delete(roomId);
           const r = activeRooms.get(roomId);
-          if (r && !r.revealed) await doReveal(io, r, roomId);
+          if (r && !r.revealed) {
+            doReveal(io, r, roomId).catch((err) =>
+              console.error('[socket] Error revealing after countdown:', err));
+          }
         }, 3000));
 
         countdownTimers.set(roomId, timers);
@@ -360,7 +397,7 @@ function setupSocket(io) {
     });
 
     // ── new-round ─────────────────────────────────────────────────────────────
-    socket.on('new-round', () => {
+    on(socket, 'new-round', () => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room) return;
@@ -382,29 +419,22 @@ function setupSocket(io) {
     });
 
     // ── set-round-name ────────────────────────────────────────────────────────
-    socket.on('set-round-name', ({ name }) => {
+    on(socket, 'set-round-name', ({ name }) => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room || room.revealed) return;
 
-      room.roundName = (name || '').trim().slice(0, 100);
+      room.roundName = str(name, 100);
       socket.to(roomId).emit('round-name-set', { name: room.roundName });
     });
 
     // ── react ─────────────────────────────────────────────────────────────────
-    socket.on('react', ({ emoji }) => {
+    on(socket, 'react', ({ emoji }) => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
       if (!room || !room.revealed) return;
 
-      const ALLOWED = [
-        '🔥', '🤯', '😬', '👏', '🎉',
-        '🏆', '🥳', '🙌', '⭐', '💪', '🎯', '😊', '🤝',
-        '🤔', '💬', '🤷', '😅', '🧐', '☕', '💭',
-        '🚀', '😴', '💤', '😪', '🛋️', '❓',
-        '👍', '🎲', '💡', '👀', '⚠️', '🌊',
-      ];
-      if (!ALLOWED.includes(emoji)) return;
+      if (typeof emoji !== 'string' || !ALLOWED_REACTIONS.has(emoji)) return;
 
       const player = room.players.get(socket.id);
       if (!player) return;
@@ -417,39 +447,22 @@ function setupSocket(io) {
     });
 
     // ── update-room-name ──────────────────────────────────────────────────────
-    socket.on('update-room-name', async ({ name }) => {
+    on(socket, 'update-room-name', async ({ name }) => {
       const roomId = socket.data.roomId;
       const room = activeRooms.get(roomId);
-      if (!room) return;
+      if (!room || !room.players.has(socket.id)) return;
 
-      const trimmed = (name || '').trim().slice(0, 100);
+      const trimmed = str(name, 100);
       if (!trimmed) return;
 
       room.name = trimmed;
       io.to(roomId).emit('room-name-updated', { name: trimmed });
 
-      try {
-        await roomRepository.updateRoomName(roomId, trimmed);
-      } catch (err) {
-        console.error('Error updating room name:', err);
-      }
+      await roomRepository.updateRoomName(roomId, trimmed);
     });
 
     // ── disconnect ────────────────────────────────────────────────────────────
-    socket.on('disconnect', async () => {
-      const roomId = socket.data.roomId;
-      if (!roomId) return;
-
-      const room = activeRooms.get(roomId);
-      if (!room) return;
-
-      const player = room.players.get(socket.id);
-      room.players.delete(socket.id);
-
-      io.to(roomId).emit('player-left', { socketId: socket.id, name: player?.name });
-
-      // Guest rooms remain available until their inactivity timer expires.
-    });
+    on(socket, 'disconnect', () => leaveCurrentRoom(io, socket));
   });
 }
 

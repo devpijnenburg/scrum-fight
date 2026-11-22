@@ -172,7 +172,18 @@ jobs:
             -p scrum-fight-test \
             -f ~/scrum-fight/docker-compose.test.yml \
             --env-file ~/scrum-fight/.env.test \
-            up -d
+            up -d || {
+              # Show why the stack did not start (the compose output only says "unhealthy").
+              echo "::group::Diagnose: database container"
+              docker ps -a --filter name=scrum-fight-test --format 'table {{.Names}}\t{{.Status}}'
+              docker logs --tail 40 scrum-fight-test-db 2>&1 || true
+              echo "::endgroup::"
+              echo "::group::Diagnose: disk"
+              df -h / /var/lib/docker 2>/dev/null || df -h
+              docker system df
+              echo "::endgroup::"
+              exit 1
+            }
           docker image prune -f
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
             -p scrum-fight-test \

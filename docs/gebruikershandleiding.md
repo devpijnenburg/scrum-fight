@@ -213,7 +213,7 @@ Badges verschijnen op de statistiekenpagina als heraldische schilden. Ontgrendel
 | Functie | Free | Pro | Premium |
 |---------|------|-----|---------|
 | Opgeslagen kamers | 3 | 20 | Onbeperkt |
-| Deelnemers per kamer | 5 | 15 | Onbeperkt |
+| Deelnemers per kamer | 7 | 15 | Onbeperkt |
 | Bewaring van opgeslagen kamers | Tot je ze verwijdert | Tot je ze verwijdert | Tot je ze verwijdert |
 | Statistieken & badges | Ja | Ja | Ja |
 | Ronde-geschiedenis | Ja | Ja | Ja |

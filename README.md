@@ -25,7 +25,7 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 
 | Plan    | Opgeslagen kamers | Deelnemers per kamer |
 |---------|-------------------|----------------------|
-| Free    | 3                 | 5                    |
+| Free    | 3                 | 7                    |
 | Pro     | 20                | 15                   |
 | Premium | ∞                 | ∞                    |
 

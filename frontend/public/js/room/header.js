@@ -2,7 +2,7 @@
 // the banners under it.
 
 import { state, ROOM_ID, $ } from './state.js';
-import { socket } from './socket.js';
+import { send } from './connection.js';
 import { t } from '../core/i18n.js';
 import { errorText } from '../core/errors.js';
 import { getCurrentUser } from '../core/auth.js';
@@ -39,7 +39,7 @@ function wireRoomNameEditor() {
     display.classList.remove('hidden');
     editBtn.classList.remove('hidden');
     input.classList.add('hidden');
-    if (newName && newName !== state.room?.name) socket.emit('update-room-name', { name: newName });
+    if (newName && newName !== state.room?.name) send('update-room-name', { name: newName });
   });
 
   input.addEventListener('keydown', (e) => {

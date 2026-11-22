@@ -38,6 +38,7 @@ function playerKeyFor(roomId) {
 export const PLAYER_KEY = playerKeyFor(ROOM_ID);
 
 export const state = {
+  joined: false,         // connected and the server sent the room state
   mySocketId: null,
   myName: null,
   room: null,            // last room state from the server, kept in sync by events

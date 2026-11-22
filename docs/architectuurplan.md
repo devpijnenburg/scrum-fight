@@ -149,3 +149,12 @@ frontend/public/
 - Beperkingen:
   - Een lopende countdown gaat bij een herstart verloren; de stemmen niet.
   - Pagina's die vóór deze deploy zijn geladen, sturen nog geen sleutel mee. Hun ronde blijft dus alleen bewaard vanaf de eerstvolgende deploy.
+
+### Notities — melding "verbinding herstellen"
+- `js/room/connection.js` houdt bij of de kamer online is: verbonden én de server heeft de kamerstatus (opnieuw) gestuurd.
+- Bij een verbroken verbinding:
+  - worden spelacties meteen geblokkeerd;
+  - verschijnt na 1 seconde de melding "Verbinding herstellen…", en worden de tafel en de bediening grijs;
+  - komt er na 15 seconden een tip bij om de internetverbinding te controleren.
+- Bij een disconnect vanuit de server (shutdown tijdens een deploy) start de client zelf een nieuwe verbindingspoging; socket.io doet dat in dat geval niet vanzelf.
+- Alle spelacties lopen via `send()`. Zo kan socket.io geen acties bufferen die na het herverbinden vóór de nieuwe join aankomen en door de server worden genegeerd.

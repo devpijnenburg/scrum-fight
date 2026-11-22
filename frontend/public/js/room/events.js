@@ -12,6 +12,7 @@ import { showCountdownOverlay, hideCountdownOverlay, showOverlay } from './overl
 import { setRoomName, initAdBanner, initPlanLimitBanner } from './header.js';
 import { resolveAndJoin, showNameModal, claimRoomIfLoggedIn, initRoomAuth } from './identity.js';
 import { spawnFloatingEmoji, showBadgeCelebration, announceBadge } from './celebrations.js';
+import { wireConnectionStatus, markOnline, stopConnectionStatus } from './connection.js';
 
 const findPlayer = (socketId) => state.room?.players.find((p) => p.socketId === socketId);
 
@@ -35,7 +36,10 @@ export function registerSocketEvents() {
     if (e.persisted && socket.disconnected) socket.connect();
   });
 
+  wireConnectionStatus();
+
   socket.on('room-state', (room) => {
+    markOnline();
     applyRoomState(room);
     if (room.isGuest) claimRoomIfLoggedIn();
   });
@@ -96,12 +100,14 @@ export function registerSocketEvents() {
   socket.on('room-name-updated', ({ name }) => setRoomName(name));
 
   socket.on('room-expired', ({ reason }) => {
+    stopConnectionStatus();
     showOverlay('😴', t('room.overlay.expired'),
       reason === 'inactivity' ? t('room.expired_inactivity') : t('room.expired_other'));
   });
 
   // Errors carry { code, message, …details }; the text comes from i18n.
   socket.on('error', (err = {}) => {
+    if (err.code !== 'NAME_REQUIRED') stopConnectionStatus();
     if (err.code === 'ROOM_NOT_FOUND') showOverlay('🚫', t('room.not_found'), t('room.not_found_msg'));
     else if (err.code === 'ROOM_FULL') showOverlay('😶', t('room.full'), errorText(err));
     else if (err.code === 'NAME_REQUIRED') showNameModal();

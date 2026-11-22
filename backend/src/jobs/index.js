@@ -2,8 +2,9 @@
 // src/jobs/ and only handles scheduling + logging; the actual work is
 // delegated to the owning domain under src/domain/.
 const roomCleanupJob = require('./roomCleanupJob');
+const loginCodeCleanupJob = require('./loginCodeCleanupJob');
 
-const JOBS = [roomCleanupJob];
+const JOBS = [roomCleanupJob, loginCodeCleanupJob];
 
 // Scheduled tasks returned by each job's register(), so they can be stopped
 // on shutdown.

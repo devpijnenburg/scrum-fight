@@ -27,4 +27,11 @@ async function recordReaction(userId, roomId, emoji) {
   );
 }
 
-module.exports = { findById, getPlan, recordSpectatorSession, recordReaction };
+// Email 2FA codes are single-use and valid for 10 minutes; expired rows
+// are only kept until the next cleanup run.
+async function deleteExpiredLoginCodes() {
+  const { rowCount } = await db.query('DELETE FROM email_2fa_codes WHERE expires_at < NOW()');
+  return rowCount;
+}
+
+module.exports = { findById, getPlan, recordSpectatorSession, recordReaction, deleteExpiredLoginCodes };

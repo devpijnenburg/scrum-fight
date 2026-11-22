@@ -1,10 +1,9 @@
 require('dotenv').config();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const fs = require('fs');
-const path = require('path');
 
 const pool = require('./src/config/database');
+const { runMigrations } = require('./src/db/migrate');
 const { createApp, corsOrigin } = require('./src/app');
 const { setupSocket, stopRealtime } = require('./src/realtime');
 const { startJobs, stopJobs } = require('./src/jobs');
@@ -27,26 +26,6 @@ const io = new Server(httpServer, {
   cors: { origin: corsOrigin() },
   connectionStateRecovery: {},
 });
-
-const MIGRATIONS = [
-  '001_init.sql',
-  '002_user_votes.sql',
-  '003_round_name.sql',
-  '004_admin_organizations.sql',
-  '005_emoticon.sql',
-  '006_user_badges.sql',
-  '007_spectator_reactions.sql',
-  '008_email_verification.sql',
-  '009_verify_existing_accounts.sql',
-];
-
-async function runMigrations() {
-  for (const file of MIGRATIONS) {
-    const sql = fs.readFileSync(path.join(__dirname, 'src/db/migrations', file), 'utf8');
-    await pool.query(sql);
-  }
-  console.log('[db] Migrations applied');
-}
 
 setupSocket(io);
 
@@ -84,7 +63,7 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 
 const PORT = process.env.PORT || 3000;
 
-runMigrations()
+runMigrations(pool)
   .then(() => {
     startJobs();
     httpServer.listen(PORT, () => {

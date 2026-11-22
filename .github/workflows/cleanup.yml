@@ -66,10 +66,12 @@ jobs:
           if [ "$SCOPE" = "alles" ]; then
             docker image prune -af
           else
-            # Elke tag van de scrum-fight-images; `docker rmi` zonder -f weigert
+            # Elke sha-tag van de scrum-fight-images (`latest` is van productie en blijft);
+            # `docker rmi` zonder -f weigert
             # images die nog door een container gebruikt worden.
             docker images --format '{{.Repository}}:{{.Tag}}' \
               | grep -E '/scrum-fight-(backend|frontend):' \
+              | grep -v ':latest$' \
               | while read -r image; do
                   docker rmi "$image" >/dev/null 2>&1 && echo "verwijderd: $image" || echo "in gebruik:  $image"
                 done

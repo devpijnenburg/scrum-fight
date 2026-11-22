@@ -189,6 +189,7 @@ jobs:
           # laat images staan die nog door een container gebruikt worden.
           docker images --format '{{.Repository}}:{{.Tag}}' \
             | grep -E '/scrum-fight-(backend|frontend):' \
+            | grep -v ':latest$' \
             | xargs -r -n1 docker rmi >/dev/null 2>&1 || true
           docker image prune -f
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \

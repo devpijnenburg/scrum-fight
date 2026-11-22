@@ -1,7 +1,7 @@
 // The card picker: the row of cards a player votes with.
 
 import { state, $ } from './state.js';
-import { socket } from './socket.js';
+import { send, isOnline } from './connection.js';
 import { renderTable, updateVoteStatus } from './table.js';
 
 const pickerCards = () => document.querySelectorAll('#cardPickerRow .picker-card');
@@ -20,7 +20,7 @@ export function renderPickerCards(values) {
 }
 
 export function castVote(value, cardEl) {
-  if (state.isRevealed) return;
+  if (state.isRevealed || !isOnline()) return;
   state.myVote = value;
 
   pickerCards().forEach((c) => c.classList.remove('selected'));
@@ -29,7 +29,7 @@ export function castVote(value, cardEl) {
   const me = state.room?.players.find((p) => p.socketId === state.mySocketId);
   if (me) { me.vote = value; me.hasVoted = true; }
 
-  socket.emit('vote', { value });
+  send('vote', { value });
   $('revealBtn').disabled = false;
   renderTable();
   updateVoteStatus();

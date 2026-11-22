@@ -2,7 +2,7 @@
 // and keyboard shortcuts.
 
 import { state, $ } from './state.js';
-import { socket } from './socket.js';
+import { send } from './connection.js';
 import { pickByPosition, pickByValue } from './picker.js';
 
 const REVEAL_COOLDOWN_MS = 2000;   // matches the server-side flood control
@@ -13,14 +13,14 @@ let revealCoolingDown = false;
 function requestReveal() {
   const btn = $('revealBtn');
   if (btn.disabled || btn.classList.contains('hidden') || revealCoolingDown) return;
+  if (!send('reveal')) return;
   revealCoolingDown = true;
   setTimeout(() => { revealCoolingDown = false; }, REVEAL_COOLDOWN_MS);
-  socket.emit('reveal');
 }
 
 function requestNewRound() {
   if ($('newRoundBtn').classList.contains('hidden')) return;
-  socket.emit('new-round');
+  send('new-round');
 }
 
 function wireRoundName() {
@@ -28,7 +28,7 @@ function wireRoundName() {
   $('roundNameInput').addEventListener('input', (e) => {
     state.currentRoundName = e.target.value;
     clearTimeout(timer);
-    timer = setTimeout(() => socket.emit('set-round-name', { name: state.currentRoundName }), ROUND_NAME_DEBOUNCE_MS);
+    timer = setTimeout(() => send('set-round-name', { name: state.currentRoundName }), ROUND_NAME_DEBOUNCE_MS);
   });
 }
 
@@ -51,11 +51,11 @@ function wireKeyboard() {
 
 export function wireControls() {
   $('revealBtn').addEventListener('click', requestReveal);
-  $('newRoundBtn').addEventListener('click', () => socket.emit('new-round'));
-  $('spectatorToggleBtn').addEventListener('click', () => socket.emit('toggle-spectator'));
-  $('spectatorJoinBtn').addEventListener('click', () => socket.emit('toggle-spectator'));
+  $('newRoundBtn').addEventListener('click', () => send('new-round'));
+  $('spectatorToggleBtn').addEventListener('click', () => send('toggle-spectator'));
+  $('spectatorJoinBtn').addEventListener('click', () => send('toggle-spectator'));
   document.querySelectorAll('.reaction-btn').forEach((btn) => {
-    btn.addEventListener('click', () => socket.emit('react', { emoji: btn.dataset.emoji }));
+    btn.addEventListener('click', () => send('react', { emoji: btn.dataset.emoji }));
   });
   wireRoundName();
   wireKeyboard();

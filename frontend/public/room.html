@@ -61,6 +61,15 @@
     <button class="plan-limit-close" id="planLimitClose" aria-label="Sluiten">✕</button>
   </div>
 
+  <!-- Shown while the connection to the server is being restored -->
+  <div id="connectionBanner" class="connection-banner hidden" role="status" aria-live="polite">
+    <span class="connection-spinner" aria-hidden="true"></span>
+    <span class="connection-text">
+      <span data-i18n="room.connection.reconnecting">Verbinding herstellen…</span>
+      <small id="connectionHint" class="connection-hint hidden" data-i18n="room.connection.hint">Controleer je internetverbinding — we blijven het proberen.</small>
+    </span>
+  </div>
+
   <main class="room-main">
     <section class="room-info-bar" aria-label="Room info">
       <span id="methodBadge" class="badge"></span>

@@ -112,11 +112,11 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
+          ssh-keyscan -4 -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
 
       - name: Copy test compose file to VM
         run: |
-          scp -P 622 -i ~/.ssh/deploy_key \
+          scp -4 -P 622 -i ~/.ssh/deploy_key \
             docker-compose.test.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
@@ -136,7 +136,7 @@ jobs:
           CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}
           CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}
         run: |
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           [ -f ~/scrum-fight/.env.test ] || cp ~/scrum-fight/.env ~/scrum-fight/.env.test
           sed -i 's/^POSTGRES_DB=.*/POSTGRES_DB=scrumfight_test/' ~/scrum-fight/.env.test
@@ -163,13 +163,13 @@ jobs:
             printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
-          } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
+          } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env.test && chmod 600 ~/scrum-fight/.env.test"
 
       - name: Deploy test on VM
         run: |
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
           echo "${{ secrets.GITHUB_TOKEN }}" | \
@@ -234,11 +234,11 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
+          ssh-keyscan -4 -p 622 murderbot.nl >> ~/.ssh/known_hosts || true
 
       - name: Copy compose file to VM
         run: |
-          scp -P 622 -i ~/.ssh/deploy_key \
+          scp -4 -P 622 -i ~/.ssh/deploy_key \
             docker-compose.prod.yml \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl:~/scrum-fight/
 
@@ -273,7 +273,7 @@ jobs:
             printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
-          } | ssh -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
+          } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env && chmod 600 ~/scrum-fight/.env"
 
@@ -281,13 +281,13 @@ jobs:
       # "Betalingen aan/uit" deze regel.
       - name: Default payments toggle to off when not set yet
         run: |
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl \
             "grep -q '^PAYMENTS_ENABLED=' ~/scrum-fight/.env || echo 'PAYMENTS_ENABLED=false' >> ~/scrum-fight/.env"
 
       - name: Deploy production on VM
         run: |
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
           echo "${{ secrets.GITHUB_TOKEN }}" | \

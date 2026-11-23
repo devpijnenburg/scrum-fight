@@ -34,7 +34,7 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -4 -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Show backend logs
         env:
@@ -46,7 +46,7 @@ jobs:
 
           # De waarden gaan als argumenten mee, zodat het filter niet als
           # shell-code op de VM wordt uitgevoerd.
-          ssh -p 622 -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@murderbot.nl \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@murderbot.nl \
             "bash -s -- $(printf '%q ' "$PROJECT" "$FILTER" "$LINES")" << 'EOF'
           CONTAINER=$(docker ps -q \
             --filter "label=com.docker.compose.project=$1" \

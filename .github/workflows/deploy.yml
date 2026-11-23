@@ -135,6 +135,7 @@ jobs:
           CREEM_PRO_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}
           CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}
           CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}
+          SEQ_API_KEY: ${{ secrets.SEQ_API_KEY }}
         run: |
           ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
@@ -163,6 +164,7 @@ jobs:
             printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
+            printf 'SEQ_API_KEY=%s\n'      "$(esc "${SEQ_API_KEY}")"
           } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env.test && chmod 600 ~/scrum-fight/.env.test"
@@ -257,6 +259,7 @@ jobs:
           CREEM_PRO_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PRO_YEARLY_PRODUCT_ID }}
           CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_MONTHLY_PRODUCT_ID }}
           CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${{ secrets.CREEM_PREMIUM_YEARLY_PRODUCT_ID }}
+          SEQ_API_KEY: ${{ secrets.SEQ_API_KEY }}
         run: |
           {
             esc() { printf '%s' "$1" | sed 's/\$/\$\$/g'; }
@@ -273,6 +276,7 @@ jobs:
             printf 'CREEM_PRO_YEARLY_PRODUCT_ID=%s\n'      "$(esc "${CREEM_PRO_YEARLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_MONTHLY_PRODUCT_ID=%s\n' "$(esc "${CREEM_PREMIUM_MONTHLY_PRODUCT_ID}")"
             printf 'CREEM_PREMIUM_YEARLY_PRODUCT_ID=%s\n'  "$(esc "${CREEM_PREMIUM_YEARLY_PRODUCT_ID}")"
+            printf 'SEQ_API_KEY=%s\n'      "$(esc "${SEQ_API_KEY}")"
           } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
               "cat >> ~/scrum-fight/.env && chmod 600 ~/scrum-fight/.env"

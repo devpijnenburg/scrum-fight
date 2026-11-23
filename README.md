@@ -131,6 +131,15 @@ De API-sleutel heeft rechten nodig voor checkouts aanmaken, producten lezen, abo
 
 Hoe het werkt: "Upgraden" stuurt de klant naar de betaalpagina van Creem. Bij terugkomst controleert de backend de handtekening van de redirect en activeert het plan direct; de webhook houdt daarna verlengingen, opzeggingen en planwijzigingen bij. `users.plan` wordt altijd afgeleid van de abonnementen in de tabel `subscriptions`. Opzeggen en de betaalmethode wijzigen doet de klant in het klantportaal van Creem ("Abonnement beheren").
 
+### Logging naar Seq (optioneel)
+
+Op de server stuurt de backend al zijn logregels (`console.log/info/warn/error`) ook naar de centrale [Seq](https://datalust.co/seq) van [murderbot-stack](https://github.com/devpijnenburg/murderbot-stack), te bekijken op <https://logs.murderbot.nl>. De uitvoer in `docker logs` en de workflow **Backend logs** blijft gewoon werken.
+
+- De backend hangt via het gedeelde Docker-netwerk `murderbot` aan Seq en logt naar `http://seq:5341` (`SEQ_URL`, staat vast in de compose-bestanden).
+- `SEQ_API_KEY` is een Seq-API-key met alleen de permissie **Ingest**. In de pipeline is dat de secret `SEQ_API_KEY`. Zonder key staat de koppeling uit en meldt de backend dat één keer bij het opstarten.
+- Elk event krijgt `Application = scrum-fight`, `Environment` (`test` of `production`) en `Component` (de tag aan het begin van de regel, bv. `billing` of `jobs:room-cleanup`). Fouten krijgen de stacktrace mee. Filter in Seq bijvoorbeeld op `Application = 'scrum-fight' and Environment = 'production'`.
+- Lokaal en in de tests is er geen `SEQ_URL`, dus daar gebeurt niets.
+
 ## Projectstructuur
 
 ```

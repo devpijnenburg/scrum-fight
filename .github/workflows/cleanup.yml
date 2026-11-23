@@ -38,11 +38,11 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -4 -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Opruimen op de server
         run: |
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl \
             SCOPE='${{ inputs.scope || 'scrum-fight' }}' bash -s << 'EOF'
           set -uo pipefail

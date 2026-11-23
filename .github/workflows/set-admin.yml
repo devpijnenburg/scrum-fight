@@ -23,7 +23,7 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -4 -p 622 murderbot.nl >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Set admin via psql
         run: |
@@ -33,7 +33,7 @@ jobs:
           PROJECT="scrum-fight${{ inputs.environment == 'test' && '-test' || '' }}"
           DB_NAME="${{ inputs.environment == 'test' && 'scrumfight_test' || '' }}"
 
-          ssh -p 622 -i ~/.ssh/deploy_key \
+          ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << EOF
           source ~/scrum-fight/${ENV_FILE}
           RESOLVED_DB="${DB_NAME:-\$POSTGRES_DB}"

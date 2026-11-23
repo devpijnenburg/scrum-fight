@@ -1,4 +1,6 @@
 require('dotenv').config();
+// Zo vroeg mogelijk, zodat ook de opstartmeldingen in Seq komen.
+const seq = require('./src/shared/seqLogging').installSeqLogging();
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
@@ -61,6 +63,7 @@ function shutdown(signal, exitCode = 0) {
       console.error('[server] Error closing DB pool:', err);
     }
     console.log('[server] Shutdown complete');
+    await seq.flush();
     process.exit(exitCode);
   });
 }
@@ -80,5 +83,5 @@ runMigrations(pool)
   })
   .catch((err) => {
     console.error('[server] Failed to start:', err);
-    process.exit(1);
+    seq.flush().finally(() => process.exit(1));
   });

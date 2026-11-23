@@ -44,6 +44,13 @@ services:
       CREEM_PRO_YEARLY_PRODUCT_ID: ${CREEM_PRO_YEARLY_PRODUCT_ID:-}
       CREEM_PREMIUM_MONTHLY_PRODUCT_ID: ${CREEM_PREMIUM_MONTHLY_PRODUCT_ID:-}
       CREEM_PREMIUM_YEARLY_PRODUCT_ID: ${CREEM_PREMIUM_YEARLY_PRODUCT_ID:-}
+      # Centrale logging (murderbot-stack). Zonder SEQ_API_KEY staat het uit.
+      SEQ_URL: http://seq:5341
+      SEQ_API_KEY: ${SEQ_API_KEY:-}
+      SEQ_ENVIRONMENT: production
+    networks:
+      - default    # database en frontend
+      - murderbot  # gedeeld netwerk met Seq
 
   frontend:
     image: ghcr.io/${GHCR_OWNER}/scrum-fight-frontend:latest
@@ -52,6 +59,10 @@ services:
       - backend
     ports:
       - "${FRONTEND_PORT:-8080}:80"
+
+networks:
+  murderbot:
+    external: true
 
 volumes:
   postgres_data:

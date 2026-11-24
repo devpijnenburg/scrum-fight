@@ -11,6 +11,7 @@
 // Shared helpers come from ../core (i18n, api, auth, settings, badges),
 // ../ui (modal, toast, auth panel) and ../components (page chrome).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import '../ui/authPanel.js';
 import { ROOM_ID } from './state.js';

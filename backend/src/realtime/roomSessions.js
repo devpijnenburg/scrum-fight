@@ -18,6 +18,7 @@ const DEFAULT_TIMING = {
   countdownStepMs: 1000,           // 3-2-1 reveal countdown
   countdownFrom: 3,
   persistDelayMs: 200,             // batch rapid changes before writing the live round
+  statusIntervalMs: 5 * 60 * 1000, // periodic "Status" log line (0 = off)
 };
 
 function createRoomSessions(io, timingOverrides = {}) {
@@ -242,8 +243,42 @@ function createRoomSessions(io, timingOverrides = {}) {
   }
 
   function stopAll() {
+    clearInterval(statusTimer);
     for (const id of [...rooms.keys()]) evict(id, { reason: 'shutdown' });
   }
+
+  // ── Periodieke status ─────────────────────────────────────────────────────
+
+  function stats() {
+    let players = 0;
+    let spectators = 0;
+    for (const room of rooms.values()) {
+      for (const player of room.players.values()) {
+        players += 1;
+        if (player.spectator) spectators += 1;
+      }
+    }
+    return { openRooms: rooms.size, players, spectators };
+  }
+
+  // Eén regel per interval zolang er kamers open zijn, plus één keer als de
+  // laatste kamer dicht is gegaan. Een lege server logt dus niets.
+  let lastHadRooms = false;
+  function reportStatus() {
+    const current = stats();
+    if (!current.openRooms && !lastHadRooms) return null;
+    lastHadRooms = current.openRooms > 0;
+    const fields = {
+      ...current,
+      sockets: io.engine?.clientsCount,
+      rssMb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+    };
+    log.info('Status', fields);
+    return fields;
+  }
+
+  const statusTimer = timing.statusIntervalMs > 0 ? setInterval(reportStatus, timing.statusIntervalMs) : null;
+  statusTimer?.unref?.();
 
   return {
     timing,
@@ -260,6 +295,8 @@ function createRoomSessions(io, timingOverrides = {}) {
     claim,
     close,
     stopAll,
+    stats,
+    reportStatus,
     get size() { return rooms.size; },
   };
 }

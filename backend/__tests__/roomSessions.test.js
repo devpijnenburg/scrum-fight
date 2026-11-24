@@ -30,7 +30,9 @@ let sessions;
 beforeEach(() => {
   jest.useFakeTimers();
   io = fakeIo();
-  sessions = createRoomSessions(io, { guestTtlMs: 1000, emptyRoomTtlMs: 500, countdownStepMs: 100, persistDelayMs: 50 });
+  sessions = createRoomSessions(io, {
+    guestTtlMs: 1000, emptyRoomTtlMs: 500, countdownStepMs: 100, persistDelayMs: 50, statusIntervalMs: 0,
+  });
 });
 
 afterEach(() => {
@@ -237,5 +239,51 @@ describe('live round persistence', () => {
     sessions.close('ROOM01');
     await jest.advanceTimersByTimeAsync(100);
     expect(liveRounds.saveLiveRound).not.toHaveBeenCalled();
+  });
+});
+
+describe('status', () => {
+  const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+  let info;
+
+  beforeEach(() => {
+    setLogLevel('info');
+    info = jest.spyOn(console, 'info').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    info.mockRestore();
+    resetLogLevel();
+  });
+
+  const statusLines = () => info.mock.calls.map(([l]) => l).filter((l) => l.startsWith('[realtime:rooms] Status'));
+
+  it('counts open rooms, players and spectators', async () => {
+    const room = await sessions.open(dbRoom());
+    room.addPlayer('s1', { name: 'Alice' });
+    room.addPlayer('s2', { name: 'Bob' });
+    room.toggleSpectator('s2');
+    expect(sessions.stats()).toEqual({ openRooms: 1, players: 2, spectators: 1 });
+  });
+
+  it('logs on every interval while rooms are open, once more when the last one closes, then stays quiet', async () => {
+    sessions.stopAll();
+    sessions = createRoomSessions(io, { statusIntervalMs: 1000, emptyRoomTtlMs: 500 });
+
+    jest.advanceTimersByTime(1000);
+    expect(statusLines()).toHaveLength(0); // empty server: nothing
+
+    const room = await sessions.open(dbRoom());
+    room.addPlayer('s1', { name: 'Alice' });
+    jest.advanceTimersByTime(1000);
+    expect(statusLines()).toEqual([
+      expect.stringMatching(/^\[realtime:rooms\] Status {2}openRooms=1 players=1 spectators=0 rssMb=\d+$/),
+    ]);
+
+    sessions.evict('ROOM01');
+    jest.advanceTimersByTime(1000);
+    expect(statusLines()[1]).toMatch(/openRooms=0 players=0/);
+
+    jest.advanceTimersByTime(3000);
+    expect(statusLines()).toHaveLength(2);
   });
 });

@@ -1,5 +1,6 @@
 // Email verification link target (entry module of verify-email.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import { apiFetch } from '../core/api.js';
 
 const token = new URLSearchParams(location.search).get('token');

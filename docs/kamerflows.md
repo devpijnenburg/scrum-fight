@@ -53,8 +53,16 @@ Dat geeft één regel per gebeurtenis, altijd in dezelfde vorm:
 | `openRooms` | Aantal kamers in het geheugen van de server ná de gebeurtenis |
 | `reason` | Waarom iets gebeurt (`disconnect: transport close`, `switch-room`, `empty`, `deleted`, …) |
 | `code` | Foutcode zoals de client hem krijgt (`ROOM_NOT_FOUND`, `ROOM_FULL`, …) |
+| `req` | Request-id van het HTTP-verzoek waarbinnen de regel geschreven is (zie hieronder) |
 
-**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db`, `jobs:*`, `billing`, `mail`, `auth` (inloggen, registreren, 2FA), `admin` (auditlog van adminacties), `rate-limit`, `badges`, `events`.
+**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db`, `jobs:*`, `billing`, `mail`, `auth` (inloggen, registreren, 2FA), `admin` (auditlog van adminacties), `rate-limit`, `browser` (fouten uit de browser), `badges`, `events`.
+
+### Request-id, verzoeken, status en browserfouten
+
+- **Request-id:** elk HTTP-verzoek krijgt een korte id (`shared/requestContext.js`). Elke logregel die tijdens dat verzoek geschreven wordt, ook diep in een service, krijgt automatisch `req=…` achteraan. De id gaat ook terug in de response-header `X-Request-Id`; stuurt een proxy zelf een (veilige) `X-Request-Id` mee, dan wordt die gebruikt. In Seq: `req = '1a2b3c4d'` geeft alles van één verzoek.
+- **Eén regel per verzoek** (`shared/accessLog.js`): `[http] Request afgehandeld  method=POST path=/api/rooms status=201 ms=12.4 user=… req=…`. Alleen het pad, zonder querystring. 5xx staat op `warn`, `/api/health` op `debug` (die wordt steeds aangeroepen). Haakt de client af voordat het antwoord er is: `Request afgebroken door de client`.
+- **Status** (`realtime/roomSessions.js`): elke 5 minuten zolang er kamers open zijn `[realtime:rooms] Status  openRooms=3 players=11 spectators=2 sockets=12 rssMb=84`, en één keer als de laatste kamer dicht gaat. Een lege server logt niets. In Seq een grafiek: `select max(players) from stream where Event = 'Status' group by time(1h)`.
+- **Browserfouten** (`frontend/public/js/core/errorReporter.js` → `POST /api/client-errors`): onafgevangen fouten en promise-rejections in de browser komen binnen als `[browser] Fout in de browser  kind=error page=/room.html source=…/table.js line=42 column=7 browser=… user=…`, met de stacktrace van de browser. Per pagina-load hooguit 5 meldingen, dezelfde fout één keer, geen fouten uit browserextensies of scripts van andere domeinen, en een rate limit van 30 per 15 minuten per IP.
 
 ---
 
@@ -385,3 +393,7 @@ Handige filters (Seq-query):
 | Mislukte logins | `Event = 'Inloggen mislukt'`; per IP geblokkeerd: `Component = 'rate-limit'` |
 | Wat deed een admin | `Component = 'admin' and admin = '<id>'` |
 | Meest voorkomende soorten regels | `select count(*) from stream group by @EventType, Event` |
+| Alles van één verzoek | `req = '1a2b3c4d'` (id uit de header `X-Request-Id`) |
+| Trage verzoeken | `Event = 'Request afgehandeld' and ms > 1000` |
+| Fouten in de browser | `Component = 'browser'`, groepeer op `@Message` of `page` |
+| Drukte door de dag | `select max(players), max(openRooms) from stream where Event = 'Status' group by time(1h)` |

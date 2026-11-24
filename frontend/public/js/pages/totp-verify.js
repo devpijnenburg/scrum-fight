@@ -1,6 +1,7 @@
 // TOTP step after an OAuth login (entry module of totp-verify.html).
 // The OAuth callback redirects here with ?preAuthToken=…
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../core/i18n.js';
 
 const preAuthToken = new URLSearchParams(location.search).get('preAuthToken');

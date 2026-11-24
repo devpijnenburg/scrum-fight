@@ -1,4 +1,7 @@
 const nodemailer = require('nodemailer');
+const { createLogger } = require('./logger');
+
+const log = createLogger('mail');
 
 let _transporter = null;
 let _from = '';
@@ -8,7 +11,7 @@ function _getTransporter() {
 
   const smtpHost = (process.env.SMTP_HOST || '').trim();
   if (!smtpHost) {
-    console.warn('[mail] SMTP_HOST niet ingesteld — e-mails worden overgeslagen.');
+    log.warn('SMTP_HOST niet ingesteld, e-mails worden overgeslagen');
     _transporter = false;
     return false;
   }
@@ -37,14 +40,14 @@ function _getTransporter() {
 async function sendMail(to, subject, text) {
   const transporter = _getTransporter();
   if (!transporter) {
-    console.warn(`[mail] Mail overgeslagen (geen SMTP): ${subject} → ${to}`);
+    log.warn('Mail overgeslagen (geen SMTP)', { subject, to });
     return;
   }
   try {
     await transporter.sendMail({ from: _from, to, subject, text });
-    console.info(`[mail] Verstuurd: ${subject} → ${to}`);
+    log.info('Mail verstuurd', { subject, to });
   } catch (err) {
-    console.error(`[mail] SMTP-fout bij versturen naar ${to} (onderwerp: ${subject}):`, err);
+    log.error('SMTP-fout bij versturen', { subject, to }, err);
     throw err;
   }
 }

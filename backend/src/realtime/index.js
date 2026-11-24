@@ -14,6 +14,9 @@ const activityRepository = require('../domains/stats/activityRepository');
 const events = require('../shared/events');
 const { on, str } = require('../shared/socketHandler');
 const { createRoomSessions } = require('./roomSessions');
+const { createLogger } = require('../shared/logger');
+
+const log = createLogger('realtime');
 
 const REVEAL_COOLDOWN_MS = 2000;
 const SPECTATOR_LOG_INTERVAL_MS = 60_000;
@@ -52,6 +55,13 @@ function participantLimit(ownerPlan) {
 // Socket.io room that every tab of one logged-in user can join.
 const accountChannel = (userId) => `account:${userId}`;
 
+// Velden waarmee een speler in de logregels herkenbaar is.
+const who = (socketId, player) => ({
+  player: player?.name,
+  user: player?.userId || 'guest',
+  socket: socketId,
+});
+
 function setupSocket(io, timing = {}) {
   sessions = createRoomSessions(io, timing);
   const rooms = sessions;
@@ -62,6 +72,7 @@ function setupSocket(io, timing = {}) {
   events.on(events.ROOM_DELETED, ({ roomId }) => rooms.close(roomId, 'deleted'));
   // A plan change (payment processed) reaches every open tab of that user.
   events.on(events.PLAN_CHANGED, ({ userId, plan }) => {
+    log.debug('Planwijziging naar open tabbladen gestuurd', { user: userId, plan });
     io.to(accountChannel(userId)).emit('plan-updated', { plan });
   });
 
@@ -70,6 +81,15 @@ function setupSocket(io, timing = {}) {
     const snapshot = room.reveal();
     if (!snapshot) return;
     rooms.persist(room.id);
+    const votes = snapshot.players.filter((p) => p.vote !== null).length;
+    log.info('Kaarten omgedraaid', {
+      room: room.id,
+      round: snapshot.roundName || undefined,
+      votes,
+      players: snapshot.players.length,
+      consensus: snapshot.stats ? Boolean(snapshot.stats.allSame) : undefined,
+      average: snapshot.stats?.average ?? undefined,
+    });
 
     io.to(room.id).emit('cards-revealed', {
       players: snapshot.players.map(({ socketId, name, vote }) => ({ socketId, name, vote })),
@@ -80,7 +100,7 @@ function setupSocket(io, timing = {}) {
     try {
       await roomRepository.recordRound(room.id, snapshot.roundName, snapshot.players);
     } catch (err) {
-      console.error('[realtime] Error saving round history:', err);
+      log.error('Rondegeschiedenis opslaan mislukt', { room: room.id }, err);
       return;
     }
     if (room.isGuest) rooms.touch(room.id);
@@ -94,18 +114,20 @@ function setupSocket(io, timing = {}) {
         if (!p.userId || !p.vote) continue;
         const badgeIds = await evaluateBadgesForUser(p.userId);
         if (!badgeIds.length) continue;
+        log.info('Badge(s) verdiend', { room: roomId, player: p.name, user: p.userId, badges: badgeIds.join(',') });
         if (p.socketId) io.to(p.socketId).emit('badge-earned', { badgeIds });
         for (const badgeId of badgeIds) {
           io.to(roomId).emit('badge-announced', { playerName: p.name, badgeId });
         }
       }
     } catch (err) {
-      console.error('[realtime] Badge evaluation failed:', err);
+      log.error('Badges berekenen mislukt', { room: roomId }, err);
     }
   }
 
   // Removes a socket from the room it is in (if any) and tells the others.
-  function leaveCurrentRoom(socket) {
+  // `reason` komt alleen in de logregel: 'disconnect: <socket.io-reden>' of 'switch-room'.
+  function leaveCurrentRoom(socket, reason) {
     const roomId = socket.data.roomId;
     if (!roomId) return;
     socket.data.roomId = null;
@@ -115,12 +137,25 @@ function setupSocket(io, timing = {}) {
     const player = room?.removePlayer(socket.id);
     if (!player) return;
 
+    log.info('Speler heeft de kamer verlaten', {
+      room: roomId,
+      ...who(socket.id, player),
+      reason,
+      players: room.playerCount,
+    });
+
     io.to(roomId).emit('player-left', { socketId: socket.id, name: player.name });
     rooms.persist(roomId); // the leaver's vote is kept for the round
     rooms.playerLeft(roomId);
   }
 
   io.on('connection', (socket) => {
+    log.debug('Socket verbonden', { socket: socket.id, recovered: socket.recovered || undefined });
+    // De reden van een disconnect bewaren voor de logregel; de handler hieronder
+    // krijgt via on() alleen een genormaliseerde payload.
+    socket.on('disconnect', (reason) => {
+      socket.data.disconnectReason = typeof reason === 'string' ? reason : undefined;
+    });
     // Same shape as REST errors: a stable code (translated by the client via
     // i18n `errors.<CODE>`), a Dutch fallback message and optional details.
     const sendError = (code, message, details = {}) => socket.emit('error', { code, message, ...details });
@@ -133,23 +168,30 @@ function setupSocket(io, timing = {}) {
     // ── join-room ───────────────────────────────────────────────────────────
     on(socket, 'join-room', async ({ roomId, playerName, token, playerKey }) => {
       const id = str(roomId, 20).toUpperCase();
-      if (!id) return sendError('ROOM_NOT_FOUND', 'Kamer niet gevonden');
+      const reject = (code, message, details, fields = {}) => {
+        log.info('Join geweigerd', { room: id || undefined, socket: socket.id, code, ...fields });
+        return sendError(code, message, details);
+      };
+      if (!id) return reject('ROOM_NOT_FOUND', 'Kamer niet gevonden');
 
       const { userId, name, emoticon } = await resolveIdentity(token, playerName);
-      if (!name) return sendError('NAME_REQUIRED', 'Voer een naam in');
+      if (!name) return reject('NAME_REQUIRED', 'Voer een naam in', {}, { user: userId || 'guest' });
 
       const dbRoom = await roomRepository.findRoomById(id);
-      if (!dbRoom) return sendError('ROOM_NOT_FOUND', 'Kamer niet gevonden');
+      if (!dbRoom) return reject('ROOM_NOT_FOUND', 'Kamer niet gevonden', {}, { player: name, user: userId || 'guest' });
 
       const ownerPlan = await ownerPlanOf(dbRoom);
       const limit = participantLimit(ownerPlan);
 
       // The socket may have gone away while we were waiting for the database;
       // adding it now would leave a ghost player nobody ever removes.
-      if (socket.disconnected) return;
+      if (socket.disconnected) {
+        log.debug('Join afgebroken: socket verbroken tijdens het laden', { room: id, socket: socket.id });
+        return;
+      }
 
       // A socket is a player in at most one room.
-      if (socket.data.roomId && socket.data.roomId !== id) leaveCurrentRoom(socket);
+      if (socket.data.roomId && socket.data.roomId !== id) leaveCurrentRoom(socket, 'switch-room');
 
       const room = await rooms.open(dbRoom);
       if (socket.disconnected) return rooms.playerLeft(id);
@@ -163,7 +205,8 @@ function setupSocket(io, timing = {}) {
 
       if (!rejoin && !previousId && room.playerCount >= limit) {
         rooms.playerLeft(id);
-        return sendError('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`, { limit });
+        return reject('ROOM_FULL', `Kamer is vol (max ${limit} deelnemers voor dit plan)`, { limit },
+          { player: name, user: userId || 'guest', plan: ownerPlan, limit });
       }
 
       if (previousId) {
@@ -177,6 +220,9 @@ function setupSocket(io, timing = {}) {
           oldSocket.leave(id);
           oldSocket.emit('session-replaced');
         }
+        log.info('Oude verbinding van hetzelfde tabblad overgenomen', {
+          room: id, player: previous.name, oldSocket: previousId, socket: socket.id,
+        });
       }
 
       const player = rejoin
@@ -184,6 +230,15 @@ function setupSocket(io, timing = {}) {
         : room.addPlayer(socket.id, { name, userId, emoticon, key });
       socket.join(id);
       socket.data.roomId = id;
+
+      log.info(rejoin ? 'Speler opnieuw aangemeld in de kamer' : 'Speler is de kamer binnengekomen', {
+        room: id,
+        ...who(socket.id, player),
+        via: rejoin ? 'rejoin' : previousId ? 'reconnect' : 'join',
+        spectator: player.spectator || undefined,
+        players: room.playerCount,
+        limit: Number.isFinite(limit) ? limit : undefined,
+      });
 
       socket.emit('room-state', room.toClientState(socket.id));
       // Also sent on a rejoin: clients replace the entry with the same socketId.
@@ -204,6 +259,7 @@ function setupSocket(io, timing = {}) {
     on(socket, 'vote', ({ value }) => {
       const room = currentRoom();
       if (!room || !room.castVote(socket.id, value)) return;
+      log.debug('Stem uitgebracht', { room: room.id, socket: socket.id });
       io.to(room.id).emit('player-voted', { socketId: socket.id });
       rooms.persist(room.id);
       if (room.isGuest) rooms.touch(room.id);
@@ -217,11 +273,13 @@ function setupSocket(io, timing = {}) {
       if (spectator === null) return;
 
       const player = room.getPlayer(socket.id);
+      log.info(spectator ? 'Speler kijkt nu toe' : 'Speler doet weer mee', { room: room.id, ...who(socket.id, player) });
       if (spectator && player.userId) {
         const now = Date.now();
         if (!player.lastSpectatorLog || now - player.lastSpectatorLog > SPECTATOR_LOG_INTERVAL_MS) {
           player.lastSpectatorLog = now;
-          activityRepository.recordSpectatorSession(player.userId, room.id).catch(console.error);
+          activityRepository.recordSpectatorSession(player.userId, room.id)
+            .catch((err) => log.error('Toeschouwersessie opslaan mislukt', { room: room.id }, err));
         }
       }
 
@@ -242,11 +300,12 @@ function setupSocket(io, timing = {}) {
       if (rooms.hasCountdown(room.id)) return;
 
       const mode = room.revealMode();
+      log.debug('Onthullen gevraagd', { room: room.id, socket: socket.id, mode });
       if (mode === 'immediate') {
         await reveal(room);
       } else if (mode === 'countdown') {
         rooms.startCountdown(room.id, (r) =>
-          reveal(r).catch((err) => console.error('[realtime] Error revealing after countdown:', err)));
+          reveal(r).catch((err) => log.error('Onthullen na countdown mislukt', { room: r.id }, err)));
       }
     });
 
@@ -255,8 +314,12 @@ function setupSocket(io, timing = {}) {
       const room = currentRoom();
       if (!room) return;
 
-      if (rooms.cancelCountdown(room.id)) io.to(room.id).emit('countdown-cancelled');
+      const cancelled = rooms.cancelCountdown(room.id);
+      if (cancelled) io.to(room.id).emit('countdown-cancelled');
       room.newRound();
+      log.info('Nieuwe ronde gestart', {
+        room: room.id, by: room.getPlayer(socket.id)?.name, countdownCancelled: cancelled || undefined,
+      });
       io.to(room.id).emit('round-reset');
       rooms.persist(room.id);
       if (room.isGuest) rooms.touch(room.id);
@@ -266,6 +329,7 @@ function setupSocket(io, timing = {}) {
     on(socket, 'set-round-name', ({ name }) => {
       const room = currentRoom();
       if (!room || !room.setRoundName(str(name, 100))) return;
+      log.debug('Rondenaam gezet', { room: room.id, round: room.roundName });
       socket.to(room.id).emit('round-name-set', { name: room.roundName });
       rooms.persist(room.id);
     });
@@ -277,7 +341,8 @@ function setupSocket(io, timing = {}) {
 
       const player = room.getPlayer(socket.id);
       if (player.userId) {
-        activityRepository.recordReaction(player.userId, room.id, emoji).catch(console.error);
+        activityRepository.recordReaction(player.userId, room.id, emoji)
+          .catch((err) => log.error('Reactie opslaan mislukt', { room: room.id }, err));
       }
       io.to(room.id).emit('reaction', { name: player.name, emoji });
     });
@@ -289,6 +354,7 @@ function setupSocket(io, timing = {}) {
       const newName = room.rename(str(name, 100));
       if (!newName) return;
 
+      log.info('Kamer hernoemd', { room: room.id, name: newName, by: room.getPlayer(socket.id)?.name });
       io.to(room.id).emit('room-name-updated', { name: newName });
       await roomRepository.updateRoomName(room.id, newName);
     });
@@ -305,10 +371,15 @@ function setupSocket(io, timing = {}) {
       }
       if (payload.preAuth || !payload.id) return;
       socket.join(accountChannel(payload.id));
+      log.debug('Socket volgt accountwijzigingen', { socket: socket.id, user: payload.id });
     });
 
     // ── disconnect ──────────────────────────────────────────────────────────
-    on(socket, 'disconnect', () => leaveCurrentRoom(socket));
+    on(socket, 'disconnect', () => {
+      const reason = socket.data.disconnectReason;
+      log.debug('Socket verbroken', { socket: socket.id, reason, room: socket.data.roomId || undefined });
+      leaveCurrentRoom(socket, reason ? `disconnect: ${reason}` : 'disconnect');
+    });
   });
 
   return sessions;

@@ -6,6 +6,10 @@
 // which normalises the payload to a plain object and logs (instead of
 // propagating) any error.
 
+const { createLogger } = require('./logger');
+
+const log = createLogger('socket');
+
 function asPayload(raw) {
   return raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
 }
@@ -18,7 +22,7 @@ function str(value, maxLength = 200) {
 function on(socket, event, handler, { onError } = {}) {
   socket.on(event, (raw) => {
     const report = (err) => {
-      console.error(`[socket] Error in "${event}" handler (socket ${socket.id}):`, err);
+      log.error('Fout in socket-handler', { event, socket: socket.id, room: socket.data?.roomId || undefined }, err);
       if (onError) {
         try { onError(err); } catch { /* never let the error hook throw */ }
       }

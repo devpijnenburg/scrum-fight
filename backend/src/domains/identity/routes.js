@@ -8,6 +8,9 @@ const oauthStateStore = require('./oauth/oauthStateStore');
 const { authMiddleware } = require('./middleware');
 const { rateLimit } = require('../../shared/rateLimit');
 const { notImplemented } = require('../../shared/errors');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('auth');
 
 const router = express.Router();
 const MINUTE = 60 * 1000;
@@ -89,7 +92,7 @@ function mountOAuthRoutes(provider, label, strategy) {
         res.redirect(`/dashboard.html?token=${result.token}`);
       }
     } catch (err) {
-      console.error(`${label} OAuth error:`, err);
+      log.error('OAuth-login mislukt', { provider: label }, err);
       res.redirect('/?error=oauth_failed');
     }
   });

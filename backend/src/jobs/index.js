@@ -4,6 +4,9 @@
 const roomCleanupJob = require('../domains/rooms/roomCleanupJob');
 const loginCodeCleanupJob = require('../domains/identity/loginCodeCleanupJob');
 const liveRoundCleanupJob = require('../domains/game/liveRoundCleanupJob');
+const { createLogger } = require('../shared/logger');
+
+const log = createLogger('jobs');
 
 const JOBS = [roomCleanupJob, loginCodeCleanupJob, liveRoundCleanupJob];
 
@@ -13,7 +16,7 @@ let tasks = [];
 
 function startJobs() {
   tasks = JOBS.map((job) => job.register());
-  console.log(`[jobs] ${JOBS.length} background job(s) scheduled`);
+  log.info('Achtergrondjobs ingepland', { jobs: JOBS.length });
 }
 
 function stopJobs() {

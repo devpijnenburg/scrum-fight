@@ -5,6 +5,9 @@
 // layer pushes it to connected clients. Keeps domains free of socket.io.
 
 const { EventEmitter } = require('events');
+const { createLogger } = require('./logger');
+
+const log = createLogger('events');
 
 const domainEvents = new EventEmitter();
 
@@ -14,10 +17,10 @@ function on(event, listener) {
     try {
       const result = listener(...args);
       if (result && typeof result.catch === 'function') {
-        result.catch((err) => console.error(`[events] Listener for "${event}" failed:`, err));
+        result.catch((err) => log.error('Listener voor domeinevent mislukt', { event }, err));
       }
     } catch (err) {
-      console.error(`[events] Listener for "${event}" failed:`, err);
+      log.error('Listener voor domeinevent mislukt', { event }, err);
     }
   });
 }

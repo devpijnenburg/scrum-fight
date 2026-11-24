@@ -50,6 +50,8 @@ services:
       SEQ_URL: http://seq:5341
       SEQ_API_KEY: ${SEQ_API_KEY:-}
       SEQ_ENVIRONMENT: test
+      # debug | info | warn | error (standaard info), zie docs/kamerflows.md
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     networks:
       - default    # database en frontend
       - murderbot  # gedeeld netwerk met Seq

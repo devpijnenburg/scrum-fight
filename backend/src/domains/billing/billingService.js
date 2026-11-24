@@ -14,6 +14,9 @@ const { signSessionToken } = require('../identity/jwt');
 const events = require('../../shared/events');
 const { withTransaction } = require('../../shared/transaction');
 const { AppError, badRequest, forbidden, notFound, conflict } = require('../../shared/errors');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('billing');
 
 const PLAN_RANK = { free: 0, pro: 1, premium: 2 };
 const PRICE_TTL_MS = 60 * 60 * 1000;
@@ -87,7 +90,7 @@ async function loadPrices() {
       }
     } catch (err) {
       failed = true;
-      console.warn(`[billing] Could not load price of ${plan}/${billing}:`, err.message);
+      log.warn('Prijs ophalen mislukt', { plan, billing, error: err.message });
     }
   })));
 
@@ -157,7 +160,7 @@ async function startCheckout(user, { plan, billing = 'yearly' } = {}) {
     });
     return { url };
   } catch (err) {
-    console.error('[billing] Checkout failed:', err.message);
+    log.error('Checkout aanmaken mislukt', { user: user.id, plan, billing, error: err.message });
     throw providerError();
   }
 }
@@ -175,7 +178,7 @@ async function changeSubscription(user, current, { plan, billing, productId }) {
   try {
     updated = await creem.upgradeSubscription(current.provider_subscription_id, productId);
   } catch (err) {
-    console.error('[billing] Plan change failed:', err.message);
+    log.error('Planwijziging mislukt', { user: user.id, plan, billing, error: err.message });
     throw providerError();
   }
 
@@ -244,7 +247,7 @@ async function createPortalLink(user) {
   try {
     return { url: await creem.createPortalLink(customerId) };
   } catch (err) {
-    console.error('[billing] Portal link failed:', err.message);
+    log.error('Link naar klantportaal maken mislukt', { user: user.id, error: err.message });
     throw providerError();
   }
 }
@@ -294,7 +297,7 @@ async function applyEvent(client, type, object, eventAt) {
   const plan = offer?.plan ?? existing?.plan;
 
   if (!userId || !plan) {
-    console.warn(`[billing] ${type} for subscription ${sub.id} ignored: unknown ${userId ? 'product' : 'user'}`);
+    log.warn('Webhook genegeerd', { type, subscription: sub.id, reason: userId ? 'unknown-product' : 'unknown-user' });
     return null;
   }
 
@@ -311,7 +314,7 @@ async function applyEvent(client, type, object, eventAt) {
   if (!applied) return null; // older than what we already know
 
   const changedPlan = await syncUserPlan(client, userId);
-  console.log(`[billing] ${type}: subscription ${sub.id} → ${sub.status} (${plan})`);
+  log.info('Abonnement bijgewerkt', { type, subscription: sub.id, user: userId, status: sub.status, plan });
   return changedPlan ? { userId, plan: changedPlan } : null;
 }
 
@@ -342,7 +345,7 @@ async function handleWebhook(rawBody, signature) {
     } catch (err) {
       // A user that no longer exists must not make Creem retry for a day.
       if (err?.code === '23503') {
-        console.warn(`[billing] ${type} (${id}) ignored: user no longer exists`);
+        log.warn('Webhook genegeerd', { type, event: id, reason: 'user-deleted' });
         return null;
       }
       throw err;

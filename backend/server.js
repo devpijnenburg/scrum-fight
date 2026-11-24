@@ -10,16 +10,19 @@ const { createApp, corsOrigin } = require('./src/app');
 const { setupSocket, stopRealtime } = require('./src/realtime');
 const { startJobs, stopJobs } = require('./src/jobs');
 const { describeState } = require('./src/domains/billing/creemClient');
+const { createLogger } = require('./src/shared/logger');
+
+const log = createLogger('server');
 
 // ── Process-level safety net ─────────────────────────────────────────────────
 // A stray rejection is logged instead of silently crashing the process.
 // Uncaught exceptions leave the process in an unknown state, so we log and
 // shut down cleanly; the container orchestrator restarts us.
 process.on('unhandledRejection', (reason) => {
-  console.error('[process] Unhandled promise rejection:', reason);
+  log.error('Unhandled promise rejection', reason instanceof Error ? reason : { reason: String(reason) });
 });
 process.on('uncaughtException', (err) => {
-  console.error('[process] Uncaught exception, shutting down:', err);
+  log.error('Uncaught exception, server stopt', err);
   shutdown('uncaughtException', 1);
 });
 
@@ -39,10 +42,10 @@ let shuttingDown = false;
 function shutdown(signal, exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`[server] ${signal} received, shutting down…`);
+  log.info('Afsluiten gestart', { signal });
 
   const force = setTimeout(() => {
-    console.error('[server] Shutdown timed out, forcing exit');
+    log.error('Afsluiten duurt te lang, proces wordt geforceerd gestopt', { timeoutMs: SHUTDOWN_TIMEOUT_MS });
     process.exit(exitCode || 1);
   }, SHUTDOWN_TIMEOUT_MS);
   force.unref();
@@ -55,14 +58,14 @@ function shutdown(signal, exitCode = 0) {
     try {
       await stopRealtime();
     } catch (err) {
-      console.error('[server] Error saving live rounds:', err);
+      log.error('Lopende rondes opslaan mislukt', err);
     }
     try {
       await pool.end();
     } catch (err) {
-      console.error('[server] Error closing DB pool:', err);
+      log.error('Databasepool sluiten mislukt', err);
     }
-    console.log('[server] Shutdown complete');
+    log.info('Afsluiten voltooid');
     await seq.flush();
     process.exit(exitCode);
   });
@@ -76,12 +79,12 @@ const PORT = process.env.PORT || 3000;
 runMigrations(pool)
   .then(() => {
     startJobs();
-    console.log(`[billing] Betalingen: ${describeState()}`);
+    createLogger('billing').info(`Betalingen: ${describeState()}`);
     httpServer.listen(PORT, () => {
-      console.log(`[server] Listening on port ${PORT}`);
+      log.info('Server luistert', { port: PORT, logLevel: process.env.LOG_LEVEL || 'info' });
     });
   })
   .catch((err) => {
-    console.error('[server] Failed to start:', err);
+    log.error('Starten mislukt', err);
     seq.flush().finally(() => process.exit(1));
   });

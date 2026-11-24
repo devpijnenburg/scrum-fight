@@ -2,6 +2,8 @@
 
 Dit document beschrijft de volgorde van events tussen de browsers, de server en de database voor elk scenario in een kamer. De diagrammen zijn Mermaid en renderen op GitHub.
 
+Wat de server bij joinen, verlaten en het openen en sluiten van een kamer beslist, en welke logregels hij daarbij schrijft, staat met activiteitendiagrammen in [`kamerflows.md`](kamerflows.md).
+
 **Deelnemers in de diagrammen**
 
 | Naam | Wat |

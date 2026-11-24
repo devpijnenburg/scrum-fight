@@ -129,7 +129,7 @@ Een testsleutel (`creem_test_…`) gebruikt automatisch de sandbox van Creem, ee
 
 De API-sleutel heeft rechten nodig voor checkouts aanmaken, producten lezen, abonnementen wijzigen en het klantportaal (of "Full access").
 
-Hoe het werkt: "Upgraden" stuurt de klant naar de betaalpagina van Creem. Bij terugkomst controleert de backend de handtekening van de redirect en activeert het plan direct; de webhook houdt daarna verlengingen, opzeggingen en planwijzigingen bij. `users.plan` wordt altijd afgeleid van de abonnementen in de tabel `subscriptions`. Opzeggen en de betaalmethode wijzigen doet de klant in het klantportaal van Creem ("Abonnement beheren").
+Hoe het werkt: "Upgraden" stuurt de klant naar de betaalpagina van Creem. Bij terugkomst controleert de backend de handtekening van de redirect en activeert het plan direct (klopt die handtekening niet, dan haalt de backend de checkout bij Creem op en activeert op basis daarvan; de reden staat dan in de log); de webhook houdt daarna verlengingen, opzeggingen en planwijzigingen bij. `users.plan` wordt altijd afgeleid van de abonnementen in de tabel `subscriptions`. Opzeggen en de betaalmethode wijzigen doet de klant in het klantportaal van Creem ("Abonnement beheren").
 
 ### Logging
 

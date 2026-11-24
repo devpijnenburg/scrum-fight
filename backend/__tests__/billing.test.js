@@ -509,13 +509,44 @@ describe('POST /api/payments/confirm', () => {
     expect(planChanges).toEqual([{ userId: ALICE, plan: 'premium' }]);
   });
 
+  const checkoutAtCreem = (overrides = {}) => ({
+    id: 'ch_1',
+    status: 'completed',
+    request_id: ALICE,
+    product: { id: 'prod_prem_y' },
+    customer: { id: 'cust_1' },
+    subscription: { id: 'sub_1' },
+    ...overrides,
+  });
+
   it('stays pending for a forged redirect', async () => {
+    mockCreem(() => ({ status: 404, body: {} }));
     const res = await confirm(redirectQuery(params, 'not-the-api-key'));
     expect(res.body).toEqual({ status: 'pending' });
     expect(planOf()).toBe('free');
   });
 
+  it('activates from the checkout at Creem when the redirect signature does not match', async () => {
+    mockCreem((url) => (url.includes('/checkouts?checkout_id=ch_1') ? { body: checkoutAtCreem() } : null));
+    const res = await confirm(redirectQuery(params, 'some-other-key'));
+    expect(res.body).toMatchObject({ status: 'active', plan: 'premium' });
+    expect(state.subs.get('sub_1')).toMatchObject({ user_id: ALICE, provider_customer_id: 'cust_1', billing_period: 'yearly' });
+  });
+
+  it.each([
+    ['not completed', { status: 'pending' }],
+    ['for another user', { request_id: BOB }],
+    ['for another subscription', { subscription: { id: 'sub_other' } }],
+    ['for an unknown product', { product: { id: 'prod_unknown' } }],
+  ])('stays pending when the checkout at Creem is %s', async (_label, overrides) => {
+    mockCreem(() => ({ body: checkoutAtCreem(overrides) }));
+    const res = await confirm(redirectQuery(params, 'some-other-key'));
+    expect(res.body).toEqual({ status: 'pending' });
+    expect(state.subs.size).toBe(0);
+  });
+
   it("does not give one user another user's payment", async () => {
+    mockCreem(() => ({ body: checkoutAtCreem() }));
     const res = await confirm(redirectQuery(params), BOB);
     expect(res.body).toEqual({ status: 'pending' });
     expect(planOf(BOB)).toBe('free');

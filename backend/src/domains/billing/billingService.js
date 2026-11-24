@@ -207,32 +207,80 @@ async function freshSession(userId) {
   return { plan: user.plan, token: signSessionToken(user) };
 }
 
+// The purchase behind a signed redirect, or null (with the reason logged).
+function purchaseFromSignedRedirect(user, query, subscriptionId) {
+  const signed = creem.verifyRedirectSignature(query);
+  if (!signed) {
+    log.warn('Terugkeer van checkout: handtekening klopt niet', { user: user.id, subscription: subscriptionId });
+    return null;
+  }
+  const offer = creem.offerForProduct(signed.product_id);
+  if (!offer) {
+    log.warn('Terugkeer van checkout: onbekend product', { user: user.id, subscription: subscriptionId, product: signed.product_id });
+    return null;
+  }
+  if (signed.request_id !== user.id) {
+    log.warn('Terugkeer van checkout: betaling hoort bij een andere gebruiker', { user: user.id, subscription: subscriptionId });
+    return null;
+  }
+  return { customerId: signed.customer_id, offer };
+}
+
+// The purchase as Creem itself reports it, looked up by checkout id. Used
+// when the redirect signature does not check out, so a paid plan never
+// depends on that signature (or on the webhook) alone.
+async function purchaseFromCheckout(user, checkoutId, subscriptionId) {
+  if (!checkoutId) return null;
+  let checkout;
+  try {
+    checkout = await creem.getCheckout(checkoutId);
+  } catch (err) {
+    log.warn('Checkout ophalen bij Creem mislukt', { user: user.id, checkout: checkoutId, error: err.message });
+    return null;
+  }
+  const offer = creem.offerForProduct(idOf(checkout?.product));
+  const reason =
+    checkout?.status !== 'completed' ? `status-${checkout?.status}` :
+    checkout.request_id !== user.id ? 'other-user' :
+    idOf(checkout.subscription) !== subscriptionId ? 'other-subscription' :
+    !offer ? 'unknown-product' : null;
+  if (reason) {
+    log.warn('Checkout bij Creem niet bevestigd', { user: user.id, checkout: checkoutId, reason });
+    return null;
+  }
+  log.info('Checkout bevestigd via Creem-API', { user: user.id, checkout: checkoutId, subscription: subscriptionId });
+  return { customerId: idOf(checkout.customer), offer };
+}
+
 // Called (repeatedly) by the page the customer returns to after paying.
-// The redirect is signed by Creem, so the plan can be activated right
-// away instead of waiting for the webhook. Without a valid signature this
-// only reports whether the webhook has been processed yet.
+// The plan is activated right away instead of waiting for the webhook:
+// from the signed redirect, or else from the checkout as Creem reports it.
 async function confirmReturn(user, queryString) {
   const query = typeof queryString === 'string' ? queryString.slice(0, 2000) : '';
-  const subscriptionId = new URLSearchParams(query).get('subscription_id');
+  const params = new URLSearchParams(query);
+  const subscriptionId = params.get('subscription_id');
   if (!subscriptionId) return { status: 'pending' };
 
-  const signed = creem.verifyRedirectSignature(query);
-  const offer = signed && creem.offerForProduct(signed.product_id);
-  if (offer && signed.request_id === user.id) {
-    const changedPlan = await withTransaction(async (client) => {
-      await repo.insertIfAbsent(client, {
-        userId: user.id,
-        providerSubscriptionId: subscriptionId,
-        providerCustomerId: signed.customer_id,
-        plan: offer.plan,
-        billingPeriod: offer.billing,
+  let row = await repo.findByProviderId(db, subscriptionId);
+  if (!row) {
+    const purchase = purchaseFromSignedRedirect(user, query, subscriptionId)
+      ?? await purchaseFromCheckout(user, params.get('checkout_id'), subscriptionId);
+    if (purchase) {
+      const changedPlan = await withTransaction(async (client) => {
+        await repo.insertIfAbsent(client, {
+          userId: user.id,
+          providerSubscriptionId: subscriptionId,
+          providerCustomerId: purchase.customerId,
+          plan: purchase.offer.plan,
+          billingPeriod: purchase.offer.billing,
+        });
+        return syncUserPlan(client, user.id);
       });
-      return syncUserPlan(client, user.id);
-    });
-    announce(user.id, changedPlan);
+      announce(user.id, changedPlan);
+      row = await repo.findByProviderId(db, subscriptionId);
+    }
   }
 
-  const row = await repo.findByProviderId(db, subscriptionId);
   if (!row || row.user_id !== user.id || !repo.ENTITLED_STATUSES.includes(row.status)) {
     return { status: 'pending' };
   }

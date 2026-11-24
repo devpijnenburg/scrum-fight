@@ -138,6 +138,12 @@ async function createPortalLink(customerId) {
   return result.customer_portal_link;
 }
 
+// The checkout session behind a redirect: status, request_id, product,
+// customer and subscription.
+function getCheckout(checkoutId) {
+  return request('GET', `/checkouts?checkout_id=${encodeURIComponent(checkoutId)}`);
+}
+
 function getProduct(productId) {
   return request('GET', `/products/${encodeURIComponent(productId)}`);
 }
@@ -194,6 +200,7 @@ module.exports = {
   createCheckout,
   upgradeSubscription,
   createPortalLink,
+  getCheckout,
   getProduct,
   verifyWebhookSignature,
   verifyRedirectSignature,

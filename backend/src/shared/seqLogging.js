@@ -7,6 +7,7 @@
 // verloren en staat er één melding op stderr; de applicatie merkt er verder niets van.
 
 const util = require('util');
+const { currentLogFields } = require('./logger');
 
 const LEVELS = {
   log: 'Information',
@@ -57,6 +58,13 @@ function installSeqLogging({
     // De bestaande logregels beginnen met een tag als "[billing]" of "[jobs:room-cleanup]".
     const tag = /^\[([^\]]+)\]/.exec(message);
     if (tag) event.Component = tag[1];
+    // Regels van shared/logger.js dragen hun velden mee als losse properties.
+    const fields = currentLogFields();
+    if (fields) {
+      for (const [key, value] of Object.entries(fields)) {
+        if (!(key in event)) event[key] = value;
+      }
+    }
     if (error && error.stack) event['@x'] = error.stack;
     return event;
   }

@@ -1,6 +1,9 @@
 const { fetchBadgeStats } = require('../stats/statsRepository');
 const { BADGE_UNLOCK_FNS } = require('./badgeDefinitions');
 const { getEarnedBadgeIds, insertNewBadges } = require('./badgeRepository');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('badges');
 
 /**
  * Evaluates and persists newly earned badges for a user.
@@ -20,7 +23,7 @@ async function evaluateBadgesForUser(userId) {
     if (!candidates.length) return [];
     return await insertNewBadges(userId, candidates);
   } catch (err) {
-    console.error('[badges] Evaluation error for user', userId, err.message);
+    log.error('Badges berekenen mislukt', { user: userId }, err);
     return [];
   }
 }

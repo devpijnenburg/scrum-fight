@@ -6,6 +6,9 @@ const users = require('../identity/userRepository');
 const { PLAN_LIMITS, VALID_METHODS } = require('../billing/plans');
 const events = require('../../shared/events');
 const { badRequest, forbidden, notFound, conflict } = require('../../shared/errors');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('rooms');
 
 const ROOM_ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const ROOM_ID_LENGTH = 6;
@@ -68,7 +71,18 @@ async function createRoom(user, { name, method }) {
 
   const id = await generateUniqueRoomId();
   const room = await roomRepository.insertRoom({ id, name: trimmedName, ownerId, method, isGuest });
+  log.info('Kamer aangemaakt', {
+    room: id,
+    name: trimmedName,
+    method,
+    type: isGuest ? 'guest' : 'saved',
+    owner: ownerId ?? undefined,
+    plan: user ? user.plan || 'free' : undefined,
+  });
   if (planLimit) {
+    log.info('Kamerlimiet bereikt, tijdelijke kamer gemaakt', {
+      room: id, user: user.id, plan: planLimit.plan, max: planLimit.max,
+    });
     room.planLimit = planLimit;
     room.planLimitWarning = roomLimitMessage(planLimit.plan);
   }
@@ -105,12 +119,15 @@ async function claimRoom(user, id) {
   const plan = user.plan || 'free';
 
   if (await hasReachedRoomLimit(user.id, plan)) {
+    log.info('Claimen geweigerd: kamerlimiet bereikt', { room: roomId, user: user.id, plan });
     throw forbidden('ROOM_LIMIT_REACHED', roomLimitMessage(plan), { plan, max: maxRoomsForPlan(plan) });
   }
   const room = await roomRepository.claimRoom(roomId, user.id);
   if (!room) {
+    log.info('Claimen geweigerd: kamer bestaat niet of is al permanent', { room: roomId, user: user.id });
     throw conflict('ROOM_NOT_CLAIMABLE', 'Kamer kan niet geclaimd worden (bestaat niet meer of is al permanent)');
   }
+  log.info('Gastkamer geclaimd', { room: roomId, owner: user.id, plan });
   events.emit(events.ROOM_CLAIMED, { roomId });
   return room;
 }
@@ -118,8 +135,10 @@ async function claimRoom(user, id) {
 async function deleteRoom(user, id) {
   const roomId = normalizeRoomId(id);
   if (!(await roomRepository.deleteOwnedRoom(roomId, user.id))) {
+    log.info('Verwijderen geweigerd: kamer niet gevonden of geen eigenaar', { room: roomId, user: user.id });
     throw notFound('ROOM_NOT_FOUND_OR_FORBIDDEN', 'Kamer niet gevonden of geen toegang');
   }
+  log.info('Kamer verwijderd', { room: roomId, owner: user.id });
   events.emit(events.ROOM_DELETED, { roomId });
 }
 

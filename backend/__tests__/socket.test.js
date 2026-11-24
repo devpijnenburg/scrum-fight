@@ -187,3 +187,41 @@ describe('room flow', () => {
     expect(io.broadcasts).toHaveLength(before);
   });
 });
+
+describe('logging', () => {
+  const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+  let infoSpy;
+
+  beforeEach(() => {
+    setLogLevel('info');
+    infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    infoSpy.mockRestore();
+    resetLogLevel();
+  });
+
+  const lines = () => infoSpy.mock.calls.map(([line]) => line);
+
+  it('logs opening the room, a join and a leave', async () => {
+    db.query.mockResolvedValueOnce({ rows: [{ id: 'ROOML1', name: 'Team', method: 'fibonacci', is_guest: false, owner_id: null }] });
+    const socket = connect(io);
+    socket.trigger('join-room', { roomId: 'rooml1', playerName: 'Alice' });
+    await flush();
+    socket.trigger('disconnect', 'transport close');
+
+    expect(lines()).toEqual(expect.arrayContaining([
+      expect.stringMatching(/^\[realtime:rooms\] Kamer geopend {2}room=ROOML1 type=saved method=fibonacci/),
+      expect.stringMatching(/^\[realtime\] Speler is de kamer binnengekomen {2}room=ROOML1 player=Alice user=guest socket=sock-\d+ via=join players=1/),
+      expect.stringMatching(/^\[realtime\] Speler heeft de kamer verlaten {2}room=ROOML1 player=Alice .*reason="disconnect: transport close" players=0/),
+      expect.stringMatching(/^\[realtime:rooms\] Kamer is leeg/),
+    ]));
+  });
+
+  it('logs a refused join with its code', async () => {
+    const socket = connect(io);
+    socket.trigger('join-room', { roomId: 'NOPE01', playerName: 'Bob' });
+    await flush();
+    expect(lines()).toContainEqual(expect.stringMatching(/^\[realtime\] Join geweigerd {2}room=NOPE01 socket=sock-\d+ code=ROOM_NOT_FOUND player=Bob user=guest/));
+  });
+});

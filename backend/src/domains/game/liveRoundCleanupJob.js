@@ -1,5 +1,8 @@
 const cron = require('node-cron');
 const { deleteStaleLiveRounds } = require('./liveRoundRepository');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('jobs:live-round-cleanup');
 
 // Daily at 03:30 — removes rounds that were abandoned for over a day.
 const SCHEDULE = '30 3 * * *';
@@ -8,9 +11,9 @@ function register() {
   return cron.schedule(SCHEDULE, async () => {
     try {
       const removed = await deleteStaleLiveRounds();
-      if (removed) console.log(`[jobs:live-round-cleanup] Removed ${removed} abandoned rounds`);
+      if (removed) log.info('Verlaten rondes opgeruimd', { removed });
     } catch (err) {
-      console.error('[jobs:live-round-cleanup] Error during cleanup:', err);
+      log.error('Opruimen mislukt', err);
     }
   });
 }

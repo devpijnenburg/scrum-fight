@@ -7,6 +7,10 @@
 const { GameRoom } = require('../domains/game/gameRoom');
 const roomRepository = require('../domains/rooms/roomRepository');
 const liveRounds = require('../domains/game/liveRoundRepository');
+const { createLogger } = require('../shared/logger');
+
+const log = createLogger('realtime:rooms');
+const roomType = (room) => (room.isGuest ? 'guest' : 'saved');
 
 const DEFAULT_TIMING = {
   guestTtlMs: 60 * 60 * 1000,      // guest room expires after 1h of inactivity
@@ -44,7 +48,7 @@ function createRoomSessions(io, timingOverrides = {}) {
   async function open(dbRoom) {
     const existing = rooms.get(dbRoom.id);
     if (existing) {
-      clear(emptyTimers, existing.id);
+      if (clear(emptyTimers, existing.id)) log.debug('Lege kamer weer in gebruik, opruimen geannuleerd', { room: existing.id });
       return existing;
     }
     if (!loading.has(dbRoom.id)) {
@@ -55,12 +59,23 @@ function createRoomSessions(io, timingOverrides = {}) {
           method: dbRoom.method,
           isGuest: dbRoom.is_guest,
         });
+        let restored = false;
         try {
-          room.restore(await liveRounds.loadLiveRound(room.id));
+          const saved = await liveRounds.loadLiveRound(room.id);
+          room.restore(saved);
+          restored = Boolean(saved);
         } catch (err) {
-          console.error('[realtime] Could not load saved round, starting fresh:', err);
+          log.error('Opgeslagen ronde laden mislukt, kamer start met een lege ronde', { room: room.id }, err);
         }
         rooms.set(room.id, room);
+        log.info('Kamer geopend', {
+          room: room.id,
+          type: roomType(room),
+          method: room.method,
+          restoredRound: restored || undefined,
+          absentPlayers: restored ? room.absent.size : undefined,
+          openRooms: rooms.size,
+        });
         return room;
       })().finally(() => loading.delete(dbRoom.id)));
     }
@@ -79,7 +94,7 @@ function createRoomSessions(io, timingOverrides = {}) {
     const previous = writes.get(roomId) || Promise.resolve();
     const write = previous
       .then(() => liveRounds.saveLiveRound(roomId, state))
-      .catch((err) => console.error('[realtime] Error saving live round:', err));
+      .catch((err) => log.error('Lopende ronde opslaan mislukt', { room: roomId }, err));
     writes.set(roomId, write);
     write.finally(() => { if (writes.get(roomId) === write) writes.delete(roomId); });
     return write;
@@ -95,19 +110,22 @@ function createRoomSessions(io, timingOverrides = {}) {
 
   // Writes every pending save now and waits for all saves (used on shutdown).
   async function flushAll() {
+    log.info('Lopende rondes opslaan voor afsluiten', { openRooms: rooms.size, pendingSaves: persistTimers.size });
     const pending = [...persistTimers.keys()].map((id) => writeNow(id));
     await Promise.all([...pending, ...writes.values()]);
   }
 
   // Drops a room from memory and cancels all of its timers. A pending save
   // is written first (unless the room itself was deleted).
-  function evict(roomId, { keepRound = true } = {}) {
+  function evict(roomId, { keepRound = true, reason = 'empty' } = {}) {
+    const existed = rooms.has(roomId);
     if (keepRound && persistTimers.has(roomId)) writeNow(roomId);
     clear(persistTimers, roomId);
     clear(guestTimers, roomId);
     clear(emptyTimers, roomId);
     clear(countdowns, roomId);
     rooms.delete(roomId);
+    if (existed) log.info('Kamer gesloten', { room: roomId, reason, openRooms: rooms.size });
   }
 
   // ── Activity / guest expiry ───────────────────────────────────────────────
@@ -116,13 +134,17 @@ function createRoomSessions(io, timingOverrides = {}) {
     clear(guestTimers, roomId);
     const timer = setTimeout(async () => {
       guestTimers.delete(roomId);
-      if (!rooms.has(roomId)) return;
+      const room = rooms.get(roomId);
+      if (!room) return;
+      log.info('Gastkamer verlopen door inactiviteit', {
+        room: roomId, players: room.playerCount, idleMinutes: Math.round(timing.guestTtlMs / 60000),
+      });
       io.to(roomId).emit('room-expired', { reason: 'inactivity' });
-      evict(roomId, { keepRound: false });
+      evict(roomId, { keepRound: false, reason: 'guest-expired' });
       try {
         await roomRepository.deleteRoom(roomId);
       } catch (err) {
-        console.error('[realtime] Error deleting expired guest room:', err);
+        log.error('Verlopen gastkamer verwijderen mislukt', { room: roomId }, err);
       }
     }, timing.guestTtlMs);
     timer.unref?.(); // lifecycle timers must not keep the process alive
@@ -136,7 +158,7 @@ function createRoomSessions(io, timingOverrides = {}) {
     if (!room) return;
     if (room.isGuest) scheduleGuestExpiry(roomId);
     roomRepository.touchLastActive(roomId).catch((err) =>
-      console.error('[realtime] Error updating last_active:', err));
+      log.error('last_active bijwerken mislukt', { room: roomId }, err));
   }
 
   // Called after a player left. Empty permanent rooms are evicted after a
@@ -145,12 +167,18 @@ function createRoomSessions(io, timingOverrides = {}) {
   function playerLeft(roomId) {
     const room = rooms.get(roomId);
     if (!room || !room.isEmpty) return;
-    clear(countdowns, roomId);
-    if (room.isGuest) return;
+    if (clear(countdowns, roomId)) log.debug('Countdown gestopt: kamer is leeg', { room: roomId });
+    if (room.isGuest) {
+      log.info('Kamer is leeg, gastkamer blijft tot de inactiviteitstimer afloopt', { room: roomId });
+      return;
+    }
     clear(emptyTimers, roomId);
+    log.info('Kamer is leeg, wordt uit het geheugen gehaald als niemand terugkomt', {
+      room: roomId, graceMinutes: Math.round(timing.emptyRoomTtlMs / 60000),
+    });
     const timer = setTimeout(() => {
       emptyTimers.delete(roomId);
-      if (rooms.get(roomId)?.isEmpty) evict(roomId);
+      if (rooms.get(roomId)?.isEmpty) evict(roomId, { reason: 'empty' });
     }, timing.emptyRoomTtlMs);
     timer.unref?.();
     emptyTimers.set(roomId, timer);
@@ -199,19 +227,22 @@ function createRoomSessions(io, timingOverrides = {}) {
     const room = rooms.get(roomId);
     if (!room) return;
     room.isGuest = false;
+    log.info('Live kamer is nu permanent (geclaimd)', { room: roomId, players: room.playerCount });
     io.to(roomId).emit('room-claimed');
     playerLeft(roomId); // starts the empty-room grace period if nobody is in it
   }
 
   // The room was deleted: tell everyone in it and forget it.
   function close(roomId, reason = 'deleted') {
-    if (!rooms.has(roomId)) return;
+    const room = rooms.get(roomId);
+    if (!room) return;
+    log.info('Live kamer gesloten, spelers worden weggestuurd', { room: roomId, reason, players: room.playerCount });
     io.to(roomId).emit('room-expired', { reason });
-    evict(roomId, { keepRound: false });
+    evict(roomId, { keepRound: false, reason });
   }
 
   function stopAll() {
-    for (const id of [...rooms.keys()]) evict(id);
+    for (const id of [...rooms.keys()]) evict(id, { reason: 'shutdown' });
   }
 
   return {

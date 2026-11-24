@@ -5,6 +5,10 @@
 // The frontend translates `code` (see i18n `errors.<CODE>`) and falls back
 // to `error` for codes it does not know yet.
 
+const { createLogger } = require('./logger');
+
+const log = createLogger('http');
+
 class AppError extends Error {
   constructor(status, code, message, details = {}) {
     super(message);
@@ -41,7 +45,7 @@ function errorHandler(err, req, res, _next) {
     return res.status(413).json({ error: 'Verzoek te groot', code: 'PAYLOAD_TOO_LARGE' });
   }
 
-  console.error(`[http] ${req.method} ${req.originalUrl} failed:`, err);
+  log.error('Request mislukt', { method: req.method, url: req.originalUrl }, err);
   res.status(500).json({ error: 'Serverfout', code: 'SERVER_ERROR' });
 }
 

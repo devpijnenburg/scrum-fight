@@ -8,8 +8,8 @@ import { apiFetch } from '../core/api.js';
 import { getCurrentUser } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
 import { generateRoomName } from '../core/roomNames.js';
-import { PLAN_RANK } from '../core/plans.js';
-import { paymentsEnabled, showSubscriptionLinks } from '../core/payments.js';
+import { showSubscriptionLinks } from '../core/payments.js';
+import '../ui/planCards.js';
 import { openModal, closeModal, confirmDialog } from '../ui/modal.js';
 import { showToast } from '../ui/toast.js';
 
@@ -29,17 +29,13 @@ function initDashboard() {
   document.getElementById('dashboardTitle').textContent = t('dashboard.welcome', { name: user.name });
   document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: user.plan.toUpperCase() });
 
-  // The plan cards link to the subscription page; only plans above the
-  // current one keep their upgrade button.
-  const rank = PLAN_RANK[user.plan] ?? Infinity;
-  document.querySelectorAll('.plan-card').forEach((card) => {
-    if (card.dataset.plan === user.plan) card.setAttribute('data-active', 'true');
-    if (PLAN_RANK[card.dataset.plan] <= rank) card.querySelector('.plan-upgrade-btn')?.remove();
-  });
-  // Without the payments feature the cards only compare the plans.
-  paymentsEnabled().then((enabled) => {
-    if (!enabled) document.querySelectorAll('.plan-upgrade-btn').forEach((btn) => btn.remove());
-    document.getElementById('planInfoLink').classList.toggle('hidden', !showSubscriptionLinks(enabled, user));
+  // The plan cards (<sf-plan-cards>) show the offers and go straight to the
+  // checkout; the page only follows what they report.
+  const cards = document.getElementById('planCards');
+  cards.addEventListener('plans:loaded', (e) => {
+    const { enabled, plan } = e.detail;
+    document.getElementById('planBadge').textContent = t('dashboard.plan_badge', { plan: plan.toUpperCase() });
+    document.getElementById('planInfoLink').classList.toggle('hidden', !showSubscriptionLinks(enabled, { plan }));
   });
 
   document.getElementById('modalRoomName').value = generateRoomName();

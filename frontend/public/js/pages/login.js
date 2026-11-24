@@ -1,5 +1,6 @@
 // Login / registration page (entry module of login.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import '../ui/authPanel.js';
 

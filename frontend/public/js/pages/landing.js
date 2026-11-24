@@ -1,5 +1,6 @@
 // Landing page: create a room or join one by code (entry module of index.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import '../ui/methodSelect.js';
 import { t } from '../core/i18n.js';

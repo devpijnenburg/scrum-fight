@@ -192,14 +192,44 @@ describe('logging', () => {
 
   const lines = (spy) => spy.mock.calls.map(([line]) => line);
 
+  it('gives every request an id, logs it on every line and returns it in X-Request-Id', async () => {
+    db.query.mockResolvedValueOnce({ rows: [baseUser] });
+    bcrypt.compare.mockResolvedValueOnce(true);
+    const res = await request(app).post('/api/auth/login').send({ email: 'alice@test.com', password: 'password123' });
+    const id = res.headers['x-request-id'];
+    expect(id).toMatch(/^[0-9a-f]{8}$/);
+    await new Promise((r) => setImmediate(r)); // access log runs on 'close'
+
+    const mine = lines(info).filter((l) => l.endsWith(`req=${id}`));
+    expect(mine).toEqual([
+      expect.stringMatching(/^\[auth\] Ingelogd /),
+      expect.stringMatching(/^\[http\] Request afgehandeld {2}method=POST path=\/api\/auth\/login status=200 ms=[\d.]+ req=/),
+    ]);
+  });
+
+  it('keeps a safe X-Request-Id from the proxy and replaces an unsafe one', async () => {
+    const ok = await request(app).get('/api/auth/providers').set('X-Request-Id', 'nginx-abc123');
+    expect(ok.headers['x-request-id']).toBe('nginx-abc123');
+    const bad = await request(app).get('/api/auth/providers').set('X-Request-Id', 'x y<script>');
+    expect(bad.headers['x-request-id']).toMatch(/^[0-9a-f]{8}$/);
+  });
+
+  it('logs the path without the query string', async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+    await request(app).get('/api/auth/verify-email?token=geheim-token');
+    await new Promise((r) => setImmediate(r));
+    expect(JSON.stringify(info.mock.calls)).not.toContain('geheim-token');
+    expect(lines(info)).toContainEqual(expect.stringMatching(/path=\/api\/auth\/verify-email status=400 /));
+  });
+
   it('logs a failed login with a masked email address', async () => {
     db.query.mockResolvedValueOnce({ rows: [baseUser] });
     bcrypt.compare.mockResolvedValueOnce(false);
     await request(app).post('/api/auth/login').send({ email: 'alice@test.com', password: 'wrong' });
 
-    expect(lines(warn)).toContainEqual(
-      '[auth] Inloggen mislukt  method=password reason=wrong-password email=a***@test.com user=uuid-1'
-    );
+    expect(lines(warn)).toContainEqual(expect.stringMatching(
+      /^\[auth\] Inloggen mislukt {2}method=password reason=wrong-password email=a\*\*\*@test\.com user=uuid-1 req=[0-9a-f]{8}$/
+    ));
     expect(JSON.stringify(warn.mock.calls)).not.toContain('alice@test.com');
   });
 
@@ -208,6 +238,6 @@ describe('logging', () => {
     bcrypt.compare.mockResolvedValueOnce(true);
     await request(app).post('/api/auth/login').send({ email: 'alice@test.com', password: 'password123' });
 
-    expect(lines(info)).toContainEqual('[auth] Ingelogd  user=uuid-1 method=password');
+    expect(lines(info)).toContainEqual(expect.stringMatching(/^\[auth\] Ingelogd {2}user=uuid-1 method=password req=[0-9a-f]{8}$/));
   });
 });

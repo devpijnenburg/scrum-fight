@@ -5,6 +5,7 @@
 // overlay then waits until the backend confirms the plan — pushed over the
 // socket as soon as the payment is processed, with polling as fallback.
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import { t, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';

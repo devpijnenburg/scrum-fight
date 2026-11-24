@@ -1,5 +1,6 @@
 // Admin portal — requires is_admin claim in JWT (entry module of admin.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import { apiFetch } from '../core/api.js';
 import { getCurrentUser } from '../core/auth.js';

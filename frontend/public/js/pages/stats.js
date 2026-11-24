@@ -1,5 +1,6 @@
 // Stats page — personal poker analytics (entry module of stats.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import { t, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';

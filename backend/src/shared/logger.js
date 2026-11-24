@@ -19,6 +19,7 @@
 // gelogd wordt (standaard `info`; in de tests `error`, zodat de uitvoer rustig blijft).
 
 const crypto = require('crypto');
+const { currentContext } = require('./requestContext');
 
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
 const CONSOLE_METHOD = { debug: 'log', info: 'info', warn: 'warn', error: 'error' };
@@ -78,6 +79,12 @@ function formatFields(fields) {
     .join(' ');
 }
 
+function withoutKeys(context, fields) {
+  if (!context) return null;
+  if (!fields) return context;
+  return Object.fromEntries(Object.entries(context).filter(([k]) => !(k in fields)));
+}
+
 function formatLine(component, message, fields) {
   const tail = fields ? formatFields(fields) : '';
   return `[${component}] ${message}${tail ? `  ${tail}` : ''}`;
@@ -85,9 +92,10 @@ function formatLine(component, message, fields) {
 
 function write(level, component, message, fields, error, target = console) {
   if (LEVELS[level] < threshold) return;
-  const clean = fields
-    ? Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined))
-    : null;
+  // Velden van het lopende verzoek (req=…) komen achteraan, tenzij al gezet.
+  const merged = { ...fields, ...withoutKeys(currentContext(), fields) };
+  const entries = Object.entries(merged).filter(([, v]) => v !== undefined);
+  const clean = entries.length ? Object.fromEntries(entries) : null;
   const line = formatLine(component, message, clean);
   const args = error ? [line, error] : [line];
   current = { component, message, fields: clean, eventType: eventTypeOf(component, message) };

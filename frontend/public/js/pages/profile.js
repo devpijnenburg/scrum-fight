@@ -1,5 +1,6 @@
 // Profile page: account details, emoticon, preferences and 2FA (entry module of profile.html).
 
+import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
 import '../components/siteChrome.js';
 import '../ui/methodSelect.js';
 import { t, getLang } from '../core/i18n.js';

@@ -139,7 +139,7 @@ De backend logt via `backend/src/shared/logger.js` in één vaste vorm:
 [realtime] Speler is de kamer binnengekomen  room=K7M2QX player=Alice user=guest socket=sQ1x… via=join players=2 limit=7
 ```
 
-Er wordt gelogd als een kamer wordt aangemaakt, geopend, geclaimd, verwijderd of gesloten, als spelers joinen, weggaan of geweigerd worden, en bij onthullen en nieuwe rondes. Daarnaast logt de backend inloggen (ook mislukte pogingen), 2FA-wijzigingen, geblokkeerde clients (rate limit) en elke adminactie. E-mailadressen worden altijd gemaskeerd (`j***@example.nl`). `LOG_LEVEL` (`debug`, `info`, `warn`, `error`; standaard `info`) bepaalt hoeveel je ziet. Alle logregels per flow, met activiteitendiagrammen, staan in [`docs/kamerflows.md`](docs/kamerflows.md).
+Er wordt gelogd als een kamer wordt aangemaakt, geopend, geclaimd, verwijderd of gesloten, als spelers joinen, weggaan of geweigerd worden, en bij onthullen en nieuwe rondes. Daarnaast logt de backend inloggen (ook mislukte pogingen), 2FA-wijzigingen, geblokkeerde clients (rate limit) en elke adminactie. E-mailadressen worden altijd gemaskeerd (`j***@example.nl`). Verder krijgt elk HTTP-verzoek een request-id (`req=…` in elke regel, header `X-Request-Id`) en een eigen logregel met status en duur, logt de server elke 5 minuten een statusregel met open kamers en spelers, en komen onafgevangen fouten uit de browser binnen via `POST /api/client-errors`. `LOG_LEVEL` (`debug`, `info`, `warn`, `error`; standaard `info`) bepaalt hoeveel je ziet. Alle logregels per flow, met activiteitendiagrammen, staan in [`docs/kamerflows.md`](docs/kamerflows.md).
 
 ### Logging naar Seq (optioneel)
 
@@ -166,9 +166,10 @@ Op de server stuurt de backend al zijn logregels (`console.log/info/warn/error`)
 │       │   ├── stats/                # Persoonlijke statistieken en activiteit
 │       │   ├── badges/               # Badge-definities, -evaluatie en -opslag
 │       │   ├── billing/              # Plannen, abonnementen en betalingen (Creem)
-│       │   └── admin/                # Gebruikers- en organisatiebeheer
+│       │   ├── admin/                # Gebruikers- en organisatiebeheer
+│       │   └── monitoring/           # Fouten uit de browser ontvangen en loggen
 │       ├── realtime/                 # Socket.io-adapter + levenscyclus van live kamers
-│       ├── shared/                   # Database, transacties, fouten, events, logger, mailer, rate limit
+│       ├── shared/                   # Database, transacties, fouten, events, logger, request-id, mailer, rate limit
 │       ├── jobs/                     # Register van achtergrondjobs
 │       └── db/                       # Migratierunner + genummerde SQL-migraties
 └── frontend/

@@ -82,17 +82,21 @@ function mountOAuthRoutes(provider, label, strategy) {
   router.get(`/${provider}/callback`, async (req, res) => {
     const { code, state } = req.query;
     if (!oauthStateStore.consumeState(state)) {
+      log.warn('OAuth-login geweigerd: ongeldige state', { method: provider });
       return res.redirect('/?error=oauth_state_invalid');
     }
     try {
       const result = await strategy.handleCallback(code, redirectUri());
+      log.info(result.requiresTotp ? 'OAuth-login gelukt, wacht op TOTP-code' : 'Ingelogd', {
+        user: result.user?.id, method: provider,
+      });
       if (result.requiresTotp) {
         res.redirect(`/totp-verify.html?preAuthToken=${result.preAuthToken}`);
       } else {
         res.redirect(`/dashboard.html?token=${result.token}`);
       }
     } catch (err) {
-      log.error('OAuth-login mislukt', { provider: label }, err);
+      log.error('OAuth-login mislukt', { method: provider }, err);
       res.redirect('/?error=oauth_failed');
     }
   });

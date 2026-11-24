@@ -9,6 +9,9 @@ const { signSessionToken, signPreAuthToken, verify } = require('./jwt');
 const { verifyTotpCode } = require('./totp');
 const { sendVerificationEmail, sendLoginCodeEmail } = require('./userMailer');
 const { badRequest, unauthorized, forbidden, conflict, notFound, isUniqueViolation } = require('../../shared/errors');
+const { createLogger, maskEmail } = require('../../shared/logger');
+
+const log = createLogger('auth');
 
 const MIN_PASSWORD_LENGTH = 8;
 const LOGIN_CODE_MINUTES = 10;
@@ -29,10 +32,14 @@ async function register({ name, email, password }) {
   try {
     user = await users.createLocalUser({ name, email, passwordHash, verificationToken });
   } catch (err) {
-    if (isUniqueViolation(err)) throw conflict('EMAIL_IN_USE', 'E-mailadres is al in gebruik');
+    if (isUniqueViolation(err)) {
+      log.info('Registratie geweigerd: e-mailadres al in gebruik', { email: maskEmail(email) });
+      throw conflict('EMAIL_IN_USE', 'E-mailadres is al in gebruik');
+    }
     throw err;
   }
 
+  log.info('Account aangemaakt', { user: user.id, method: 'password', email: maskEmail(email) });
   await sendVerificationEmail(user, verificationToken);
   return { requiresVerification: true };
 }
@@ -45,6 +52,7 @@ async function resendVerification(email) {
   if (!user || user.email_verified) return;
 
   const token = crypto.randomUUID();
+  log.info('Verificatiemail opnieuw verstuurd', { user: user.id });
   await users.setVerificationToken(user.id, token);
   await sendVerificationEmail(user, token);
 }
@@ -52,7 +60,11 @@ async function resendVerification(email) {
 async function verifyEmail(token) {
   if (!token) throw badRequest('TOKEN_MISSING', 'Token ontbreekt');
   const user = await users.verifyEmailByToken(token);
-  if (!user) throw badRequest('TOKEN_INVALID', 'Ongeldig of verlopen token');
+  if (!user) {
+    log.info('E-mailverificatie mislukt: ongeldig of verlopen token');
+    throw badRequest('TOKEN_INVALID', 'Ongeldig of verlopen token');
+  }
+  log.info('E-mailadres bevestigd', { user: user.id });
   return { token: signSessionToken(user), user };
 }
 
@@ -70,19 +82,35 @@ async function login({ email, password }) {
   }
 
   const user = await users.findLoginCandidate(email);
-  if (!user) throw invalidCredentials();
-  if (!user.password_hash) throw unauthorized('OAUTH_ACCOUNT', 'Dit account gebruikt OAuth-login');
-  if (!(await bcrypt.compare(password, user.password_hash))) throw invalidCredentials();
-  if (!user.email_verified) throw forbidden('EMAIL_NOT_VERIFIED', 'E-mail nog niet geverifieerd');
+  const failed = (reason, fields = {}) =>
+    log.warn('Inloggen mislukt', { method: 'password', reason, email: maskEmail(email), ...fields });
+  if (!user) {
+    failed('unknown-email');
+    throw invalidCredentials();
+  }
+  if (!user.password_hash) {
+    failed('oauth-account', { user: user.id });
+    throw unauthorized('OAUTH_ACCOUNT', 'Dit account gebruikt OAuth-login');
+  }
+  if (!(await bcrypt.compare(password, user.password_hash))) {
+    failed('wrong-password', { user: user.id });
+    throw invalidCredentials();
+  }
+  if (!user.email_verified) {
+    log.info('Inloggen geweigerd: e-mailadres nog niet bevestigd', { user: user.id });
+    throw forbidden('EMAIL_NOT_VERIFIED', 'E-mail nog niet geverifieerd');
+  }
 
   // eslint-disable-next-line no-unused-vars
   const { password_hash, totp_enabled, email_2fa_enabled, email_verified, ...safeUser } = user;
 
   if (totp_enabled) {
+    log.info('Wachtwoord juist, wacht op TOTP-code', { user: user.id });
     return { user: safeUser, preAuthToken: signPreAuthToken(user.id), requiresTotp: true };
   }
 
   if (email_2fa_enabled) {
+    log.info('Wachtwoord juist, inlogcode per e-mail verstuurd', { user: user.id });
     const code = crypto.randomInt(100000, 1000000).toString();
     await loginCodes.createCode(user.id, code, LOGIN_CODE_MINUTES);
     await sendLoginCodeEmail(user, code);
@@ -93,6 +121,7 @@ async function login({ email, password }) {
     };
   }
 
+  log.info('Ingelogd', { user: user.id, method: 'password' });
   return { user: safeUser, token: signSessionToken(safeUser) };
 }
 
@@ -104,6 +133,7 @@ function preAuthUserId(preAuthToken) {
   } catch {
     // fall through
   }
+  log.warn('Tweede inlogstap mislukt', { reason: 'preauth-invalid' });
   throw unauthorized('PREAUTH_INVALID', 'Ongeldig of verlopen token');
 }
 
@@ -116,9 +146,16 @@ async function completeTotpLogin({ preAuthToken, code }) {
   const userId = preAuthUserId(preAuthToken);
 
   const user = await users.findTotpState(userId);
-  if (!user || !user.totp_enabled) throw unauthorized('INVALID_REQUEST', 'Ongeldige aanvraag');
-  if (!verifyTotpCode(user.totp_secret, code)) throw unauthorized('INVALID_CODE', 'Ongeldige code');
+  if (!user || !user.totp_enabled) {
+    log.warn('Tweede inlogstap mislukt', { method: 'totp', reason: 'totp-not-enabled', user: userId });
+    throw unauthorized('INVALID_REQUEST', 'Ongeldige aanvraag');
+  }
+  if (!verifyTotpCode(user.totp_secret, code)) {
+    log.warn('Tweede inlogstap mislukt', { method: 'totp', reason: 'wrong-code', user: userId });
+    throw unauthorized('INVALID_CODE', 'Ongeldige code');
+  }
 
+  log.info('Ingelogd', { user: userId, method: 'password+totp' });
   return { token: signSessionToken(user) };
 }
 
@@ -127,10 +164,12 @@ async function completeEmailCodeLogin({ preAuthToken, code }) {
   const userId = preAuthUserId(preAuthToken);
 
   if (!(await loginCodes.consumeCode(userId, code))) {
+    log.warn('Tweede inlogstap mislukt', { method: 'email-code', reason: 'wrong-or-expired-code', user: userId });
     throw unauthorized('CODE_INVALID_OR_EXPIRED', 'Ongeldige of verlopen code');
   }
   const user = await users.findSessionUser(userId);
   if (!user) throw unauthorized('INVALID_REQUEST', 'Ongeldige aanvraag');
+  log.info('Ingelogd', { user: userId, method: 'password+email-code' });
   return { token: signSessionToken(user) };
 }
 

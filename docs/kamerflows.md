@@ -1,6 +1,6 @@
 # Kamerflows — activiteitendiagrammen en logging
 
-Dit document laat met activiteitendiagrammen zien wat de backend doet als een kamer wordt aangemaakt, als spelers joinen of weggaan en hoe een kamer in het geheugen leeft en weer verdwijnt. Bij elke stap staat welke logregel de backend schrijft, zodat je in `docker logs`, de workflow **Backend logs** of Seq kunt volgen wat er gebeurt.
+Dit document laat met activiteitendiagrammen zien wat de backend doet als een kamer wordt aangemaakt, als spelers joinen of weggaan, hoe een kamer in het geheugen leeft en weer verdwijnt, en wat er bij inloggen gebeurt. Bij elke stap staat welke logregel de backend schrijft, zodat je in `docker logs`, de workflow **Backend logs** of Seq kunt volgen wat er gebeurt.
 
 De volgorde van berichten tussen browser, server en database staat in de sequence-diagrammen van [`spelscenarios.md`](spelscenarios.md). Dit document gaat over de beslissingen en de logging aan de serverkant.
 
@@ -36,8 +36,11 @@ Dat geeft één regel per gebeurtenis, altijd in dezelfde vorm:
 ```
 
 - **Vorm:** `[component] Bericht  veld=waarde veld=waarde`. Waarden met spaties of `=` staan tussen aanhalingstekens (`player="Account Alice"`). Lege velden worden weggelaten.
-- **Seq:** de velden gaan ook als losse properties mee, dus je kunt filteren op bijvoorbeeld `room = 'K7M2QX'` of `Component = 'realtime' and player = 'Alice'`.
-- **Niveaus:** `debug` < `info` < `warn` < `error`. `LOG_LEVEL` in de omgeving bepaalt vanaf welk niveau er gelogd wordt; standaard `info`, in de tests `warn`. Met `LOG_LEVEL=debug` zie je ook stemmen, socketverbindingen en rondenamen.
+- **Seq:** de velden gaan ook als losse properties mee, dus je kunt filteren op bijvoorbeeld `room = 'K7M2QX'` of `Component = 'realtime' and player = 'Alice'`. Elke soort regel heeft daarnaast:
+  - een vast **eventtype** (`@EventType`, 8 hex-tekens, afgeleid van component + bericht). Alle "Speler is de kamer binnengekomen"-regels hebben hetzelfde type, wat de velden ook zijn. Zo kun je in Seq per soort tellen, grafieken maken en signalen instellen;
+  - de property **`Event`**: het bericht zonder velden, om leesbaar op te filteren: `Event = 'Speler is de kamer binnengekomen'`.
+- **Persoonsgegevens:** log nooit een volledig e-mailadres, wachtwoord, token of code. Gebruik `maskEmail()` uit de logger (`jan.jansen@example.nl` → `j***@example.nl`) en identificeer gebruikers met hun id (`user=`). Bij HTTP-fouten wordt alleen het pad gelogd, zonder querystring, omdat daar tokens in kunnen staan. Spelernamen staan wel in de logs, omdat je anders niet kunt zien wie er joint of weggaat.
+- **Niveaus:** `debug` < `info` < `warn` < `error`. `LOG_LEVEL` in de omgeving bepaalt vanaf welk niveau er gelogd wordt; standaard `info`, in de tests `error`. Met `LOG_LEVEL=debug` zie je ook stemmen, socketverbindingen en rondenamen.
 - **Vaste velden:**
 
 | Veld | Betekenis |
@@ -51,7 +54,7 @@ Dat geeft één regel per gebeurtenis, altijd in dezelfde vorm:
 | `reason` | Waarom iets gebeurt (`disconnect: transport close`, `switch-room`, `empty`, `deleted`, …) |
 | `code` | Foutcode zoals de client hem krijgt (`ROOM_NOT_FOUND`, `ROOM_FULL`, …) |
 
-**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db`, `jobs:*`, `billing`, `mail`, `auth`, `badges`, `events`.
+**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db`, `jobs:*`, `billing`, `mail`, `auth` (inloggen, registreren, 2FA), `admin` (auditlog van adminacties), `rate-limit`, `badges`, `events`.
 
 ---
 
@@ -324,6 +327,49 @@ flowchart TD
 
 ---
 
+## 7. Inloggen en beveiliging
+
+`backend/src/domains/identity/authService.js`, `oauth/oauthAccount.js`, `routes.js` en `shared/rateLimit.js`. Mislukte pogingen zijn `warn`, zodat je er in Seq een signaal op kunt zetten.
+
+```mermaid
+flowchart TD
+    start([POST /api/auth/login]) --> rl{Rate limit<br/>20 per 15 min per IP}
+    rl -- overschreden --> logRl[/"[rate-limit] Te veel verzoeken, verzoeken worden geweigerd<br/>limiter, ip — één keer per venster"/] --> e429([429 RATE_LIMITED])
+    rl -- ok --> find[(Gebruiker opzoeken op e-mail)]
+    find --> known{Bestaat het account?}
+    known -- nee --> f1[/"[auth] Inloggen mislukt<br/>reason=unknown-email, email=a***@…"/] --> e401([401 INVALID_CREDENTIALS])
+    known -- ja --> hasPw{Heeft het account<br/>een wachtwoord?}
+    hasPw -- nee --> f2[/"[auth] Inloggen mislukt<br/>reason=oauth-account"/] --> e401b([401 OAUTH_ACCOUNT])
+    hasPw -- ja --> pw{Wachtwoord juist?}
+    pw -- nee --> f3[/"[auth] Inloggen mislukt<br/>reason=wrong-password, user"/] --> e401
+    pw -- ja --> verified{E-mail bevestigd?}
+    verified -- nee --> f4[/"[auth] Inloggen geweigerd: e-mailadres nog niet bevestigd"/] --> e403([403 EMAIL_NOT_VERIFIED])
+    verified -- ja --> twofa{2FA}
+    twofa -- geen --> ok1[/"[auth] Ingelogd<br/>method=password"/] --> done([sessietoken])
+    twofa -- TOTP --> t1[/"[auth] Wachtwoord juist, wacht op TOTP-code"/] --> step2
+    twofa -- e-mailcode --> t2[/"[auth] Wachtwoord juist, inlogcode per e-mail verstuurd"/] --> step2
+    step2([POST verify-totp / verify-email-2fa]) --> code{Code juist?}
+    code -- nee --> f5[/"[auth] Tweede inlogstap mislukt<br/>method, reason, user"/] --> e401c([401])
+    code -- ja --> ok2[/"[auth] Ingelogd<br/>method=password+totp | password+email-code"/] --> done
+
+    classDef log fill:#eef6ff,stroke:#3b82f6,color:#1e3a8a
+    class logRl,f1,f2,f3,f4,f5,t1,t2,ok1,ok2 log
+```
+
+Andere regels van `auth`:
+
+| Gebeurtenis | Logregel |
+|---|---|
+| Registratie | `Account aangemaakt  user=… method=password email=a***@…` of `Registratie geweigerd: e-mailadres al in gebruik` |
+| OAuth (Google/GitHub) | `Account aangemaakt  method=google`, `Ingelogd  method=github`, `OAuth-login gelukt, wacht op TOTP-code`, `OAuth-login geweigerd: ongeldige state` (warn) |
+| E-mail bevestigen | `E-mailadres bevestigd`, `E-mailverificatie mislukt: ongeldig of verlopen token`, `Verificatiemail opnieuw verstuurd` |
+| 2FA in het profiel | `2FA ingeschakeld` / `2FA uitgeschakeld` met `method=totp` of `email-code`; `2FA uitschakelen geweigerd: ongeldige code` (warn) |
+| Geen admin | `Admintoegang geweigerd  user=… method=PUT path=/api/admin/users/…` (warn) |
+
+**Auditlog van admins** (component `admin`, altijd met `admin=<id>` van wie het deed): `Gebruiker bijgewerkt` (met `changed=plan,is_admin`, `plan`, `isAdmin`), `Gebruiker verwijderd`, `Organisatie aangemaakt/bijgewerkt/verwijderd`, `Lid toegevoegd aan organisatie`, `Lid verwijderd uit organisatie`.
+
+---
+
 ## Een kamer volgen in Seq
 
 Handige filters (Seq-query):
@@ -331,8 +377,11 @@ Handige filters (Seq-query):
 | Vraag | Filter |
 |---|---|
 | Alles van één kamer | `room = 'K7M2QX'` |
-| Wie kwam binnen en ging weg | `Component = 'realtime' and (@Message like '%binnengekomen%' or @Message like '%verlaten%')` |
-| Geweigerde joins | `@Message like '%Join geweigerd%'` of `code = 'ROOM_FULL'` |
-| Aangemaakte kamers vandaag | `Component = 'rooms' and @Message like '%Kamer aangemaakt%'` |
-| Kamers die uit het geheugen gaan | `@Message like '%Kamer gesloten%'` en groepeer op `reason` |
+| Wie kwam binnen en ging weg | `Event in ['Speler is de kamer binnengekomen', 'Speler heeft de kamer verlaten']` |
+| Geweigerde joins | `Event = 'Join geweigerd'` of `code = 'ROOM_FULL'` |
+| Aangemaakte kamers per dag | `select count(*) from stream where Event = 'Kamer aangemaakt' group by time(1d)` |
+| Kamers die uit het geheugen gaan | `Event = 'Kamer gesloten'` en groepeer op `reason` |
 | Verbindingsproblemen | `reason like 'disconnect: ping timeout%'` |
+| Mislukte logins | `Event = 'Inloggen mislukt'`; per IP geblokkeerd: `Component = 'rate-limit'` |
+| Wat deed een admin | `Component = 'admin' and admin = '<id>'` |
+| Meest voorkomende soorten regels | `select count(*) from stream group by @EventType, Event` |

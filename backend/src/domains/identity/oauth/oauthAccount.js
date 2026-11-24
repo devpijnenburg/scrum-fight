@@ -1,6 +1,10 @@
 const users = require('../userRepository');
 const { signSessionToken, signPreAuthToken } = require('../jwt');
 
+const { createLogger, maskEmail } = require('../../../shared/logger');
+
+const log = createLogger('auth');
+
 // Shared logic for OAuth strategies (Google, GitHub, …).
 
 // Finds the user linked to this OAuth account (refreshing their display
@@ -11,7 +15,9 @@ async function upsertOAuthUser(provider, oauthId, { name, email }) {
     await users.updateName(existing.id, name);
     return { ...existing, name };
   }
-  return users.createOAuthUser({ provider, oauthId, name, email });
+  const user = await users.createOAuthUser({ provider, oauthId, name, email });
+  log.info('Account aangemaakt', { user: user.id, method: provider, email: maskEmail(email) });
+  return user;
 }
 
 // Builds the login result: a TOTP pre-auth step when 2FA is enabled,

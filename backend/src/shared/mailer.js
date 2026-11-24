@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { createLogger } = require('./logger');
+const { createLogger, maskEmail } = require('./logger');
 
 const log = createLogger('mail');
 
@@ -40,14 +40,14 @@ function _getTransporter() {
 async function sendMail(to, subject, text) {
   const transporter = _getTransporter();
   if (!transporter) {
-    log.warn('Mail overgeslagen (geen SMTP)', { subject, to });
+    log.warn('Mail overgeslagen (geen SMTP)', { subject, to: maskEmail(to) });
     return;
   }
   try {
     await transporter.sendMail({ from: _from, to, subject, text });
-    log.info('Mail verstuurd', { subject, to });
+    log.info('Mail verstuurd', { subject, to: maskEmail(to) });
   } catch (err) {
-    log.error('SMTP-fout bij versturen', { subject, to }, err);
+    log.error('SMTP-fout bij versturen', { subject, to: maskEmail(to) }, err);
     throw err;
   }
 }

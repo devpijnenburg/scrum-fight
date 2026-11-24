@@ -173,3 +173,41 @@ describe('POST /api/auth/login', () => {
     expect(res.body.error).toMatch(/OAuth/i);
   });
 });
+
+describe('logging', () => {
+  const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+  let warn;
+  let info;
+
+  beforeEach(() => {
+    setLogLevel('info');
+    warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    info = jest.spyOn(console, 'info').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    warn.mockRestore();
+    info.mockRestore();
+    resetLogLevel();
+  });
+
+  const lines = (spy) => spy.mock.calls.map(([line]) => line);
+
+  it('logs a failed login with a masked email address', async () => {
+    db.query.mockResolvedValueOnce({ rows: [baseUser] });
+    bcrypt.compare.mockResolvedValueOnce(false);
+    await request(app).post('/api/auth/login').send({ email: 'alice@test.com', password: 'wrong' });
+
+    expect(lines(warn)).toContainEqual(
+      '[auth] Inloggen mislukt  method=password reason=wrong-password email=a***@test.com user=uuid-1'
+    );
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('alice@test.com');
+  });
+
+  it('logs a successful login without the email address', async () => {
+    db.query.mockResolvedValueOnce({ rows: [baseUser] });
+    bcrypt.compare.mockResolvedValueOnce(true);
+    await request(app).post('/api/auth/login').send({ email: 'alice@test.com', password: 'password123' });
+
+    expect(lines(info)).toContainEqual('[auth] Ingelogd  user=uuid-1 method=password');
+  });
+});

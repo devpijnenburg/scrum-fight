@@ -1,4 +1,4 @@
-const { createLogger, formatLine, setLogLevel, resetLogLevel } = require('../src/shared/logger');
+const { createLogger, formatLine, setLogLevel, resetLogLevel, maskEmail, eventTypeOf } = require('../src/shared/logger');
 const { installSeqLogging } = require('../src/shared/seqLogging');
 
 function fakeConsole() {
@@ -64,9 +64,27 @@ describe('logger', () => {
         '@m': '[realtime] Speler is de kamer binnengekomen  room=R1 player=Alice players=2',
         Component: 'realtime', room: 'R1', player: 'Alice', players: 2,
       });
+      expect(sent[0].Event).toBe('Speler is de kamer binnengekomen');
+      expect(sent[0]['@i']).toBe(eventTypeOf('realtime', 'Speler is de kamer binnengekomen'));
       expect(sent[1].room).toBeUndefined();
+      expect(sent[1]['@i']).toBeUndefined();
     } finally {
       seq.uninstall();
     }
+  });
+
+  test('eventtype hangt af van component en bericht, niet van de velden', () => {
+    const a = eventTypeOf('realtime', 'Speler is de kamer binnengekomen');
+    expect(a).toMatch(/^[0-9a-f]{8}$/);
+    expect(eventTypeOf('realtime', 'Speler is de kamer binnengekomen')).toBe(a);
+    expect(eventTypeOf('realtime', 'Speler heeft de kamer verlaten')).not.toBe(a);
+    expect(eventTypeOf('rooms', 'Speler is de kamer binnengekomen')).not.toBe(a);
+  });
+
+  test('maskEmail laat alleen de eerste letter en het domein zien', () => {
+    expect(maskEmail('jan.jansen@example.nl')).toBe('j***@example.nl');
+    expect(maskEmail('geen-adres')).toBe('***');
+    expect(maskEmail('')).toBeUndefined();
+    expect(maskEmail({ evil: true })).toBeUndefined();
   });
 });

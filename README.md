@@ -139,7 +139,7 @@ De backend logt via `backend/src/shared/logger.js` in één vaste vorm:
 [realtime] Speler is de kamer binnengekomen  room=K7M2QX player=Alice user=guest socket=sQ1x… via=join players=2 limit=7
 ```
 
-Er wordt gelogd als een kamer wordt aangemaakt, geopend, geclaimd, verwijderd of gesloten, als spelers joinen, weggaan of geweigerd worden, en bij onthullen en nieuwe rondes. `LOG_LEVEL` (`debug`, `info`, `warn`, `error`; standaard `info`) bepaalt hoeveel je ziet. Alle logregels per flow, met activiteitendiagrammen, staan in [`docs/kamerflows.md`](docs/kamerflows.md).
+Er wordt gelogd als een kamer wordt aangemaakt, geopend, geclaimd, verwijderd of gesloten, als spelers joinen, weggaan of geweigerd worden, en bij onthullen en nieuwe rondes. Daarnaast logt de backend inloggen (ook mislukte pogingen), 2FA-wijzigingen, geblokkeerde clients (rate limit) en elke adminactie. E-mailadressen worden altijd gemaskeerd (`j***@example.nl`). `LOG_LEVEL` (`debug`, `info`, `warn`, `error`; standaard `info`) bepaalt hoeveel je ziet. Alle logregels per flow, met activiteitendiagrammen, staan in [`docs/kamerflows.md`](docs/kamerflows.md).
 
 ### Logging naar Seq (optioneel)
 
@@ -147,7 +147,7 @@ Op de server stuurt de backend al zijn logregels (`console.log/info/warn/error`)
 
 - De backend hangt via het gedeelde Docker-netwerk `murderbot` aan Seq en logt naar `http://seq:5341` (`SEQ_URL`, staat vast in de compose-bestanden).
 - `SEQ_API_KEY` is een Seq-API-key met alleen de permissie **Ingest**. In de pipeline is dat de secret `SEQ_API_KEY`. Zonder key staat de koppeling uit en meldt de backend dat één keer bij het opstarten.
-- Elk event krijgt `Application = scrum-fight`, `Environment` (`test` of `production`) en `Component` (de tag aan het begin van de regel, bv. `billing` of `jobs:room-cleanup`). De velden van de logregel (`room`, `player`, `user`, `reason`, …) komen als losse properties mee, dus je kunt filteren op bv. `room = 'K7M2QX'`. Fouten krijgen de stacktrace mee. Filter in Seq bijvoorbeeld op `Application = 'scrum-fight' and Environment = 'production'`.
+- Elk event krijgt `Application = scrum-fight`, `Environment` (`test` of `production`) en `Component` (de tag aan het begin van de regel, bv. `billing` of `jobs:room-cleanup`). De velden van de logregel (`room`, `player`, `user`, `reason`, …) komen als losse properties mee, dus je kunt filteren op bv. `room = 'K7M2QX'`. Regels van de logger krijgen ook een vast eventtype (`@EventType`) en een property `Event` (het bericht zonder velden), zodat je per soort kunt tellen: `Event = 'Kamer aangemaakt'`. Fouten krijgen de stacktrace mee. Filter in Seq bijvoorbeeld op `Application = 'scrum-fight' and Environment = 'production'`.
 - Lokaal en in de tests is er geen `SEQ_URL`, dus daar gebeurt niets.
 
 ## Projectstructuur

@@ -276,7 +276,9 @@ profile-menu { display: contents; }
   flex-direction: column;
   align-items: center;
   gap: .4rem;
-  transform: translate(-50%, -50%);
+  /* No translate(-50%, -50%) here: the pop-in animation (fill-mode forwards)
+     always overrode it, so seats have always been placed by their top-left
+     corner. Adding it now would shift seats that skip the animation. */
 }
 
 .player-name-tag {

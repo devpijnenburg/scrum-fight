@@ -53,13 +53,22 @@ function createCardEl(player, revealed, noAnim) {
   return container;
 }
 
-export function renderTable(noAnim = false) {
+// Seats currently on the table, so only newcomers get the pop-in animation.
+// Without this every vote, join or leave re-animated all seats for everyone,
+// which looked like the whole view refreshing.
+let renderedSeats = new Set();
+
+// noAnim: show revealed cards without the flip (e.g. after a reconnect).
+// popAll: let every seat pop in again (reveal, new round).
+export function renderTable(noAnim = false, { popAll = false } = {}) {
   const room = state.room;
   if (!room) return;
   const table = $('pokerTable');
   table.querySelectorAll('.player-seat, .table-waiting').forEach((el) => el.remove());
 
   const players = room.players;
+  const previousSeats = renderedSeats;
+  renderedSeats = new Set(players.map((p) => p.socketId));
   if (players.length < 2 && !room.revealed) {
     const hint = document.createElement('div');
     hint.className = 'table-waiting';
@@ -72,7 +81,8 @@ export function renderTable(noAnim = false) {
     const angle = (2 * Math.PI * i) / players.length - Math.PI / 2;
 
     const seat = document.createElement('div');
-    seat.className = 'player-seat pop-in';
+    const pop = popAll || !previousSeats.has(player.socketId);
+    seat.className = `player-seat${pop ? ' pop-in' : ''}`;
     seat.style.left = `${50 + SEAT_RADIUS_X * Math.cos(angle)}%`;
     seat.style.top = `${50 + SEAT_RADIUS_Y * Math.sin(angle)}%`;
 

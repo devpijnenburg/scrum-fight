@@ -14,7 +14,7 @@
   <main class="legal-main">
     <article class="legal-card">
       <h1>Privacybeleid</h1>
-      <p class="legal-meta">Laatst bijgewerkt: april 2025</p>
+      <p class="legal-meta">Laatst bijgewerkt: november 2026</p>
 
       <section>
         <h2>1. Wie zijn wij?</h2>
@@ -38,8 +38,18 @@
         <ul>
           <li><strong>Kamerdata</strong> — naam van kamers en stemmen worden opgeslagen om de sessie mogelijk te maken. Gastgegevens worden automatisch verwijderd na 7 dagen inactiviteit.</li>
           <li><strong>Lokale opslag</strong> — naam en taalvoorkeur worden opgeslagen in je browser (localStorage/sessionStorage). Er worden geen tracking-cookies geplaatst.</li>
-          <li><strong>Serverlogs</strong> — om storingen op te lossen en misbruik te herkennen houdt de server een logboek bij van wat er gebeurt: kamers die worden aangemaakt, spelers die binnenkomen of weggaan (met hun weergavenaam), inlogpogingen en wijzigingen in 2FA-instellingen. Daarin staat je gebruikers-ID, nooit je wachtwoord of je volledige e-mailadres (alleen de eerste letter en het domein, bijvoorbeeld <code>j***@example.nl</code>). Bij te veel verzoeken achter elkaar wordt het IP-adres vastgelegd. Gaat er in je browser iets mis op onze site, dan stuurt de pagina een foutmelding naar de server met de pagina, de foutmelding en je browserversie. De logs staan op onze eigen server en worden niet met derden gedeeld.</li>
         </ul>
+        <h3>Serverlogs</h3>
+        <p>Onze server houdt een logboek bij van wat er gebeurt. Daarmee lossen we storingen op en herkennen we misbruik. In dat logboek staat:</p>
+        <ul>
+          <li><strong>Kamers</strong> — wanneer een kamer wordt aangemaakt, geopend, geclaimd, verwijderd of gesloten.</li>
+          <li><strong>Spelers</strong> — wie een kamer binnenkomt of verlaat, met je weergavenaam en je gebruikers-ID (of "gast" zonder account), en wanneer er kaarten worden omgedraaid of een nieuwe ronde begint.</li>
+          <li><strong>Verzoeken aan de server</strong> — welke functie werd aangeroepen, of dat lukte en hoe lang het duurde, met je gebruikers-ID als je bent ingelogd. De inhoud van wat je invult staat er niet in.</li>
+          <li><strong>Account en beveiliging</strong> — inlogpogingen (gelukt en mislukt), registraties, e-mailverificatie, het aan- of uitzetten van 2FA en wijzigingen door beheerders.</li>
+          <li><strong>Foutmeldingen uit je browser</strong> — gaat er op onze site iets mis in je browser, dan stuurt de pagina de foutmelding, de pagina waarop het gebeurde en je browserversie naar de server.</li>
+          <li><strong>IP-adres</strong> — alleen als er vanaf één adres te veel verzoeken achter elkaar komen (bescherming tegen misbruik).</li>
+        </ul>
+        <p>In de logs staan <strong>nooit</strong> je wachtwoord, inlogcodes, tokens of de waarde van je stemmen. Van je e-mailadres bewaren we alleen de eerste letter en het domein (bijvoorbeeld <code>j***@example.nl</code>).</p>
       </section>
 
       <section>
@@ -48,7 +58,10 @@
           <li>Authenticatie en accountbeheer.</li>
           <li>Het faciliteren van story estimation sessies.</li>
           <li>Verbetering van de dienst (geen externe analytics).</li>
+          <li>Beveiliging: misbruik en inbraakpogingen herkennen en tegengaan (serverlogs).</li>
+          <li>Storingen opsporen en oplossen (serverlogs).</li>
         </ul>
+        <p>Voor de serverlogs baseren wij ons op ons gerechtvaardigd belang bij een veilige en goed werkende dienst (artikel 6, lid 1, onder f AVG). We loggen alleen wat daarvoor nodig is.</p>
         <p>Wij verkopen jouw gegevens <strong>nooit</strong> aan derden.</p>
       </section>
 
@@ -59,7 +72,7 @@
           <li><strong>Gastkamers</strong> — worden na 7 dagen inactiviteit automatisch verwijderd.</li>
           <li><strong>Kamers (free-plan)</strong> — worden na 30 dagen inactiviteit verwijderd.</li>
           <li><strong>Kamers (premium)</strong> — worden nooit automatisch verwijderd.</li>
-          <li><strong>Serverlogs</strong> — worden na maximaal 30 dagen verwijderd.</li>
+          <li><strong>Serverlogs</strong> — worden na maximaal 30 dagen automatisch verwijderd.</li>
         </ul>
       </section>
 
@@ -70,7 +83,7 @@
           <li><strong>Google OAuth</strong> (optioneel) — alleen als je kiest voor "Inloggen met Google". Zie het <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacybeleid van Google</a>.</li>
           <li><strong>GitHub OAuth</strong> (optioneel) — alleen als je kiest voor "Inloggen met GitHub". Zie het <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener">privacybeleid van GitHub</a>.</li>
         </ul>
-        <p>Buiten deze providers worden jouw gegevens niet gedeeld met andere partijen.</p>
+        <p>Buiten deze providers worden jouw gegevens niet gedeeld met andere partijen. De serverlogs staan op een server die wij zelf beheren en worden niet met derden gedeeld.</p>
       </section>
 
       <section>

@@ -9,7 +9,7 @@ const { runMigrations } = require('./src/db/migrate');
 const { createApp, corsOrigin } = require('./src/app');
 const { setupSocket, stopRealtime } = require('./src/realtime');
 const { startJobs, stopJobs } = require('./src/jobs');
-const { describeState } = require('./src/domains/billing/creemClient');
+const { describeState, isConfigured, checkAccess } = require('./src/domains/billing/creemClient');
 const { createLogger } = require('./src/shared/logger');
 
 const log = createLogger('server');
@@ -79,7 +79,16 @@ const PORT = process.env.PORT || 3000;
 runMigrations(pool)
   .then(() => {
     startJobs();
-    createLogger('billing').info(`Betalingen: ${describeState()}`);
+    const billingLog = createLogger('billing');
+    billingLog.info(`Betalingen: ${describeState()}`);
+    if (isConfigured()) {
+      checkAccess()
+        .then((problems) => {
+          if (problems.length === 0) billingLog.info('Creem-toegang: in orde');
+          for (const problem of problems) billingLog.warn(`Creem-toegang: ${problem}`);
+        })
+        .catch((err) => billingLog.warn('Creem-toegang controleren mislukt', { error: err.message }));
+    }
     httpServer.listen(PORT, () => {
       log.info('Server luistert', { port: PORT, logLevel: process.env.LOG_LEVEL || 'info' });
     });

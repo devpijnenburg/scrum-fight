@@ -58,7 +58,7 @@ export function applyRoomState(room) {
   showSelectedCard(state.myVote); // a vote restored after a refresh or restart
   // noAnim: on (re)connect show cards in their final state without the
   // 3-D flip, which can glitch when a mobile tab is restored.
-  renderTable(true);
+  renderTable(true, { popAll: true });
   updateSpectatorUI();
   if (room.revealed) showRevealedControls(room.stats, room.roundName || '');
   else showVotingControls();
@@ -86,7 +86,7 @@ export function applyReveal({ players, stats, roundName }) {
       showSelectedCard(state.myVote);
     }
   }
-  renderTable();
+  renderTable(false, { popAll: true });
   prependHistoryRound(players, stats, state.currentRoundName);
   showRevealedControls(stats, state.currentRoundName);
   $('voteStatus').textContent = t('room.revealed');
@@ -103,7 +103,7 @@ export function applyRoundReset() {
     state.room.revealed = false;
     state.room.players.forEach((p) => { p.vote = null; p.hasVoted = false; p.joinedMidRound = false; });
   }
-  renderTable();
+  renderTable(false, { popAll: true });
   showVotingControls();
   $('roundNameInput').value = '';
   clearPickerSelection();

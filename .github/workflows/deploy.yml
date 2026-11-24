@@ -167,7 +167,7 @@ jobs:
             printf 'SEQ_API_KEY=%s\n'      "$(esc "${SEQ_API_KEY}")"
           } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
-              "cat >> ~/scrum-fight/.env.test && chmod 600 ~/scrum-fight/.env.test"
+              'set -e; f="$HOME/scrum-fight/.env.test"; new="$(cat)"; keys="$(printf "%s\n" "$new" | cut -d= -f1 | paste -sd"|" -)"; touch "$f"; tmp="$(mktemp "$f.XXXXXX")"; grep -Ev "^($keys)=" "$f" > "$tmp" || true; printf "%s\n" "$new" >> "$tmp"; chmod 600 "$tmp"; mv "$tmp" "$f"'
 
       - name: Deploy test on VM
         run: |
@@ -215,6 +215,15 @@ jobs:
             -f ~/scrum-fight/docker-compose.test.yml \
             --env-file ~/scrum-fight/.env.test \
             ps
+          # Laat zien of Creem bruikbaar is: de backend controleert bij het
+          # opstarten de sleutel en de product-ID's (zie checkAccess).
+          for i in $(seq 1 20); do
+            docker compose -p scrum-fight-test -f ~/scrum-fight/docker-compose.test.yml --env-file ~/scrum-fight/.env.test logs backend 2>&1 | grep -qE 'Creem-toegang|Betalingen: uit' && break
+            sleep 2
+          done
+          docker compose -p scrum-fight-test -f ~/scrum-fight/docker-compose.test.yml --env-file ~/scrum-fight/.env.test logs backend 2>&1 | grep -F '[billing]' | tail -n 10 || true
+          docker compose -p scrum-fight-test -f ~/scrum-fight/docker-compose.test.yml --env-file ~/scrum-fight/.env.test logs backend 2>&1 | grep -F 'Creem-toegang:' | grep -v 'in orde' \
+            | sed 's/^/::warning title=Creem (test)::/' || true
           EOF
 
       - name: Cleanup SSH key
@@ -279,7 +288,7 @@ jobs:
             printf 'SEQ_API_KEY=%s\n'      "$(esc "${SEQ_API_KEY}")"
           } | ssh -4 -p 622 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@murderbot.nl \
-              "cat >> ~/scrum-fight/.env && chmod 600 ~/scrum-fight/.env"
+              'set -e; f="$HOME/scrum-fight/.env"; new="$(cat)"; keys="$(printf "%s\n" "$new" | cut -d= -f1 | paste -sd"|" -)"; touch "$f"; tmp="$(mktemp "$f.XXXXXX")"; grep -Ev "^($keys)=" "$f" > "$tmp" || true; printf "%s\n" "$new" >> "$tmp"; chmod 600 "$tmp"; mv "$tmp" "$f"'
 
       # Betalingen staan op productie standaard uit; daarna beheert de workflow
       # "Betalingen aan/uit" deze regel.
@@ -313,6 +322,15 @@ jobs:
             -f ~/scrum-fight/docker-compose.prod.yml \
             --env-file ~/scrum-fight/.env \
             ps
+          # Laat zien of Creem bruikbaar is: de backend controleert bij het
+          # opstarten de sleutel en de product-ID's (zie checkAccess).
+          for i in $(seq 1 20); do
+            docker compose -f ~/scrum-fight/docker-compose.prod.yml --env-file ~/scrum-fight/.env logs backend 2>&1 | grep -qE 'Creem-toegang|Betalingen: uit' && break
+            sleep 2
+          done
+          docker compose -f ~/scrum-fight/docker-compose.prod.yml --env-file ~/scrum-fight/.env logs backend 2>&1 | grep -F '[billing]' | tail -n 10 || true
+          docker compose -f ~/scrum-fight/docker-compose.prod.yml --env-file ~/scrum-fight/.env logs backend 2>&1 | grep -F 'Creem-toegang:' | grep -v 'in orde' \
+            | sed 's/^/::warning title=Creem (productie)::/' || true
           EOF
 
       - name: Cleanup SSH key

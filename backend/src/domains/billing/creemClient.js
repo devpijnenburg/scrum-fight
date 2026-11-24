@@ -148,6 +148,39 @@ function getProduct(productId) {
   return request('GET', `/products/${encodeURIComponent(productId)}`);
 }
 
+// ── Access check ────────────────────────────────────────────────────────────
+
+// Read-only probes, run at startup so a key without the right scopes (or
+// product ids from the other mode) shows up in the log right away instead
+// of at the first payment. Returns a list of problems; empty = all fine.
+// Write scopes (checkouts, subscriptions, customer portal) cannot be probed
+// without side effects; a Full access key covers them.
+async function checkAccess() {
+  const problems = [];
+  const probe = async (label, path) => {
+    try {
+      await request('GET', path);
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) problems.push(`${label}: geen toegang (${err.status}) — sleutel mist dit recht of is ongeldig`);
+      else if (err.status === 404 && label.startsWith('product')) problems.push(`${label}: bestaat niet in ${isTestKey() ? 'Test Mode' : 'live'}`);
+      else if (err.status !== 404 && err.status !== 400) problems.push(`${label}: ${err.message}`);
+    }
+  };
+
+  const probes = [
+    probe('checkouts lezen', '/checkouts?checkout_id=ch_access_check'),
+    probe('abonnementen lezen', '/subscriptions?subscription_id=sub_access_check'),
+  ];
+  for (const plan of PAID_PLANS) {
+    for (const billing of BILLING_PERIODS) {
+      const productId = productIdFor(plan, billing);
+      if (productId) probes.push(probe(`product ${plan}/${billing}`, `/products/${encodeURIComponent(productId)}`));
+    }
+  }
+  await Promise.all(probes);
+  return problems;
+}
+
 // ── Signatures ──────────────────────────────────────────────────────────────
 
 function safeEqualHex(a, b) {
@@ -202,6 +235,7 @@ module.exports = {
   createPortalLink,
   getCheckout,
   getProduct,
+  checkAccess,
   verifyWebhookSignature,
   verifyRedirectSignature,
 };

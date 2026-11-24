@@ -393,6 +393,25 @@ describe('PAYMENTS_ENABLED and PAYMENTS_MODE', () => {
     delete process.env.CREEM_API_KEY;
     expect(creem.describeState()).toMatch(/niet geconfigureerd/);
   });
+
+  it('reports no access problems for a key that can read everything', async () => {
+    mockCreem((url) => (url.includes('/products/') ? { body: { id: 'p' } } : { status: 404, body: {} }));
+    expect(await creem.checkAccess()).toEqual([]);
+  });
+
+  it('reports missing scopes and products from the other mode', async () => {
+    mockCreem((url) => {
+      if (url.includes('/checkouts')) return { status: 403, body: { message: ['API key does not have the required scopes'] } };
+      if (url.endsWith('prod_prem_y')) return { status: 404, body: {} };
+      if (url.includes('/products/')) return { body: { id: 'p' } };
+      return { status: 404, body: {} };
+    });
+    const problems = await creem.checkAccess();
+    expect(problems).toEqual([
+      expect.stringMatching(/^checkouts lezen: geen toegang \(403\)/),
+      'product premium/yearly: bestaat niet in Test Mode',
+    ]);
+  });
 });
 
 // ── Offers ──────────────────────────────────────────────────────────────────

@@ -1,6 +1,9 @@
 const { verify } = require('./jwt');
 const users = require('./userRepository');
 const { unauthorized, forbidden } = require('../../shared/errors');
+const { createLogger } = require('../../shared/logger');
+
+const log = createLogger('auth');
 
 function bearerToken(req) {
   const header = req.headers.authorization;
@@ -46,7 +49,10 @@ async function optionalAuth(req, res, next) {
 async function requireAdmin(req, res, next) {
   await authMiddleware(req, res, (err) => {
     if (err) return next(err);
-    if (!req.user.is_admin) return next(forbidden('FORBIDDEN', 'Toegang geweigerd'));
+    if (!req.user.is_admin) {
+      log.warn('Admintoegang geweigerd', { user: req.user.id, method: req.method, path: req.originalUrl.split('?')[0] });
+      return next(forbidden('FORBIDDEN', 'Toegang geweigerd'));
+    }
     next();
   });
 }

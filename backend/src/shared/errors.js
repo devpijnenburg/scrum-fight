@@ -45,7 +45,8 @@ function errorHandler(err, req, res, _next) {
     return res.status(413).json({ error: 'Verzoek te groot', code: 'PAYLOAD_TOO_LARGE' });
   }
 
-  log.error('Request mislukt', { method: req.method, url: req.originalUrl }, err);
+  // Alleen het pad: de querystring kan tokens bevatten (verify-email, OAuth-callback).
+  log.error('Request mislukt', { method: req.method, path: req.originalUrl.split('?')[0] }, err);
   res.status(500).json({ error: 'Serverfout', code: 'SERVER_ERROR' });
 }
 

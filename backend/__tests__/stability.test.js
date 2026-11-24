@@ -110,3 +110,23 @@ describe('app', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('rateLimit logging', () => {
+  const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+
+  it('logs once per window when a client is blocked', async () => {
+    setLogLevel('warn');
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const app = express();
+      app.get('/limited', rateLimit({ name: 'test-log', windowMs: 60_000, max: 1 }), (_req, res) => res.json({ ok: true }));
+      for (let i = 0; i < 4; i++) await request(app).get('/limited');
+      const lines = warn.mock.calls.map(([line]) => line).filter((l) => l.startsWith('[rate-limit]'));
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toMatch(/^\[rate-limit\] Te veel verzoeken, verzoeken worden geweigerd {2}limiter=test-log ip=\S+ max=1 windowMinutes=1$/);
+    } finally {
+      warn.mockRestore();
+      resetLogLevel();
+    }
+  });
+});

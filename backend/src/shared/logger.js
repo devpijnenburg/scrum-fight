@@ -10,10 +10,15 @@
 // De regel gaat via console.* naar buiten, zodat `docker logs`, de workflow
 // "Backend logs" en de Seq-koppeling (shared/seqLogging.js) hem gewoon oppakken.
 // Seq krijgt de velden daarnaast als losse properties, zodat je erop kunt
-// filteren (bv. `room = 'K7M2QX'`).
+// filteren (bv. `room = 'K7M2QX'`), en een vast eventtype per soort regel
+// (component + bericht), zodat je in Seq per soort kunt tellen en groeperen.
+//
+// Persoonsgegevens: log geen volledige e-mailadressen, gebruik maskEmail().
 //
 // Niveaus: debug < info < warn < error. LOG_LEVEL bepaalt vanaf welk niveau er
-// gelogd wordt (standaard `info`; in de tests `warn`, zodat de uitvoer rustig blijft).
+// gelogd wordt (standaard `info`; in de tests `error`, zodat de uitvoer rustig blijft).
+
+const crypto = require('crypto');
 
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
 const CONSOLE_METHOD = { debug: 'log', info: 'info', warn: 'warn', error: 'error' };
@@ -21,17 +26,39 @@ const CONSOLE_METHOD = { debug: 'log', info: 'info', warn: 'warn', error: 'error
 function thresholdFrom(env = process.env) {
   const wanted = String(env.LOG_LEVEL || '').toLowerCase();
   if (LEVELS[wanted]) return LEVELS[wanted];
-  return env.NODE_ENV === 'test' ? LEVELS.warn : LEVELS.info;
+  return env.NODE_ENV === 'test' ? LEVELS.error : LEVELS.info;
 }
 
 let threshold = thresholdFrom();
 
-// Velden van de regel die nu gelogd wordt; seqLogging leest ze uit terwijl
-// console.* (synchroon) wordt aangeroepen.
-let currentFields = null;
+// De regel die nu gelogd wordt; seqLogging leest hem uit terwijl console.*
+// (synchroon) wordt aangeroepen. { component, message, fields, eventType }
+let current = null;
 
-function currentLogFields() {
-  return currentFields;
+function currentLogEvent() {
+  return current;
+}
+
+// Stabiel eventtype (8 hex-tekens) per soort regel: hetzelfde component en
+// bericht geven altijd hetzelfde type, ongeacht de velden.
+const eventTypes = new Map();
+function eventTypeOf(component, message) {
+  const key = `${component}\u0000${message}`;
+  let type = eventTypes.get(key);
+  if (!type) {
+    type = crypto.createHash('sha1').update(key).digest('hex').slice(0, 8);
+    if (eventTypes.size < 5000) eventTypes.set(key, type);
+  }
+  return type;
+}
+
+// "jan.jansen@example.nl" → "j***@example.nl". Het domein blijft zichtbaar,
+// zodat je een storing bij één mailprovider nog kunt herkennen.
+function maskEmail(email) {
+  if (typeof email !== 'string' || !email) return undefined;
+  const at = email.lastIndexOf('@');
+  if (at < 1) return '***';
+  return `${email[0]}***${email.slice(at)}`;
 }
 
 function formatValue(value) {
@@ -63,11 +90,11 @@ function write(level, component, message, fields, error, target = console) {
     : null;
   const line = formatLine(component, message, clean);
   const args = error ? [line, error] : [line];
-  currentFields = clean;
+  current = { component, message, fields: clean, eventType: eventTypeOf(component, message) };
   try {
     target[CONSOLE_METHOD[level]](...args);
   } finally {
-    currentFields = null;
+    current = null;
   }
 }
 
@@ -95,7 +122,9 @@ function resetLogLevel() {
 
 module.exports = {
   createLogger,
-  currentLogFields,
+  currentLogEvent,
+  eventTypeOf,
+  maskEmail,
   formatLine,
   setLogLevel,
   resetLogLevel,

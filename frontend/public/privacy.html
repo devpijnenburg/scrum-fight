@@ -38,6 +38,7 @@
         <ul>
           <li><strong>Kamerdata</strong> — naam van kamers en stemmen worden opgeslagen om de sessie mogelijk te maken. Gastgegevens worden automatisch verwijderd na 7 dagen inactiviteit.</li>
           <li><strong>Lokale opslag</strong> — naam en taalvoorkeur worden opgeslagen in je browser (localStorage/sessionStorage). Er worden geen tracking-cookies geplaatst.</li>
+          <li><strong>Serverlogs</strong> — om storingen op te lossen en misbruik te herkennen houdt de server een logboek bij van wat er gebeurt: kamers die worden aangemaakt, spelers die binnenkomen of weggaan (met hun weergavenaam), inlogpogingen en wijzigingen in 2FA-instellingen. Daarin staat je gebruikers-ID, nooit je wachtwoord of je volledige e-mailadres (alleen de eerste letter en het domein, bijvoorbeeld <code>j***@example.nl</code>). Bij te veel verzoeken achter elkaar wordt het IP-adres vastgelegd. De logs staan op onze eigen server en worden niet met derden gedeeld.</li>
         </ul>
       </section>
 
@@ -58,6 +59,7 @@
           <li><strong>Gastkamers</strong> — worden na 7 dagen inactiviteit automatisch verwijderd.</li>
           <li><strong>Kamers (free-plan)</strong> — worden na 30 dagen inactiviteit verwijderd.</li>
           <li><strong>Kamers (premium)</strong> — worden nooit automatisch verwijderd.</li>
+          <li><strong>Serverlogs</strong> — worden na maximaal 30 dagen verwijderd.</li>
         </ul>
       </section>
 

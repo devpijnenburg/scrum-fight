@@ -98,10 +98,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # Test krijgt elke push op een feature-branch. Op main (na een merge) staat
+  # die versie al op test, dus daar slaan we deze job over.
   deploy-test:
     name: Deploy to Test
     runs-on: [self-hosted, proxmox]
     needs: build
+    if: github.ref != 'refs/heads/main'
     environment: test
 
     steps:
@@ -233,7 +236,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: [self-hosted, proxmox]
-    needs: [build, deploy-test]
+    needs: build
     if: github.ref == 'refs/heads/main'
     environment: production
 

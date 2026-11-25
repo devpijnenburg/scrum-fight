@@ -8,9 +8,11 @@ const TRANSLATIONS = {
     'nav.login': 'Inloggen',
     'nav.register': 'Registreren',
     'nav.logout': 'Uitloggen',
+    'nav.features': 'Functies',
+    'nav.faq': 'FAQ',
+    'nav.events': 'Scrum events',
 
-    'landing.subtitle': 'Schat stories. Win de sprint.',
-    'landing.anon': '✅ Geen account nodig — gewoon een naam invullen en spelen!',
+    'landing.anon': '✓ Geen account nodig',
     'landing.create.title': '✨ Kamer aanmaken',
     'landing.create.yourname': 'Jouw naam',
     'landing.create.yourname.ph': 'bijv. Alice',
@@ -32,6 +34,19 @@ const TRANSLATIONS = {
     'landing.join.back': '← Terug',
     'landing.join.btn': 'Joinen →',
     'landing.join.found': '✅ "{name}" gevonden!',
+    'landing.tagline': 'Gratis online Planning Poker voor Scrum-teams',
+    'landing.info.what.title': 'Wat is ScrumFight?',
+    'landing.info.what.body': 'ScrumFight is een gratis, realtime Planning Poker-tool voor Scrum- en Agile-teams. Je schat user stories samen tijdens backlog refinement en sprint planning: iedereen kiest tegelijk een kaart, de kaarten worden pas onthuld als het team klaar is, en verschillen worden direct zichtbaar. Geen installatie en geen account nodig.',
+    'landing.info.how.title': 'Zo werkt het',
+    'landing.info.how.1.title': '1. Maak een kamer aan',
+    'landing.info.how.1.body': 'Kies een naam en een schattingsmethode: Fibonacci, Fibonacci+, T-shirt maten of Powers of 2.',
+    'landing.info.how.2.title': '2. Deel de code',
+    'landing.info.how.2.body': 'Stuur de kamercode of link naar je team. Collega’s doen mee vanuit de browser, op kantoor of op afstand.',
+    'landing.info.how.3.title': '3. Stem en onthul',
+    'landing.info.how.3.body': 'Iedereen stemt verborgen. Bij de reveal zie je meteen of er consensus is, en waar het gesprek over moet gaan.',
+    'landing.info.more.features': 'Alle functies →',
+    'landing.info.more.events': 'ScrumFight bij Scrum events →',
+    'landing.info.more.faq': 'Veelgestelde vragen →',
 
     'login.tab.login': 'Inloggen',
     'login.tab.register': 'Registreren',
@@ -114,11 +129,11 @@ const TRANSLATIONS = {
     'subscription.manage': 'Abonnement beheren',
     'subscription.manage_hint': 'Opzeggen, je betaalmethode wijzigen en betaalbewijzen bekijken doe je bij onze betaalpartner Creem.',
     'subscription.status.active': 'Actief abonnement: {plan}',
-    'subscription.status.thanks': 'Bedankt dat je Scrum Fight steunt! Je abonnement helpt de server- en ontwikkelkosten te dekken.',
+    'subscription.status.thanks': 'Bedankt dat je ScrumFight steunt! Je abonnement helpt de server- en ontwikkelkosten te dekken.',
     'subscription.status.renews': 'Wordt automatisch verlengd op {date}.',
     'subscription.status.ends': 'Opgezegd — je houdt je plan tot en met {date}.',
     'subscription.status.past_due': 'De laatste betaling is niet gelukt. Werk je betaalmethode bij om je plan te behouden.',
-    'subscription.support_note': 'Scrum Fight wordt gemaakt en onderhouden door één persoon. Een Pro- of Premium-abonnement helpt de server- en ontwikkelkosten te dekken. Dankjewel dat je het overweegt. 🙏',
+    'subscription.support_note': 'ScrumFight wordt gemaakt en onderhouden door één persoon. Een Pro- of Premium-abonnement helpt de server- en ontwikkelkosten te dekken. Dankjewel dat je het overweegt. 🙏',
     'subscription.processing.title': 'Je abonnement wordt geactiveerd',
     'subscription.processing.subtitle': 'Even geduld — dit duurt meestal maar een paar seconden.',
     'subscription.processing.done': 'Je plan is bijgewerkt!',
@@ -191,7 +206,10 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacybeleid',
     'footer.terms': 'Algemene voorwaarden',
-    'footer.copy': '© 2026 Scrum Fight',
+    'footer.copy': '© 2026 ScrumFight',
+    'footer.col.product': 'Product',
+    'footer.col.account': 'Account',
+    'footer.col.legal': 'Juridisch',
     'footer.login': 'Inloggen',
     'footer.register': 'Registreren',
 
@@ -394,9 +412,11 @@ const TRANSLATIONS = {
     'nav.login': 'Log in',
     'nav.register': 'Sign up',
     'nav.logout': 'Log out',
+    'nav.features': 'Features',
+    'nav.faq': 'FAQ',
+    'nav.events': 'Scrum events',
 
-    'landing.subtitle': 'Estimate stories. Win the sprint.',
-    'landing.anon': '✅ No account needed — just enter a name and play!',
+    'landing.anon': '✓ No account needed',
     'landing.create.title': '✨ Create room',
     'landing.create.yourname': 'Your name',
     'landing.create.yourname.ph': 'e.g. Alice',
@@ -418,6 +438,19 @@ const TRANSLATIONS = {
     'landing.join.back': '← Back',
     'landing.join.btn': 'Join →',
     'landing.join.found': '✅ "{name}" found!',
+    'landing.tagline': 'Free online Planning Poker for Scrum teams',
+    'landing.info.what.title': 'What is ScrumFight?',
+    'landing.info.what.body': 'ScrumFight is a free, real-time Planning Poker tool for Scrum and Agile teams. Estimate user stories together during backlog refinement and sprint planning: everyone picks a card at the same time, cards are revealed only when the team is ready, and differences show up instantly. No installation and no account needed.',
+    'landing.info.how.title': 'How it works',
+    'landing.info.how.1.title': '1. Create a room',
+    'landing.info.how.1.body': 'Pick a name and an estimation method: Fibonacci, Fibonacci+, T-shirt sizes or Powers of 2.',
+    'landing.info.how.2.title': '2. Share the code',
+    'landing.info.how.2.body': 'Send the room code or link to your team. Colleagues join from their browser, in the office or remotely.',
+    'landing.info.how.3.title': '3. Vote and reveal',
+    'landing.info.how.3.body': 'Everyone votes in secret. On reveal you instantly see whether there is consensus, and where the conversation needs to go.',
+    'landing.info.more.features': 'All features →',
+    'landing.info.more.events': 'ScrumFight in Scrum events →',
+    'landing.info.more.faq': 'Frequently asked questions →',
 
     'login.tab.login': 'Log in',
     'login.tab.register': 'Sign up',
@@ -500,11 +533,11 @@ const TRANSLATIONS = {
     'subscription.manage': 'Manage subscription',
     'subscription.manage_hint': 'Cancelling, changing your payment method and viewing receipts is done at our payment partner Creem.',
     'subscription.status.active': 'Active subscription: {plan}',
-    'subscription.status.thanks': 'Thank you for supporting Scrum Fight! Your subscription helps cover server and development costs.',
+    'subscription.status.thanks': 'Thank you for supporting ScrumFight! Your subscription helps cover server and development costs.',
     'subscription.status.renews': 'Renews automatically on {date}.',
     'subscription.status.ends': 'Cancelled — you keep your plan until {date}.',
     'subscription.status.past_due': 'The last payment failed. Update your payment method to keep your plan.',
-    'subscription.support_note': 'Scrum Fight is built and maintained by one person. A Pro or Premium subscription helps cover server and development costs. Thank you for considering it. 🙏',
+    'subscription.support_note': 'ScrumFight is built and maintained by one person. A Pro or Premium subscription helps cover server and development costs. Thank you for considering it. 🙏',
     'subscription.processing.title': 'Activating your subscription',
     'subscription.processing.subtitle': 'One moment — this usually takes just a few seconds.',
     'subscription.processing.done': 'Your plan has been updated!',
@@ -577,7 +610,10 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms & Conditions',
-    'footer.copy': '© 2026 Scrum Fight',
+    'footer.copy': '© 2026 ScrumFight',
+    'footer.col.product': 'Product',
+    'footer.col.account': 'Account',
+    'footer.col.legal': 'Legal',
     'footer.login': 'Log in',
     'footer.register': 'Sign up',
 
@@ -783,7 +819,21 @@ const TRANSLATIONS = {
 const SUPPORTED = ['nl', 'en'];
 const DEFAULT_LANG = 'en';
 
+// A page with <html data-lang-locked lang="nl"> is a language-specific URL
+// (e.g. /nl/): it always renders in its own language, so search engines and
+// visitors from a search result get the language the URL promises.
+function lockedLang() {
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  if (!root || !root.hasAttribute('data-lang-locked')) return null;
+  return SUPPORTED.includes(root.lang) ? root.lang : null;
+}
+
 function detectLang() {
+  const locked = lockedLang();
+  if (locked) {
+    localStorage.setItem('lang', locked);
+    return locked;
+  }
   const stored = localStorage.getItem('lang');
   if (stored && SUPPORTED.includes(stored)) return stored;
   const browser = (navigator.language || '').slice(0, 2).toLowerCase();
@@ -805,8 +855,19 @@ function setLang(lang) {
   if (!SUPPORTED.includes(lang)) return;
   currentLang = lang;
   localStorage.setItem('lang', lang);
+  // On a language-specific URL, switching language means going to the
+  // other language's URL (declared as <link rel="alternate" hreflang>),
+  // on the current origin so it also works outside production.
+  if (lockedLang() && lockedLang() !== lang) {
+    const alt = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
+    if (alt) {
+      window.location.href = new URL(alt.href).pathname + window.location.search;
+      return;
+    }
+  }
   applyTranslations();
   updateLangSwitcher();
+  document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
 }
 
 function getLang() { return currentLang; }

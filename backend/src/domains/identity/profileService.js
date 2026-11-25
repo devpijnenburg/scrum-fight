@@ -17,11 +17,11 @@ const MAX_EMOTICON_CHARS = 8;
 async function startTotpSetup(userId) {
   const { base32: secret } = speakeasy.generateSecret({ length: 20 });
   const contact = await users.findContact(userId);
-  const label = contact?.email || contact?.name || 'Scrum Fight';
+  const label = contact?.email || contact?.name || 'ScrumFight';
   const otpauthUrl = speakeasy.otpauthURL({
     secret,
     label: encodeURIComponent(label),
-    issuer: 'Scrum Fight',
+    issuer: 'ScrumFight',
     encoding: 'base32',
   });
   return { secret, qrDataUrl: await QRCode.toDataURL(otpauthUrl) };

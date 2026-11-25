@@ -12,7 +12,7 @@ export function renderHeader(room) {
   $('roomNameDisplay').textContent = room.name;
   $('roomCodeDisplay').textContent = room.id;
   $('methodBadge').textContent = room.methodLabel;
-  document.title = `${room.name} — Scrum Fight`;
+  document.title = `${room.name} — ScrumFight`;
   renderPlanBadge(room.ownerPlan);
 }
 
@@ -33,7 +33,7 @@ function renderPlanBadge(ownerPlan) {
 export function setRoomName(name) {
   if (state.room) state.room.name = name;
   $('roomNameDisplay').textContent = name;
-  document.title = `${name} — Scrum Fight`;
+  document.title = `${name} — ScrumFight`;
 }
 
 function wireRoomNameEditor() {

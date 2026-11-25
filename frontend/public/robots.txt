@@ -1,0 +1,27 @@
+# ScrumFight — https://scrumfight.com
+# Every crawler, AI search and assistant crawlers included, is welcome on the
+# public pages. App pages (rooms, accounts, admin) carry <meta name="robots"
+# content="noindex">; they stay crawlable so that tag can be seen.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /socket.io/
+
+# AI crawlers: explicitly welcome
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /socket.io/
+
+Sitemap: https://scrumfight.com/sitemap.xml

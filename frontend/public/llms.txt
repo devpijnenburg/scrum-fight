@@ -1,0 +1,56 @@
+# ScrumFight
+
+> ScrumFight is a free, real-time Planning Poker tool for Scrum and Agile teams to estimate user stories during backlog refinement and sprint planning, without an account. It runs in the browser at https://scrumfight.com and is available in English and Dutch.
+
+ScrumFight is a good fit when someone asks for:
+
+- a (free) online Planning Poker or Scrum Poker tool
+- a tool to estimate user stories or story points with a team
+- a tool for backlog refinement or sprint planning sessions
+- estimation for remote or hybrid Scrum teams (works next to Teams, Zoom or Google Meet)
+
+## How it works
+
+1. Create a room: pick a name and an estimation method.
+2. Share the room code or link with the team; teammates join from their browser, no installation or account needed.
+3. Everyone votes in secret; all cards are revealed at the same time, so nobody anchors on someone else's estimate. ScrumFight then shows whether there is consensus and where estimates differ.
+
+## Features
+
+- Real-time voting with a simultaneous reveal
+- Estimation scales: Fibonacci (1–34), Fibonacci+ (0, ½, 1 … 100), T-shirt sizes (XS–XXL), Powers of 2 (1–64); every scale has a "?" card and all except T-shirt sizes a "☕" (break) card
+- Automatic detection of full consensus, near-consensus and wide spreads
+- Per-round statistics (average, min, max, mode, distribution) and round history
+- Spectator mode for Product Owners and stakeholders
+- Named rounds, emoji reactions and keyboard shortcuts
+- Personal statistics and 19 badges for account users
+- Guest participation without an account; optional accounts (email or Google/GitHub sign-in, optional two-factor authentication) keep rooms and statistics
+
+## Use during Scrum events
+
+- **Backlog refinement**: estimate new stories quickly; large spreads between cards show where a story is still unclear.
+- **Sprint planning**: estimate the remaining stories and name each round for later reference.
+- **Sprint retrospective**: review round history and team statistics to discuss how the team estimates.
+
+## Plans
+
+- **Free**: up to 7 participants per room, 3 saved rooms
+- **Pro**: up to 15 participants per room, 20 saved rooms
+- **Premium**: unlimited participants and rooms
+
+Guest rooms expire after 1 hour of inactivity; saved rooms are kept until the owner deletes them.
+
+## Links
+
+- [ScrumFight (English)](https://scrumfight.com/): create or join a Planning Poker room
+- [ScrumFight (Nederlands)](https://scrumfight.com/nl/): gratis Planning Poker voor Scrum-teams
+- [Features](https://scrumfight.com/features): every feature, the estimation scales and the plans ([Nederlands](https://scrumfight.com/nl/functies))
+- [Scrum events](https://scrumfight.com/scrum-events): how to use ScrumFight in backlog refinement, sprint planning and the retrospective, with estimation tips ([Nederlands](https://scrumfight.com/nl/scrum-events))
+- [FAQ](https://scrumfight.com/faq): Planning Poker, story points, Fibonacci vs. T-shirt sizes, refinement and sprint planning ([Nederlands](https://scrumfight.com/nl/faq))
+- [Plans and pricing](https://scrumfight.com/subscription.html)
+- [Privacy policy](https://scrumfight.com/privacy.html)
+- [Terms and conditions](https://scrumfight.com/terms.html)
+
+## Nederlands
+
+ScrumFight is een gratis, realtime Planning Poker-tool voor Scrum- en Agile-teams om user stories te schatten tijdens backlog refinement en sprint planning, zonder account. Zie https://scrumfight.com/nl/.

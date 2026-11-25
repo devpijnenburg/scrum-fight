@@ -7,7 +7,7 @@
 //   <site-footer></site-footer>        — footer with login/register links when logged out
 //   <site-footer hide-auth></site-footer> — footer without the login/register links
 
-import { t, applyTranslations, buildLangDropdown } from '../core/i18n.js';
+import { t, applyTranslations, buildLangDropdown, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { getCurrentUser, logout } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
@@ -141,6 +141,8 @@ class ProfileMenu extends HTMLElement {
     this._wire();
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    setPublicLinks(this);
+    document.addEventListener('langchange', () => setPublicLinks(this));
     applyTranslations();
   }
 
@@ -175,6 +177,22 @@ class ProfileMenu extends HTMLElement {
 
 if (!customElements.get('profile-menu')) customElements.define('profile-menu', ProfileMenu);
 
+// ── Public page links ─────────────────────────────────────────────────────────
+// The public pages exist per language: /, /features, /scrum-events, /faq and
+// /nl/, /nl/functies, /nl/scrum-events, /nl/faq.
+
+const PUBLIC_URLS = {
+  en: { home: '/', features: '/features', events: '/scrum-events', faq: '/faq' },
+  nl: { home: '/nl/', features: '/nl/functies', events: '/nl/scrum-events', faq: '/nl/faq' },
+};
+
+function setPublicLinks(root) {
+  const urls = PUBLIC_URLS[getLang()] || PUBLIC_URLS.en;
+  for (const [key, href] of Object.entries(urls)) {
+    root.querySelectorAll(`[data-public-link="${key}"]`).forEach((a) => { a.href = href; });
+  }
+}
+
 // ── SiteNav ───────────────────────────────────────────────────────────────────
 
 class SiteNav extends HTMLElement {
@@ -183,18 +201,36 @@ class SiteNav extends HTMLElement {
   }
 
   _render() {
-    const user    = getCurrentUser();
-    const showCta = this.hasAttribute('show-cta');
+    const user      = getCurrentUser();
+    const showCta   = this.hasAttribute('show-cta');
+    // Public pages (home, features, FAQ) link to each other; the language
+    // switch is in the footer there to keep the bar calm.
+    const showLinks = this.hasAttribute('show-links');
+    const lang      = showLinks ? '' : '<div class="lang-switcher _nav-lang"></div>';
 
     this.innerHTML = `
       <nav class="navbar">
-        <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
+        <div class="navbar-left">
+          <a href="/" class="navbar-brand" data-public-link="home">
+            <span class="navbar-logo" aria-hidden="true">⚔️</span>
+            <span class="navbar-brand-text">
+              <span class="navbar-name">ScrumFight</span>
+              <small class="navbar-subtitle">Story Estimator 2.0</small>
+            </span>
+          </a>
+          ${showLinks ? `
+          <div class="navbar-links">
+            <a class="navbar-link" data-public-link="features" data-i18n="nav.features">Functies</a>
+            <a class="navbar-link" data-public-link="events" data-i18n="nav.events">Scrum events</a>
+            <a class="navbar-link" data-public-link="faq" data-i18n="nav.faq">FAQ</a>
+          </div>` : ''}
+        </div>
         <div class="navbar-actions">
           ${user
-            ? `<div class="lang-switcher _nav-lang"></div><profile-menu></profile-menu>`
-            : `<div class="lang-switcher _nav-lang"></div>
+            ? `${lang}<profile-menu></profile-menu>`
+            : `${lang}
                ${showCta
-                 ? `<a href="/login.html" class="btn btn-ghost" data-i18n="nav.login">Inloggen</a>
+                 ? `<a href="/login.html" class="btn btn-ghost btn-sm" data-i18n="nav.login">Inloggen</a>
                     <a href="/login.html#register" class="btn btn-primary btn-sm" data-i18n="nav.register">Registreren</a>`
                  : ''}`
           }
@@ -203,8 +239,14 @@ class SiteNav extends HTMLElement {
     `;
 
     this.querySelectorAll('._nav-lang').forEach(buildLangDropdown);
+    this._updateLinks();
+    document.addEventListener('langchange', () => this._updateLinks());
     applyTranslations();
   }
+
+  // The public pages exist per language: /, /features, /scrum-events, /faq and
+// /nl/, /nl/functies, /nl/scrum-events, /nl/faq.
+  _updateLinks() { setPublicLinks(this); }
 }
 
 if (!customElements.get('site-nav')) customElements.define('site-nav', SiteNav);
@@ -212,32 +254,72 @@ if (!customElements.get('site-nav')) customElements.define('site-nav', SiteNav);
 // ── SiteFooter ────────────────────────────────────────────────────────────────
 
 class SiteFooter extends HTMLElement {
+  //   <site-footer></site-footer>          — full footer: brand and link columns
+  //   <site-footer hide-auth></site-footer> — without the login/register links
+  //   <site-footer compact></site-footer>  — one slim row, for the room
   connectedCallback() {
-    const loggedIn = !!getCurrentUser();
-    const showAuth = !this.hasAttribute('hide-auth') && !loggedIn;
+    const user     = getCurrentUser();
+    const showAuth = !this.hasAttribute('hide-auth') && !user;
 
-    this.innerHTML = `
+    this.innerHTML = this.hasAttribute('compact') ? `
+      <footer class="site-footer site-footer-compact">
+        <div class="footer-compact-inner">
+          <div class="lang-switcher"></div>
+          <span class="footer-copy" data-i18n="footer.copy">© 2026 ScrumFight</span>
+          <nav class="footer-compact-links">
+            <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+            <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+          </nav>
+        </div>
+      </footer>
+    ` : `
       <footer class="site-footer">
         <div class="footer-inner">
-          <div class="footer-left">
+          <div class="footer-brand">
+            <a class="footer-logo" data-public-link="home">
+              <span class="navbar-logo" aria-hidden="true">⚔️</span>
+              <span class="navbar-brand-text">
+                <span class="navbar-name">ScrumFight</span>
+                <small class="navbar-subtitle">Story Estimator 2.0</small>
+              </span>
+            </a>
+            <p class="footer-tagline" data-i18n="landing.tagline">Gratis online Planning Poker voor Scrum-teams</p>
             <div class="lang-switcher"></div>
-            <span class="footer-copy" data-i18n="footer.copy">© 2026 Scrum Fight</span>
           </div>
-          <nav class="footer-links">
-            <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+          <nav class="footer-col" aria-labelledby="footer-col-product">
+            <h2 id="footer-col-product" data-i18n="footer.col.product">Product</h2>
+            <a data-public-link="features" data-i18n="nav.features">Functies</a>
+            <a data-public-link="events" data-i18n="nav.events">Scrum events</a>
+            <a data-public-link="faq" data-i18n="nav.faq">FAQ</a>
             <a href="/subscription.html" class="hidden _footer-subscription" data-i18n="footer.subscription">Abonnementen</a>
-            <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
-            ${showAuth ? `
-            <span class="footer-auth" id="footerAuth">
-              <a href="/login.html" data-i18n="footer.login">Inloggen</a>
-              <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
-            </span>` : ''}
           </nav>
+          ${user ? `
+          <nav class="footer-col" aria-labelledby="footer-col-account">
+            <h2 id="footer-col-account" data-i18n="footer.col.account">Account</h2>
+            <a href="/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
+            <a href="/stats.html" data-i18n="nav.stats">Statistieken</a>
+            <a href="/profile.html" data-i18n="nav.profile">Profiel</a>
+          </nav>` : showAuth ? `
+          <nav class="footer-col" id="footerAuth" aria-labelledby="footer-col-account">
+            <h2 id="footer-col-account" data-i18n="footer.col.account">Account</h2>
+            <a href="/login.html" data-i18n="footer.login">Inloggen</a>
+            <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
+          </nav>` : ''}
+          <nav class="footer-col" aria-labelledby="footer-col-legal">
+            <h2 id="footer-col-legal" data-i18n="footer.col.legal">Juridisch</h2>
+            <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
+            <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
+          </nav>
+        </div>
+        <div class="footer-bottom">
+          <span class="footer-copy" data-i18n="footer.copy">© 2026 ScrumFight</span>
         </div>
       </footer>
     `;
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    setPublicLinks(this);
+    document.addEventListener('langchange', () => setPublicLinks(this));
     applyTranslations();
 
     // Only shown where the payments feature is on (or to manage a paid plan).

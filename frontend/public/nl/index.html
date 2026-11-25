@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="nl" data-lang-locked>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScrumFight – Gratis Planning Poker voor Scrum-teams | Refinement &amp; Sprint Planning</title>
+  <meta name="description" content="Gratis online Planning Poker voor Scrum-teams. Schat user stories realtime tijdens backlog refinement en sprint planning. Geen account nodig." />
+  <link rel="canonical" href="https://scrumfight.com/nl/" />
+  <link rel="alternate" hreflang="en" href="https://scrumfight.com/" />
+  <link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/" />
+  <link rel="alternate" hreflang="x-default" href="https://scrumfight.com/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ScrumFight" />
+  <meta property="og:url" content="https://scrumfight.com/nl/" />
+  <meta property="og:title" content="ScrumFight – Gratis Planning Poker voor Scrum-teams | Refinement &amp; Sprint Planning" />
+  <meta property="og:description" content="Gratis online Planning Poker voor Scrum-teams. Schat user stories realtime tijdens backlog refinement en sprint planning. Geen account nodig." />
+  <meta property="og:image" content="https://scrumfight.com/img/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="nl_NL" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ScrumFight – Gratis Planning Poker voor Scrum-teams | Refinement &amp; Sprint Planning" />
+  <meta name="twitter:description" content="Gratis online Planning Poker voor Scrum-teams. Schat user stories realtime tijdens backlog refinement en sprint planning. Geen account nodig." />
+  <meta name="twitter:image" content="https://scrumfight.com/img/og-image.png" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://scrumfight.com/#website",
+      "url": "https://scrumfight.com/",
+      "name": "ScrumFight",
+      "inLanguage": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://scrumfight.com/#app",
+      "name": "ScrumFight",
+      "url": "https://scrumfight.com/nl/",
+      "description": "ScrumFight is een gratis, realtime Planning Poker-tool voor Scrum- en Agile-teams om user stories te schatten tijdens backlog refinement en sprint planning, zonder account.",
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Planning Poker",
+      "operatingSystem": "Web browser",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "nl",
+      "isAccessibleForFree": true,
+      "image": "https://scrumfight.com/img/og-image.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Realtime stemmen met gelijktijdige reveal",
+        "Fibonacci, Fibonacci+, T-shirt maten en Powers of 2",
+        "Herkenning van consensus en spreiding",
+        "Statistieken per ronde en rondegeschiedenis",
+        "Toeschouwermodus",
+        "Meedoen als gast, zonder account",
+        "Persoonlijke statistieken en badges",
+        "Nederlands en Engels"
+      ],
+      "keywords": "planning poker, scrum poker, story points, backlog refinement, sprint planning, agile estimation, scrum"
+    }
+  ]
+}
+  </script>
+</head>
+<body class="page-landing">
+
+  <site-nav show-cta show-links></site-nav>
+
+  <!-- Hero -->
+  <main class="landing-main">
+    <div class="landing-hero">
+      <h1 class="landing-heading">
+        <span class="landing-title">⚔️ ScrumFight</span>
+        <span class="landing-tagline" data-i18n="landing.tagline">Gratis online Planning Poker voor Scrum-teams</span>
+      </h1>
+      <p class="landing-pill" data-i18n="landing.anon">✓ Geen account nodig</p>
+    </div>
+
+    <div class="landing-cards">
+
+      <!-- Create room card — full width -->
+      <div class="form-card form-card-wide form-card-create">
+        <h2 class="form-card-title" data-i18n="landing.create.title">✨ Kamer aanmaken</h2>
+
+        <div class="create-fields">
+          <div class="form-group">
+            <label for="createName" data-i18n="landing.create.yourname">Jouw naam</label>
+            <input id="createName" type="text" class="input" data-i18n-ph="landing.create.yourname.ph" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
+          </div>
+
+          <div class="form-group field-full">
+            <label for="createRoomName" data-i18n="landing.create.roomname">Kamernaam</label>
+            <div class="input-with-btn">
+              <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
+              <button id="randomNameBtn" class="btn btn-ghost btn-icon" data-i18n-title="landing.create.random.title" title="Nieuwe willekeurige naam">🎲</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="createMethod" data-i18n="landing.create.method">Schattingsmethode</label>
+            <select id="createMethod" class="input" data-method-select></select>
+          </div>
+        </div>
+
+        <button id="createRoomBtn" class="btn btn-primary btn-full" data-i18n="landing.create.btn">Kamer aanmaken →</button>
+        <p id="createError" class="form-error hidden"></p>
+      </div>
+
+      <!-- Join room card — step 1: code, step 2: name -->
+      <div class="form-card form-card-wide form-card-join">
+        <h2 class="form-card-title" data-i18n="landing.join.title">🚪 Kamer joinen</h2>
+
+        <!-- Step 1: code -->
+        <div id="joinStep1">
+          <div class="form-group">
+            <label for="joinCode" data-i18n="landing.join.code">Kamercode</label>
+            <input
+              id="joinCode"
+              type="text"
+              class="input input-code"
+              data-i18n-ph="landing.join.code.ph"
+              placeholder="ABC123"
+              maxlength="6"
+              autocomplete="off"
+              style="text-transform:uppercase;letter-spacing:.15em;"
+            />
+          </div>
+          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem" data-i18n="landing.join.search">Kamer zoeken →</button>
+        </div>
+
+        <!-- Step 2: name (hidden until code verified) -->
+        <div id="joinStep2" class="hidden">
+          <div class="join-found-banner" id="joinFoundBanner"></div>
+          <div class="form-group" style="margin-top:.8rem">
+            <label for="joinName" data-i18n="landing.join.yourname">Jouw naam</label>
+            <input id="joinName" type="text" class="input" data-i18n-ph="landing.join.yourname.ph" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+          </div>
+          <div class="join-step2-actions">
+            <button id="joinBackBtn" class="btn btn-ghost" data-i18n="landing.join.back">← Terug</button>
+            <button id="joinRoomBtn" class="btn btn-secondary btn-full" data-i18n="landing.join.btn">Joinen →</button>
+          </div>
+        </div>
+
+        <p id="joinError" class="form-error hidden"></p>
+      </div>
+
+    </div>
+
+    <!-- Product information: what search engines and AI assistants read -->
+    <div class="landing-info">
+      <section class="landing-section" aria-labelledby="what-title">
+        <h2 id="what-title" data-i18n="landing.info.what.title">Wat is ScrumFight?</h2>
+        <p class="landing-lead" data-i18n="landing.info.what.body">ScrumFight is een gratis, realtime Planning Poker-tool voor Scrum- en Agile-teams. Je schat user stories samen tijdens backlog refinement en sprint planning: iedereen kiest tegelijk een kaart, de kaarten worden pas onthuld als het team klaar is, en verschillen worden direct zichtbaar. Geen installatie en geen account nodig.</p>
+      </section>
+
+      <section class="landing-section" aria-labelledby="how-title">
+        <h2 id="how-title" data-i18n="landing.info.how.title">Zo werkt het</h2>
+        <ol class="landing-steps">
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.1.title">1. Maak een kamer aan</h3>
+            <p data-i18n="landing.info.how.1.body">Kies een naam en een schattingsmethode: Fibonacci, Fibonacci+, T-shirt maten of Powers of 2.</p>
+          </li>
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.2.title">2. Deel de code</h3>
+            <p data-i18n="landing.info.how.2.body">Stuur de kamercode of link naar je team. Collega’s doen mee vanuit de browser, op kantoor of op afstand.</p>
+          </li>
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.3.title">3. Stem en onthul</h3>
+            <p data-i18n="landing.info.how.3.body">Iedereen stemt verborgen. Bij de reveal zie je meteen of er consensus is, en waar het gesprek over moet gaan.</p>
+          </li>
+        </ol>
+      </section>
+
+      <nav class="landing-more" aria-label="ScrumFight">
+        <a href="/nl/functies" data-public-link="features" data-i18n="landing.info.more.features">Alle functies →</a>
+        <a href="/nl/scrum-events" data-public-link="events" data-i18n="landing.info.more.events">ScrumFight bij Scrum events →</a>
+        <a href="/nl/faq" data-public-link="faq" data-i18n="landing.info.more.faq">Veelgestelde vragen →</a>
+      </nav>
+    </div>
+  </main>
+
+  <site-footer></site-footer>
+  <script type="module" src="/js/pages/landing.js"></script>
+</body>
+</html>

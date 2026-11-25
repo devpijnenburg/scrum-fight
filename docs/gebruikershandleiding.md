@@ -1,4 +1,4 @@
-# Scrum Fight — Gebruikershandleiding
+# ScrumFight — Gebruikershandleiding
 
 > Real-time planning poker voor Scrum-teams. Geen installatie, geen gedoe — gewoon een link delen en schatten.
 
@@ -6,7 +6,7 @@
 
 ## Inhoudsopgave
 
-1. [Wat is Scrum Fight?](#1-wat-is-scrum-fight)
+1. [Wat is ScrumFight?](#1-wat-is-scrum-fight)
 2. [Aan de slag](#2-aan-de-slag)
 3. [In de poker-kamer](#3-in-de-poker-kamer)
 4. [Dashboard](#4-dashboard)
@@ -16,9 +16,9 @@
 
 ---
 
-## 1. Wat is Scrum Fight?
+## 1. Wat is ScrumFight?
 
-Scrum Fight is een gratis planning poker tool voor agile teams. Iedereen in het team kiest gelijktijdig een kaart om een user story te schatten. Pas na de reveal ziet iedereen elkaars keuze, zodat er geen groepsdruk is.
+ScrumFight is een gratis planning poker tool voor agile teams. Iedereen in het team kiest gelijktijdig een kaart om een user story te schatten. Pas na de reveal ziet iedereen elkaars keuze, zodat er geen groepsdruk is.
 
 **Voordelen ten opzichte van alternatieven:**
 - Geen account nodig om mee te spelen — gewoon een naam en een kamercode
@@ -79,7 +79,7 @@ Elke deelnemer kiest één kaart uit het dek. De gekozen waarde is **verborgen v
 
 ### Reveal & resultaten
 
-Na de reveal toont Scrum Fight:
+Na de reveal toont ScrumFight:
 - Wie wat heeft gestemd
 - Gemiddelde, minimum en maximum (voor numerieke methoden)
 - De meest gekozen waarde (modus)
@@ -155,7 +155,7 @@ Beschikbaar via `/stats.html` voor ingelogde gebruikers.
 
 ### Poker-persoonlijkheid
 
-Scrum Fight bepaalt jouw poker-persoonlijkheid op basis van je stempatroon:
+ScrumFight bepaalt jouw poker-persoonlijkheid op basis van je stempatroon:
 
 | Type | Trigger | Omschrijving |
 |------|---------|-------------|

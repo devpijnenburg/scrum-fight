@@ -55,7 +55,7 @@ Dat geeft één regel per gebeurtenis, altijd in dezelfde vorm:
 | `code` | Foutcode zoals de client hem krijgt (`ROOM_NOT_FOUND`, `ROOM_FULL`, …) |
 | `req` | Request-id van het HTTP-verzoek waarbinnen de regel geschreven is (zie hieronder) |
 
-**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db`, `jobs:*`, `billing`, `mail`, `auth` (inloggen, registreren, 2FA), `admin` (auditlog van adminacties), `rate-limit`, `browser` (fouten uit de browser), `badges`, `events`.
+**Componenten:** `rooms` (REST: aanmaken, claimen, verwijderen), `realtime` (socket-handlers: joinen, verlaten, spelacties), `realtime:rooms` (levenscyclus van kamers in het geheugen), `socket`, `http`, `server`, `db` (migraties bij het opstarten, verbindingsfouten), `jobs:*`, `billing`, `mail`, `auth` (inloggen, registreren, 2FA), `admin` (auditlog van adminacties), `rate-limit`, `browser` (fouten uit de browser), `badges`, `events`.
 
 ### Request-id, verzoeken, status en browserfouten
 
@@ -132,9 +132,11 @@ flowchart TD
     open{Kamer al in het geheugen?}
     open -- ja --> cancelEmpty[Opruimtimer van lege kamer stoppen]
     open -- nee --> load[(live_rounds: opgeslagen ronde laden)]
-    load --> logOpened[/"[realtime:rooms] Kamer geopend<br/>room, type, method, restoredRound, openRooms"/]
-    logOpened --> sync
-    cancelEmpty --> sync
+    load --> logLoaded[/"[realtime:rooms] Kamer geladen in het geheugen (debug)"/]
+    logLoaded --> gone2
+    cancelEmpty --> gone2
+    gone2{Socket intussen weg?} -- ja --> stop2([lege kamer, zie flow 3])
+    gone2 -- nee --> sync
 
     sync[Vanaf hier synchroon] --> kind{Wie joint er?}
     kind -- "zelfde socket (rejoin)" --> update[Speler bijwerken]
@@ -145,15 +147,20 @@ flowchart TD
     takeover --> logTakeover[/"[realtime] Oude verbinding van hetzelfde tabblad overgenomen<br/>room, player, oldSocket, socket"/] --> add
 
     update --> logRejoin[/"[realtime] Speler opnieuw aangemeld in de kamer<br/>via=rejoin"/]
-    add --> logJoin[/"[realtime] Speler is de kamer binnengekomen<br/>room, player, user, socket, via=join|reconnect, players, limit"/]
+    add --> first{Eerste speler sinds<br/>het laden?}
+    first -- ja --> logOpened[/"[realtime:rooms] Kamer geopend<br/>room, type, method, restoredRound, openRooms"/] --> logJoin
+    first -- nee --> logJoin
+    logJoin[/"[realtime] Speler is de kamer binnengekomen<br/>room, player, user, socket, via=join|reconnect, players, limit"/]
     logRejoin --> broadcast
     logJoin --> broadcast
     broadcast[room-state naar de speler<br/>player-joined naar de rest] --> persist[(live_rounds opslaan na 200 ms<br/>last_active bijwerken)]
     persist --> done([klaar])
 
     classDef log fill:#eef6ff,stroke:#3b82f6,color:#1e3a8a
-    class rName,rNotFound1,logGone,logOpened,rFull,logTakeover,logRejoin,logJoin log
+    class rName,rNotFound1,logGone,logLoaded,logOpened,rFull,logTakeover,logRejoin,logJoin log
 ```
+
+**Kamer geopend** staat pas in het log als de eerste speler echt binnen is. Breekt een join af nadat de kamer al geladen was (bijvoorbeeld omdat de verbinding wegviel), dan blijven het laden, de lege kamer en het opruimen op `debug`: er is niemand binnen geweest, dus er valt niets te melden.
 
 Voorbeeld van twee spelers die binnenkomen en een derde die niet meer past:
 
@@ -224,7 +231,7 @@ Voorbeeld:
 
 ```mermaid
 flowchart TD
-    start([Eerste join, flow 2]) --> logOpened[/"[realtime:rooms] Kamer geopend"/]
+    start([Eerste speler binnen, flow 2]) --> logOpened[/"[realtime:rooms] Kamer geopend"/]
     logOpened --> active[Kamer actief in het geheugen]
 
     active --> ev{Wat gebeurt er?}

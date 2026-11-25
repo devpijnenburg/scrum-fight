@@ -31,6 +31,10 @@ function createRoomSessions(io, timingOverrides = {}) {
   const loading = new Map();      // roomId → Promise<GameRoom> while the saved round loads
   const persistTimers = new Map();// roomId → timeout (debounced save)
   const writes = new Map();       // roomId → Promise of the last save (keeps saves in order)
+  // Kamers die geladen zijn maar waar nog niemand binnen is gekomen → velden
+  // voor de logregel "Kamer geopend". Die regel volgt pas bij de eerste speler
+  // (announce), zodat een afgebroken join geen kamer-open/-dicht-ruis geeft.
+  const unannounced = new Map();
 
   const clear = (map, id) => {
     const handle = map.get(id);
@@ -69,14 +73,15 @@ function createRoomSessions(io, timingOverrides = {}) {
           log.error('Opgeslagen ronde laden mislukt, kamer start met een lege ronde', { room: room.id }, err);
         }
         rooms.set(room.id, room);
-        log.info('Kamer geopend', {
+        const fields = {
           room: room.id,
           type: roomType(room),
           method: room.method,
           restoredRound: restored || undefined,
           absentPlayers: restored ? room.absent.size : undefined,
-          openRooms: rooms.size,
-        });
+        };
+        unannounced.set(room.id, fields);
+        log.debug('Kamer geladen in het geheugen', fields);
         return room;
       })().finally(() => loading.delete(dbRoom.id)));
     }
@@ -126,7 +131,21 @@ function createRoomSessions(io, timingOverrides = {}) {
     clear(emptyTimers, roomId);
     clear(countdowns, roomId);
     rooms.delete(roomId);
-    if (existed) log.info('Kamer gesloten', { room: roomId, reason, openRooms: rooms.size });
+    if (!existed) return;
+    if (unannounced.delete(roomId)) {
+      log.debug('Kamer uit het geheugen gehaald, er is nooit iemand binnengekomen', { room: roomId, reason });
+    } else {
+      log.info('Kamer gesloten', { room: roomId, reason, openRooms: rooms.size });
+    }
+  }
+
+  // De eerste speler is binnen: nu pas "Kamer geopend" loggen (één keer per
+  // keer dat de kamer in het geheugen komt).
+  function announce(roomId) {
+    const fields = unannounced.get(roomId);
+    if (!fields) return;
+    unannounced.delete(roomId);
+    log.info('Kamer geopend', { ...fields, openRooms: rooms.size });
   }
 
   // ── Activity / guest expiry ───────────────────────────────────────────────
@@ -169,12 +188,14 @@ function createRoomSessions(io, timingOverrides = {}) {
     const room = rooms.get(roomId);
     if (!room || !room.isEmpty) return;
     if (clear(countdowns, roomId)) log.debug('Countdown gestopt: kamer is leeg', { room: roomId });
+    // Nooit iemand binnen geweest (join afgebroken): niets te melden op info.
+    const level = unannounced.has(roomId) ? 'debug' : 'info';
     if (room.isGuest) {
-      log.info('Kamer is leeg, gastkamer blijft tot de inactiviteitstimer afloopt', { room: roomId });
+      log[level]('Kamer is leeg, gastkamer blijft tot de inactiviteitstimer afloopt', { room: roomId });
       return;
     }
     clear(emptyTimers, roomId);
-    log.info('Kamer is leeg, wordt uit het geheugen gehaald als niemand terugkomt', {
+    log[level]('Kamer is leeg, wordt uit het geheugen gehaald als niemand terugkomt', {
       room: roomId, graceMinutes: Math.round(timing.emptyRoomTtlMs / 60000),
     });
     const timer = setTimeout(() => {
@@ -284,6 +305,7 @@ function createRoomSessions(io, timingOverrides = {}) {
     timing,
     get,
     open,
+    announce,
     evict,
     persist,
     flushAll,

@@ -95,7 +95,7 @@ function onLoggedIn(user) {
   closeModal('roomAuthModal');
   setProfileName(user?.name || getCurrentUser()?.name || '');
   profileMenu()?.refresh();
-  $('footerAuth')?.classList.add('hidden');
+  document.querySelector('site-footer')?.refresh?.();
   // Join again as the account: the server links this seat to the user (so
   // votes count for stats and badges) and keeps the current vote.
   const account = getCurrentUser();

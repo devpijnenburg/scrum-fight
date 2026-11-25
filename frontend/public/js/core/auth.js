@@ -19,12 +19,3 @@ export function logout() {
   localStorage.removeItem('token');
   window.location.href = '/';
 }
-
-// Hide footer auth links when already logged in
-function initFooterAuth() {
-  if (!getCurrentUser()) return;
-  const el = document.getElementById('footerAuth');
-  if (el) el.classList.add('hidden');
-}
-
-document.addEventListener('DOMContentLoaded', initFooterAuth);

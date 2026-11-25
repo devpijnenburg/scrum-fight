@@ -52,16 +52,3 @@
 @media (max-width: 339px) {
   .footer-inner { grid-template-columns: 1fr; }
 }
-
-/* Compact footer (room): one slim row */
-.footer-compact-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: .9rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.footer-compact-links { display: flex; gap: 1.2rem; margin-left: auto; }
-.footer-compact-links a { font-size: .8rem; }

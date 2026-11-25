@@ -106,6 +106,16 @@
 
 .lang-switcher-sm { margin-left: auto; }
 
+/* Flag only (public pages); on phones the switch is in the footer */
+.lang-switcher-compact .lang-toggle { padding: .3rem .45rem; background: transparent; border-color: transparent; }
+.lang-switcher-compact .lang-toggle:hover { background: var(--surface-2); border-color: var(--border); }
+.lang-switcher-compact .lang-toggle .lang-code,
+.lang-switcher-compact .lang-toggle .lang-arrow { display: none; }
+.lang-switcher-compact .lang-flag { font-size: 1.15rem; }
+@media (max-width: 720px) {
+  .lang-switcher-compact { display: none; }
+}
+
 .room-header-right { display: flex; align-items: center; gap: .6rem; margin-left: auto; }
 .room-user-badge { font-size: .85rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
 

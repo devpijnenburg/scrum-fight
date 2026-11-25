@@ -33,9 +33,9 @@ De limieten staan in `backend/src/domains/billing/plans.js`. Opgeslagen kamers w
 
 ## Vindbaarheid (SEO en AI-assistenten)
 
-- **Publieke pagina's** per taal: home (`/`, `/nl/`), functies (`/features`, `/nl/functies`) en FAQ (`/faq`, `/nl/faq`), gekoppeld met `hreflang`. De Engelse home volgt de taalkeuze van de bezoeker; alle andere publieke pagina's hebben `data-lang-locked` en tonen altijd hun eigen taal. De taalwissel gaat daar naar de andere URL. De twee home-pagina's delen dezelfde app-markup; `frontend/__tests__/seo.test.mjs` controleert dat ids, vertaalsleutels en teksten overeenkomen met `i18n.js`, en dat de NL- en EN-versie van functies en FAQ dezelfde opbouw hebben.
-- **Navigatie**: op de publieke pagina's (`<site-nav show-links>`) staan Functies en FAQ in de balk en de taalkeuze alleen in de footer.
-- **Metadata**: title, description, canonical, `hreflang`, Open Graph/Twitter (`/img/og-image.png`, 1200×630) en JSON-LD (`WebSite` en `WebApplication` op home, `FAQPage` op de FAQ, `BreadcrumbList` op functies en FAQ).
+- **Publieke pagina's** per taal: home (`/`, `/nl/`), functies (`/features`, `/nl/functies`), Scrum events (`/scrum-events`, `/nl/scrum-events`) en FAQ (`/faq`, `/nl/faq`), gekoppeld met `hreflang`. De Engelse home volgt de taalkeuze van de bezoeker; alle andere publieke pagina's hebben `data-lang-locked` en tonen altijd hun eigen taal. De taalwissel gaat daar naar de andere URL. De twee home-pagina's delen dezelfde app-markup; `frontend/__tests__/seo.test.mjs` controleert dat ids, vertaalsleutels en teksten overeenkomen met `i18n.js`, en dat de NL- en EN-versie van de andere pagina's dezelfde opbouw hebben.
+- **Navigatie**: op de publieke pagina's (`<site-nav show-links>`) staan Functies, Scrum events en FAQ in de balk en de taalkeuze alleen in de footer. De footer heeft kolommen (merk, Product, Account, Juridisch); in de kamer staat `<site-footer compact>`, één smalle regel.
+- **Metadata**: title, description, canonical, `hreflang`, Open Graph/Twitter (`/img/og-image.png`, 1200×630) en JSON-LD (`WebSite` en `WebApplication` op home, `FAQPage` op de FAQ, `BreadcrumbList` op de andere publieke pagina's).
 - **App-pagina's** (kamer, dashboard, login, profiel, statistieken, beheer) hebben `noindex`.
 - **Crawlerbestanden** in `frontend/public`: `robots.txt` (AI-crawlers expliciet welkom), `sitemap.xml` en `llms.txt` (samenvatting voor taalmodellen).
 - **nginx** geeft voor onbekende URL's een echte 404 (`404.html`) in plaats van de homepage.

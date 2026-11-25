@@ -1,4 +1,4 @@
-// SEO: the English and Dutch public pages (home, features, FAQ), their
+// SEO: the English and Dutch public pages (home, features, Scrum events, FAQ), their
 // metadata and the crawler files (robots.txt, sitemap.xml, llms.txt).
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,6 +12,7 @@ const read = (p) => readFileSync(join(PUBLIC, p), 'utf8');
 const PAGES = {
   home: [['index.html', '/', 'en'], ['nl/index.html', '/nl/', 'nl']],
   features: [['features.html', '/features', 'en'], ['nl/functies.html', '/nl/functies', 'nl']],
+  events: [['scrum-events.html', '/scrum-events', 'en'], ['nl/scrum-events.html', '/nl/scrum-events', 'nl']],
   faq: [['faq.html', '/faq', 'en'], ['nl/faq.html', '/nl/faq', 'nl']],
 };
 const ALL = Object.values(PAGES).flat();
@@ -66,12 +67,13 @@ test('home pages describe the app in structured data', () => {
   }
 });
 
-test('home pages link to the features and FAQ pages in their own language', () => {
+test('home pages link to the other public pages in their own language', () => {
   for (const [file, , lang] of PAGES.home) {
     const html = read(file);
-    const [features, faq] = lang === 'nl' ? ['/nl/functies', '/nl/faq'] : ['/features', '/faq'];
-    expect(html).toContain(`href="${features}"`);
-    expect(html).toContain(`href="${faq}"`);
+    for (const pair of [PAGES.features, PAGES.events, PAGES.faq]) {
+      const [, path] = pair.find(([, , l]) => l === lang);
+      expect(html).toContain(`href="${path}"`);
+    }
   }
 });
 
@@ -87,8 +89,8 @@ test('the FAQ structured data matches the visible questions and answers', () => 
 });
 
 test('both language versions of a content page have the same shape', () => {
-  for (const pair of [PAGES.features, PAGES.faq]) {
-    const shape = (file) => read(file).match(/<(h2|h3|tr)\b/g);
+  for (const pair of [PAGES.features, PAGES.events, PAGES.faq]) {
+    const shape = (file) => read(file).match(/<(h2|h3|tr|li)\b/g);
     expect(shape(pair[1][0])).toEqual(shape(pair[0][0]));
   }
 });

@@ -38,13 +38,13 @@
 }
 @media (max-width: 400px) {
   .navbar { gap: .5rem; }
-  .navbar-logo { display: none; }
-  .navbar-name { font-size: 1.05rem; }
+  .navbar .navbar-logo { display: none; }
+  .navbar .navbar-name { font-size: 1.05rem; }
   .navbar-actions { gap: .4rem; }
   .navbar-actions .btn-sm { padding-left: .6rem; padding-right: .6rem; }
 }
 @media (max-width: 359px) {
-  .navbar-subtitle { display: none; }
+  .navbar .navbar-subtitle { display: none; }
 }
 .navbar-actions { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
 .navbar-user { font-size: .9rem; color: var(--text-muted); }

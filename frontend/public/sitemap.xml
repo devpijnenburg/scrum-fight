@@ -34,6 +34,22 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://scrumfight.com/scrum-events</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/scrum-events" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/scrum-events" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/scrum-events" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scrumfight.com/nl/scrum-events</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/scrum-events" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/scrum-events" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/scrum-events" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://scrumfight.com/faq</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/faq" />
     <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/faq" />

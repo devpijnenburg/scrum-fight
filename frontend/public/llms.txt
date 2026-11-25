@@ -45,6 +45,7 @@ Guest rooms expire after 1 hour of inactivity; saved rooms are kept until the ow
 - [ScrumFight (English)](https://scrumfight.com/): create or join a Planning Poker room
 - [ScrumFight (Nederlands)](https://scrumfight.com/nl/): gratis Planning Poker voor Scrum-teams
 - [Features](https://scrumfight.com/features): every feature, the estimation scales and the plans ([Nederlands](https://scrumfight.com/nl/functies))
+- [Scrum events](https://scrumfight.com/scrum-events): how to use ScrumFight in backlog refinement, sprint planning and the retrospective, with estimation tips ([Nederlands](https://scrumfight.com/nl/scrum-events))
 - [FAQ](https://scrumfight.com/faq): Planning Poker, story points, Fibonacci vs. T-shirt sizes, refinement and sprint planning ([Nederlands](https://scrumfight.com/nl/faq))
 - [Plans and pricing](https://scrumfight.com/subscription.html)
 - [Privacy policy](https://scrumfight.com/privacy.html)

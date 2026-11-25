@@ -188,7 +188,7 @@ class SiteNav extends HTMLElement {
 
     this.innerHTML = `
       <nav class="navbar">
-        <a href="/" class="navbar-brand">⚔️ Scrum Fight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
+        <a href="/" class="navbar-brand">⚔️ ScrumFight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
         <div class="navbar-actions">
           ${user
             ? `<div class="lang-switcher _nav-lang"></div><profile-menu></profile-menu>`
@@ -221,7 +221,7 @@ class SiteFooter extends HTMLElement {
         <div class="footer-inner">
           <div class="footer-left">
             <div class="lang-switcher"></div>
-            <span class="footer-copy" data-i18n="footer.copy">© 2026 Scrum Fight</span>
+            <span class="footer-copy" data-i18n="footer.copy">© 2026 ScrumFight</span>
           </div>
           <nav class="footer-links">
             <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>

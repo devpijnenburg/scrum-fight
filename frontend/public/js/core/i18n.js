@@ -32,6 +32,47 @@ const TRANSLATIONS = {
     'landing.join.back': '← Terug',
     'landing.join.btn': 'Joinen →',
     'landing.join.found': '✅ "{name}" gevonden!',
+    'landing.tagline': 'Gratis online Planning Poker voor Scrum-teams',
+    'landing.info.what.title': 'Wat is ScrumFight?',
+    'landing.info.what.body': 'ScrumFight is een gratis, realtime Planning Poker-tool voor Scrum- en Agile-teams. Je schat user stories samen tijdens backlog refinement en sprint planning: iedereen kiest tegelijk een kaart, de kaarten worden pas onthuld als het team klaar is, en verschillen worden direct zichtbaar. Geen installatie en geen account nodig.',
+    'landing.info.how.title': 'Zo werkt het',
+    'landing.info.how.1.title': '1. Maak een kamer aan',
+    'landing.info.how.1.body': 'Kies een naam en een schattingsmethode: Fibonacci, Fibonacci+, T-shirt maten of Powers of 2.',
+    'landing.info.how.2.title': '2. Deel de code',
+    'landing.info.how.2.body': 'Stuur de kamercode of link naar je team. Collega’s doen mee vanuit de browser, op kantoor of op afstand.',
+    'landing.info.how.3.title': '3. Stem en onthul',
+    'landing.info.how.3.body': 'Iedereen stemt verborgen. Bij de reveal zie je meteen of er consensus is, en waar het gesprek over moet gaan.',
+    'landing.info.events.title': 'Voor de Scrum events',
+    'landing.info.events.refinement.title': '🔍 Backlog refinement',
+    'landing.info.events.refinement.body': 'Schat nieuwe stories snel en zonder anchoring. Grote verschillen tussen kaarten laten zien waar nog onduidelijkheid zit, zodat je weet welke vragen je moet stellen.',
+    'landing.info.events.planning.title': '📋 Sprint planning',
+    'landing.info.events.planning.body': 'Schat de laatste stories voor de sprint en geef elke ronde een naam, zodat je achteraf precies ziet wat er is geschat.',
+    'landing.info.events.retro.title': '🔄 Retrospective',
+    'landing.info.events.retro.body': 'Kijk terug op de rondegeschiedenis en teamstatistieken en bespreek hoe jullie schatten en waar je het vaak oneens bent.',
+    'landing.info.events.remote.title': '🌍 Remote en hybride teams',
+    'landing.info.events.remote.body': 'Werkt in elke browser, op laptop en telefoon. Iedereen stemt tegelijk, waar je ook zit.',
+    'landing.info.features.title': 'Functies',
+    'landing.info.features.1': 'Realtime stemmen en gelijktijdige reveal',
+    'landing.info.features.2': 'Fibonacci, Fibonacci+, T-shirt maten en Powers of 2',
+    'landing.info.features.3': 'Automatische herkenning van consensus en grote verschillen',
+    'landing.info.features.4': 'Statistieken per ronde: gemiddelde, minimum, maximum en verdeling',
+    'landing.info.features.5': 'Toeschouwermodus voor Product Owners en stakeholders',
+    'landing.info.features.6': 'Meedoen als gast, zonder account',
+    'landing.info.features.7': 'Sneltoetsen, emoji-reacties en rondenamen',
+    'landing.info.features.8': 'Beschikbaar in het Nederlands en Engels',
+    'landing.info.faq.title': 'Veelgestelde vragen',
+    'landing.info.faq.1.q': 'Wat is Planning Poker?',
+    'landing.info.faq.1.a': 'Planning Poker (ook wel Scrum Poker) is een schattingstechniek waarbij elk teamlid tegelijk en verborgen een kaart kiest met een schatting voor een user story. Daarna worden de kaarten onthuld en bespreekt het team de verschillen. Zo voorkom je dat de eerste mening de rest beïnvloedt.',
+    'landing.info.faq.2.q': 'Is ScrumFight gratis?',
+    'landing.info.faq.2.a': 'Ja. Het gratis plan heeft tot 7 deelnemers per kamer en 3 opgeslagen kamers. Pro (15 deelnemers, 20 kamers) en Premium (onbeperkt) zijn er voor grotere teams.',
+    'landing.info.faq.3.q': 'Heb ik een account nodig?',
+    'landing.info.faq.3.a': 'Nee. Vul een naam in en je kunt meteen een kamer aanmaken of meedoen. Met een account bewaar je kamers en statistieken.',
+    'landing.info.faq.4.q': 'Kan ik ScrumFight gebruiken tijdens refinement?',
+    'landing.info.faq.4.a': 'Ja, daar is het voor gemaakt. Maak één kamer aan voor je team, schat de stories een voor een en gebruik de reveal om het gesprek te starten waar de schattingen uiteenlopen.',
+    'landing.info.faq.5.q': 'Welke schattingsmethoden zijn er?',
+    'landing.info.faq.5.a': 'Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt maten (XS t/m XXL) en Powers of 2 (1 t/m 64), allemaal met een ?- en ☕-kaart.',
+    'landing.info.faq.6.q': 'Werkt het voor remote teams?',
+    'landing.info.faq.6.a': 'Ja. ScrumFight draait in de browser en synchroniseert realtime, dus het werkt naast Teams, Zoom of Google Meet.',
 
     'login.tab.login': 'Inloggen',
     'login.tab.register': 'Registreren',
@@ -114,11 +155,11 @@ const TRANSLATIONS = {
     'subscription.manage': 'Abonnement beheren',
     'subscription.manage_hint': 'Opzeggen, je betaalmethode wijzigen en betaalbewijzen bekijken doe je bij onze betaalpartner Creem.',
     'subscription.status.active': 'Actief abonnement: {plan}',
-    'subscription.status.thanks': 'Bedankt dat je Scrum Fight steunt! Je abonnement helpt de server- en ontwikkelkosten te dekken.',
+    'subscription.status.thanks': 'Bedankt dat je ScrumFight steunt! Je abonnement helpt de server- en ontwikkelkosten te dekken.',
     'subscription.status.renews': 'Wordt automatisch verlengd op {date}.',
     'subscription.status.ends': 'Opgezegd — je houdt je plan tot en met {date}.',
     'subscription.status.past_due': 'De laatste betaling is niet gelukt. Werk je betaalmethode bij om je plan te behouden.',
-    'subscription.support_note': 'Scrum Fight wordt gemaakt en onderhouden door één persoon. Een Pro- of Premium-abonnement helpt de server- en ontwikkelkosten te dekken. Dankjewel dat je het overweegt. 🙏',
+    'subscription.support_note': 'ScrumFight wordt gemaakt en onderhouden door één persoon. Een Pro- of Premium-abonnement helpt de server- en ontwikkelkosten te dekken. Dankjewel dat je het overweegt. 🙏',
     'subscription.processing.title': 'Je abonnement wordt geactiveerd',
     'subscription.processing.subtitle': 'Even geduld — dit duurt meestal maar een paar seconden.',
     'subscription.processing.done': 'Je plan is bijgewerkt!',
@@ -191,7 +232,7 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacybeleid',
     'footer.terms': 'Algemene voorwaarden',
-    'footer.copy': '© 2026 Scrum Fight',
+    'footer.copy': '© 2026 ScrumFight',
     'footer.login': 'Inloggen',
     'footer.register': 'Registreren',
 
@@ -418,6 +459,47 @@ const TRANSLATIONS = {
     'landing.join.back': '← Back',
     'landing.join.btn': 'Join →',
     'landing.join.found': '✅ "{name}" found!',
+    'landing.tagline': 'Free online Planning Poker for Scrum teams',
+    'landing.info.what.title': 'What is ScrumFight?',
+    'landing.info.what.body': 'ScrumFight is a free, real-time Planning Poker tool for Scrum and Agile teams. Estimate user stories together during backlog refinement and sprint planning: everyone picks a card at the same time, cards are revealed only when the team is ready, and differences show up instantly. No installation and no account needed.',
+    'landing.info.how.title': 'How it works',
+    'landing.info.how.1.title': '1. Create a room',
+    'landing.info.how.1.body': 'Pick a name and an estimation method: Fibonacci, Fibonacci+, T-shirt sizes or Powers of 2.',
+    'landing.info.how.2.title': '2. Share the code',
+    'landing.info.how.2.body': 'Send the room code or link to your team. Colleagues join from their browser, in the office or remotely.',
+    'landing.info.how.3.title': '3. Vote and reveal',
+    'landing.info.how.3.body': 'Everyone votes in secret. On reveal you instantly see whether there is consensus, and where the conversation needs to go.',
+    'landing.info.events.title': 'Built for Scrum events',
+    'landing.info.events.refinement.title': '🔍 Backlog refinement',
+    'landing.info.events.refinement.body': 'Estimate new stories quickly and without anchoring. Big differences between cards show where things are still unclear, so you know which questions to ask.',
+    'landing.info.events.planning.title': '📋 Sprint planning',
+    'landing.info.events.planning.body': 'Estimate the last stories for the sprint and name every round, so you can see exactly what was estimated afterwards.',
+    'landing.info.events.retro.title': '🔄 Retrospective',
+    'landing.info.events.retro.body': 'Look back at round history and team statistics and discuss how your team estimates and where you often disagree.',
+    'landing.info.events.remote.title': '🌍 Remote and hybrid teams',
+    'landing.info.events.remote.body': 'Works in any browser, on laptop and phone. Everyone votes at the same time, wherever they are.',
+    'landing.info.features.title': 'Features',
+    'landing.info.features.1': 'Real-time voting and simultaneous reveal',
+    'landing.info.features.2': 'Fibonacci, Fibonacci+, T-shirt sizes and Powers of 2',
+    'landing.info.features.3': 'Automatic detection of consensus and wide spreads',
+    'landing.info.features.4': 'Per-round statistics: average, minimum, maximum and distribution',
+    'landing.info.features.5': 'Spectator mode for Product Owners and stakeholders',
+    'landing.info.features.6': 'Join as a guest, no account required',
+    'landing.info.features.7': 'Keyboard shortcuts, emoji reactions and round names',
+    'landing.info.features.8': 'Available in English and Dutch',
+    'landing.info.faq.title': 'Frequently asked questions',
+    'landing.info.faq.1.q': 'What is Planning Poker?',
+    'landing.info.faq.1.a': 'Planning Poker (also called Scrum Poker) is an estimation technique where every team member secretly picks a card with their estimate for a user story at the same time. The cards are then revealed and the team discusses the differences. This keeps the first opinion from influencing everyone else.',
+    'landing.info.faq.2.q': 'Is ScrumFight free?',
+    'landing.info.faq.2.a': 'Yes. The free plan supports up to 7 participants per room and 3 saved rooms. Pro (15 participants, 20 rooms) and Premium (unlimited) are available for larger teams.',
+    'landing.info.faq.3.q': 'Do I need an account?',
+    'landing.info.faq.3.a': 'No. Enter a name and you can create or join a room right away. With an account you keep your rooms and statistics.',
+    'landing.info.faq.4.q': 'Can I use ScrumFight during backlog refinement?',
+    'landing.info.faq.4.a': 'Yes, that is what it is built for. Create one room for your team, estimate the stories one by one and use the reveal to start the conversation where estimates differ.',
+    'landing.info.faq.5.q': 'Which estimation methods are available?',
+    'landing.info.faq.5.a': 'Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt sizes (XS to XXL) and Powers of 2 (1 to 64), all with a ? and ☕ card.',
+    'landing.info.faq.6.q': 'Does it work for remote teams?',
+    'landing.info.faq.6.a': 'Yes. ScrumFight runs in the browser and syncs in real time, so it works alongside Teams, Zoom or Google Meet.',
 
     'login.tab.login': 'Log in',
     'login.tab.register': 'Sign up',
@@ -500,11 +582,11 @@ const TRANSLATIONS = {
     'subscription.manage': 'Manage subscription',
     'subscription.manage_hint': 'Cancelling, changing your payment method and viewing receipts is done at our payment partner Creem.',
     'subscription.status.active': 'Active subscription: {plan}',
-    'subscription.status.thanks': 'Thank you for supporting Scrum Fight! Your subscription helps cover server and development costs.',
+    'subscription.status.thanks': 'Thank you for supporting ScrumFight! Your subscription helps cover server and development costs.',
     'subscription.status.renews': 'Renews automatically on {date}.',
     'subscription.status.ends': 'Cancelled — you keep your plan until {date}.',
     'subscription.status.past_due': 'The last payment failed. Update your payment method to keep your plan.',
-    'subscription.support_note': 'Scrum Fight is built and maintained by one person. A Pro or Premium subscription helps cover server and development costs. Thank you for considering it. 🙏',
+    'subscription.support_note': 'ScrumFight is built and maintained by one person. A Pro or Premium subscription helps cover server and development costs. Thank you for considering it. 🙏',
     'subscription.processing.title': 'Activating your subscription',
     'subscription.processing.subtitle': 'One moment — this usually takes just a few seconds.',
     'subscription.processing.done': 'Your plan has been updated!',
@@ -577,7 +659,7 @@ const TRANSLATIONS = {
 
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms & Conditions',
-    'footer.copy': '© 2026 Scrum Fight',
+    'footer.copy': '© 2026 ScrumFight',
     'footer.login': 'Log in',
     'footer.register': 'Sign up',
 
@@ -783,7 +865,21 @@ const TRANSLATIONS = {
 const SUPPORTED = ['nl', 'en'];
 const DEFAULT_LANG = 'en';
 
+// A page with <html data-lang-locked lang="nl"> is a language-specific URL
+// (e.g. /nl/): it always renders in its own language, so search engines and
+// visitors from a search result get the language the URL promises.
+function lockedLang() {
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  if (!root || !root.hasAttribute('data-lang-locked')) return null;
+  return SUPPORTED.includes(root.lang) ? root.lang : null;
+}
+
 function detectLang() {
+  const locked = lockedLang();
+  if (locked) {
+    localStorage.setItem('lang', locked);
+    return locked;
+  }
   const stored = localStorage.getItem('lang');
   if (stored && SUPPORTED.includes(stored)) return stored;
   const browser = (navigator.language || '').slice(0, 2).toLowerCase();
@@ -805,6 +901,16 @@ function setLang(lang) {
   if (!SUPPORTED.includes(lang)) return;
   currentLang = lang;
   localStorage.setItem('lang', lang);
+  // On a language-specific URL, switching language means going to the
+  // other language's URL (declared as <link rel="alternate" hreflang>),
+  // on the current origin so it also works outside production.
+  if (lockedLang() && lockedLang() !== lang) {
+    const alt = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
+    if (alt) {
+      window.location.href = new URL(alt.href).pathname + window.location.search;
+      return;
+    }
+  }
   applyTranslations();
   updateLangSwitcher();
 }

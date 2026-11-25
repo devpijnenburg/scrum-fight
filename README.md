@@ -31,6 +31,16 @@ Real-time Planning Poker tool voor Scrum-teams. Maak een kamer aan, deel de code
 
 De limieten staan in `backend/src/domains/billing/plans.js`. Opgeslagen kamers worden in geen enkel plan automatisch verwijderd; alleen gastkamers (zonder account) verlopen na 1 uur inactiviteit.
 
+## Vindbaarheid (SEO en AI-assistenten)
+
+- **Landingspagina's**: `/` is Engels (ook `x-default`), `/nl/` is Nederlands. Beide hebben dezelfde app-markup plus productinformatie (wat, hoe, Scrum events, functies, FAQ). `/nl/` heeft `data-lang-locked` en toont daardoor altijd Nederlands. De taalwissel gaat daar naar de andere URL (`hreflang`). Houd beide bestanden gelijk; `frontend/__tests__/seo.test.mjs` controleert dat ids, vertaalsleutels en teksten overeenkomen met `i18n.js`.
+- **Metadata**: title, description, canonical, `hreflang`, Open Graph/Twitter (`/img/og-image.png`, 1200×630) en JSON-LD (`WebSite`, `WebApplication`, `FAQPage`).
+- **App-pagina's** (kamer, dashboard, login, profiel, statistieken, beheer) hebben `noindex`.
+- **Crawlerbestanden** in `frontend/public`: `robots.txt` (AI-crawlers expliciet welkom), `sitemap.xml` en `llms.txt` (samenvatting voor taalmodellen).
+- **nginx** geeft voor onbekende URL's een echte 404 (`404.html`) in plaats van de homepage.
+
+Na een deploy: meld `https://scrumfight.com/sitemap.xml` aan bij Google Search Console én Bing Webmaster Tools.
+
 ## Technische stack
 
 | Laag      | Technologie                        |

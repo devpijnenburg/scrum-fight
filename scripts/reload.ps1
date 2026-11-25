@@ -31,7 +31,7 @@ if (-not $Url) {
   }
 }
 
-Write-Host 'Reloading Scrum Fight...' -ForegroundColor Cyan
+Write-Host 'Reloading ScrumFight...' -ForegroundColor Cyan
 Write-Host 'Database data is preserved. This script never removes Docker volumes.' -ForegroundColor DarkCyan
 
 if ($NoBuild) {
@@ -45,4 +45,4 @@ if (-not $NoOpen) {
   Start-Process $Url
 }
 
-Write-Host 'Scrum Fight is reloaded.' -ForegroundColor Green
+Write-Host 'ScrumFight is reloaded.' -ForegroundColor Green

@@ -1,11 +1,134 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scrum Fight — Story Estimator 2.0</title>
+  <title>ScrumFight – Free Planning Poker for Scrum Teams | Refinement &amp; Sprint Planning</title>
+  <meta name="description" content="Free online Planning Poker for Scrum teams. Estimate user stories in real time during backlog refinement and sprint planning. No account needed." />
+  <link rel="canonical" href="https://scrumfight.com/" />
+  <link rel="alternate" hreflang="en" href="https://scrumfight.com/" />
+  <link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/" />
+  <link rel="alternate" hreflang="x-default" href="https://scrumfight.com/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ScrumFight" />
+  <meta property="og:url" content="https://scrumfight.com/" />
+  <meta property="og:title" content="ScrumFight – Free Planning Poker for Scrum Teams | Refinement &amp; Sprint Planning" />
+  <meta property="og:description" content="Free online Planning Poker for Scrum teams. Estimate user stories in real time during backlog refinement and sprint planning. No account needed." />
+  <meta property="og:image" content="https://scrumfight.com/img/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="nl_NL" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ScrumFight – Free Planning Poker for Scrum Teams | Refinement &amp; Sprint Planning" />
+  <meta name="twitter:description" content="Free online Planning Poker for Scrum teams. Estimate user stories in real time during backlog refinement and sprint planning. No account needed." />
+  <meta name="twitter:image" content="https://scrumfight.com/img/og-image.png" />
+
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/css/styles.css" />
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://scrumfight.com/#website",
+      "url": "https://scrumfight.com/",
+      "name": "ScrumFight",
+      "inLanguage": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://scrumfight.com/#app",
+      "name": "ScrumFight",
+      "url": "https://scrumfight.com/",
+      "description": "ScrumFight is a free, real-time Planning Poker tool for Scrum and Agile teams to estimate user stories during backlog refinement and sprint planning, without an account.",
+      "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Planning Poker",
+      "operatingSystem": "Web browser",
+      "browserRequirements": "Requires JavaScript",
+      "inLanguage": "en",
+      "isAccessibleForFree": true,
+      "image": "https://scrumfight.com/img/og-image.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Real-time voting and simultaneous reveal",
+        "Fibonacci, Fibonacci+, T-shirt sizes and Powers of 2",
+        "Automatic detection of consensus and wide spreads",
+        "Per-round statistics: average, minimum, maximum and distribution",
+        "Spectator mode for Product Owners and stakeholders",
+        "Join as a guest, no account required",
+        "Keyboard shortcuts, emoji reactions and round names",
+        "Available in English and Dutch"
+      ],
+      "keywords": "planning poker, scrum poker, story points, backlog refinement, sprint planning, agile estimation, scrum"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://scrumfight.com/#faq",
+      "inLanguage": "en",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Planning Poker?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Planning Poker (also called Scrum Poker) is an estimation technique where every team member secretly picks a card with their estimate for a user story at the same time. The cards are then revealed and the team discusses the differences. This keeps the first opinion from influencing everyone else."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is ScrumFight free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The free plan supports up to 7 participants per room and 3 saved rooms. Pro (15 participants, 20 rooms) and Premium (unlimited) are available for larger teams."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Enter a name and you can create or join a room right away. With an account you keep your rooms and statistics."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use ScrumFight during backlog refinement?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, that is what it is built for. Create one room for your team, estimate the stories one by one and use the reveal to start the conversation where estimates differ."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which estimation methods are available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt sizes (XS to XXL) and Powers of 2 (1 to 64), all with a ? and ☕ card."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work for remote teams?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. ScrumFight runs in the browser and syncs in real time, so it works alongside Teams, Zoom or Google Meet."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
 </head>
 <body class="page-landing">
 
@@ -14,51 +137,52 @@
   <!-- Hero -->
   <main class="landing-main">
     <div class="landing-hero">
-      <h1 class="landing-title">⚔️ Scrum Fight</h1>
-      <p class="landing-subtitle" data-i18n="landing.subtitle">Schat stories. Win de sprint.</p>
-      <p class="landing-anon-note" data-i18n="landing.anon">✅ Geen account nodig — gewoon een naam invullen en spelen!</p>
+      <h1 class="landing-heading">
+        <span class="landing-title">⚔️ ScrumFight</span>
+        <span class="landing-tagline" data-i18n="landing.tagline">Free online Planning Poker for Scrum teams</span>
+      </h1>
+      <p class="landing-subtitle" data-i18n="landing.subtitle">Estimate stories. Win the sprint.</p>
+      <p class="landing-anon-note" data-i18n="landing.anon">✅ No account needed — just enter a name and play!</p>
     </div>
 
     <div class="landing-cards">
 
       <!-- Create room card — full width -->
       <div class="form-card form-card-wide">
-        <h2 class="form-card-title" data-i18n="landing.create.title">✨ Kamer aanmaken</h2>
+        <h2 class="form-card-title" data-i18n="landing.create.title">✨ Create room</h2>
 
         <div class="create-fields">
           <div class="form-group">
-            <label for="createName" data-i18n="landing.create.yourname">Jouw naam</label>
-            <input id="createName" type="text" class="input" data-i18n-ph="landing.create.yourname.ph" placeholder="bijv. Alice" maxlength="50" autocomplete="off" />
+            <label for="createName" data-i18n="landing.create.yourname">Your name</label>
+            <input id="createName" type="text" class="input" data-i18n-ph="landing.create.yourname.ph" placeholder="e.g. Alice" maxlength="50" autocomplete="off" />
           </div>
 
           <div class="form-group field-full">
-            <label for="createRoomName" data-i18n="landing.create.roomname">Kamernaam</label>
+            <label for="createRoomName" data-i18n="landing.create.roomname">Room name</label>
             <div class="input-with-btn">
               <input id="createRoomName" type="text" class="input" maxlength="100" autocomplete="off" />
-              <button id="randomNameBtn" class="btn btn-ghost btn-icon" data-i18n-title="landing.create.random.title" title="Nieuwe willekeurige naam">🎲</button>
+              <button id="randomNameBtn" class="btn btn-ghost btn-icon" data-i18n-title="landing.create.random.title" title="Generate random name">🎲</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="createMethod" data-i18n="landing.create.method">Schattingsmethode</label>
+            <label for="createMethod" data-i18n="landing.create.method">Estimation method</label>
             <select id="createMethod" class="input" data-method-select></select>
           </div>
         </div>
 
-        <button id="createRoomBtn" class="btn btn-primary btn-full" data-i18n="landing.create.btn">
-          Kamer aanmaken →
-        </button>
+        <button id="createRoomBtn" class="btn btn-primary btn-full" data-i18n="landing.create.btn">Create room →</button>
         <p id="createError" class="form-error hidden"></p>
       </div>
 
       <!-- Join room card — step 1: code, step 2: name -->
       <div class="form-card form-card-wide">
-        <h2 class="form-card-title" data-i18n="landing.join.title">🚪 Kamer joinen</h2>
+        <h2 class="form-card-title" data-i18n="landing.join.title">🚪 Join room</h2>
 
         <!-- Step 1: code -->
         <div id="joinStep1">
           <div class="form-group">
-            <label for="joinCode" data-i18n="landing.join.code">Kamercode</label>
+            <label for="joinCode" data-i18n="landing.join.code">Room code</label>
             <input
               id="joinCode"
               type="text"
@@ -70,27 +194,114 @@
               style="text-transform:uppercase;letter-spacing:.15em;"
             />
           </div>
-          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem" data-i18n="landing.join.search">
-            Kamer zoeken →
-          </button>
+          <button id="joinLookupBtn" class="btn btn-secondary btn-full" style="margin-top:.6rem" data-i18n="landing.join.search">Find room →</button>
         </div>
 
         <!-- Step 2: name (hidden until code verified) -->
         <div id="joinStep2" class="hidden">
           <div class="join-found-banner" id="joinFoundBanner"></div>
           <div class="form-group" style="margin-top:.8rem">
-            <label for="joinName" data-i18n="landing.join.yourname">Jouw naam</label>
-            <input id="joinName" type="text" class="input" data-i18n-ph="landing.join.yourname.ph" placeholder="bijv. Bob" maxlength="50" autocomplete="off" />
+            <label for="joinName" data-i18n="landing.join.yourname">Your name</label>
+            <input id="joinName" type="text" class="input" data-i18n-ph="landing.join.yourname.ph" placeholder="e.g. Bob" maxlength="50" autocomplete="off" />
           </div>
           <div class="join-step2-actions">
-            <button id="joinBackBtn" class="btn btn-ghost" data-i18n="landing.join.back">← Terug</button>
-            <button id="joinRoomBtn" class="btn btn-secondary btn-full" data-i18n="landing.join.btn">Joinen →</button>
+            <button id="joinBackBtn" class="btn btn-ghost" data-i18n="landing.join.back">← Back</button>
+            <button id="joinRoomBtn" class="btn btn-secondary btn-full" data-i18n="landing.join.btn">Join →</button>
           </div>
         </div>
 
         <p id="joinError" class="form-error hidden"></p>
       </div>
 
+    </div>
+    <!-- Product information: what search engines and AI assistants read -->
+    <div class="landing-info">
+      <section class="landing-section" aria-labelledby="what-title">
+        <h2 id="what-title" data-i18n="landing.info.what.title">What is ScrumFight?</h2>
+        <p class="landing-lead" data-i18n="landing.info.what.body">ScrumFight is a free, real-time Planning Poker tool for Scrum and Agile teams. Estimate user stories together during backlog refinement and sprint planning: everyone picks a card at the same time, cards are revealed only when the team is ready, and differences show up instantly. No installation and no account needed.</p>
+      </section>
+
+      <section class="landing-section" aria-labelledby="how-title">
+        <h2 id="how-title" data-i18n="landing.info.how.title">How it works</h2>
+        <ol class="landing-steps">
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.1.title">1. Create a room</h3>
+            <p data-i18n="landing.info.how.1.body">Pick a name and an estimation method: Fibonacci, Fibonacci+, T-shirt sizes or Powers of 2.</p>
+          </li>
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.2.title">2. Share the code</h3>
+            <p data-i18n="landing.info.how.2.body">Send the room code or link to your team. Colleagues join from their browser, in the office or remotely.</p>
+          </li>
+          <li class="landing-step">
+            <h3 data-i18n="landing.info.how.3.title">3. Vote and reveal</h3>
+            <p data-i18n="landing.info.how.3.body">Everyone votes in secret. On reveal you instantly see whether there is consensus, and where the conversation needs to go.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="landing-section" aria-labelledby="events-title">
+        <h2 id="events-title" data-i18n="landing.info.events.title">Built for Scrum events</h2>
+        <div class="landing-tiles">
+          <article class="landing-tile">
+            <h3 data-i18n="landing.info.events.refinement.title">🔍 Backlog refinement</h3>
+            <p data-i18n="landing.info.events.refinement.body">Estimate new stories quickly and without anchoring. Big differences between cards show where things are still unclear, so you know which questions to ask.</p>
+          </article>
+          <article class="landing-tile">
+            <h3 data-i18n="landing.info.events.planning.title">📋 Sprint planning</h3>
+            <p data-i18n="landing.info.events.planning.body">Estimate the last stories for the sprint and name every round, so you can see exactly what was estimated afterwards.</p>
+          </article>
+          <article class="landing-tile">
+            <h3 data-i18n="landing.info.events.retro.title">🔄 Retrospective</h3>
+            <p data-i18n="landing.info.events.retro.body">Look back at round history and team statistics and discuss how your team estimates and where you often disagree.</p>
+          </article>
+          <article class="landing-tile">
+            <h3 data-i18n="landing.info.events.remote.title">🌍 Remote and hybrid teams</h3>
+            <p data-i18n="landing.info.events.remote.body">Works in any browser, on laptop and phone. Everyone votes at the same time, wherever they are.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="landing-section" aria-labelledby="features-title">
+        <h2 id="features-title" data-i18n="landing.info.features.title">Features</h2>
+        <ul class="landing-features">
+          <li data-i18n="landing.info.features.1">Real-time voting and simultaneous reveal</li>
+          <li data-i18n="landing.info.features.2">Fibonacci, Fibonacci+, T-shirt sizes and Powers of 2</li>
+          <li data-i18n="landing.info.features.3">Automatic detection of consensus and wide spreads</li>
+          <li data-i18n="landing.info.features.4">Per-round statistics: average, minimum, maximum and distribution</li>
+          <li data-i18n="landing.info.features.5">Spectator mode for Product Owners and stakeholders</li>
+          <li data-i18n="landing.info.features.6">Join as a guest, no account required</li>
+          <li data-i18n="landing.info.features.7">Keyboard shortcuts, emoji reactions and round names</li>
+          <li data-i18n="landing.info.features.8">Available in English and Dutch</li>
+        </ul>
+      </section>
+
+      <section class="landing-section" aria-labelledby="faq-title">
+        <h2 id="faq-title" data-i18n="landing.info.faq.title">Frequently asked questions</h2>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.1.q">What is Planning Poker?</summary>
+          <p data-i18n="landing.info.faq.1.a">Planning Poker (also called Scrum Poker) is an estimation technique where every team member secretly picks a card with their estimate for a user story at the same time. The cards are then revealed and the team discusses the differences. This keeps the first opinion from influencing everyone else.</p>
+        </details>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.2.q">Is ScrumFight free?</summary>
+          <p data-i18n="landing.info.faq.2.a">Yes. The free plan supports up to 7 participants per room and 3 saved rooms. Pro (15 participants, 20 rooms) and Premium (unlimited) are available for larger teams.</p>
+        </details>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.3.q">Do I need an account?</summary>
+          <p data-i18n="landing.info.faq.3.a">No. Enter a name and you can create or join a room right away. With an account you keep your rooms and statistics.</p>
+        </details>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.4.q">Can I use ScrumFight during backlog refinement?</summary>
+          <p data-i18n="landing.info.faq.4.a">Yes, that is what it is built for. Create one room for your team, estimate the stories one by one and use the reveal to start the conversation where estimates differ.</p>
+        </details>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.5.q">Which estimation methods are available?</summary>
+          <p data-i18n="landing.info.faq.5.a">Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt sizes (XS to XXL) and Powers of 2 (1 to 64), all with a ? and ☕ card.</p>
+        </details>
+        <details class="landing-faq-item">
+          <summary data-i18n="landing.info.faq.6.q">Does it work for remote teams?</summary>
+          <p data-i18n="landing.info.faq.6.a">Yes. ScrumFight runs in the browser and syncs in real time, so it works alongside Teams, Zoom or Google Meet.</p>
+        </details>
+      </section>
     </div>
   </main>
 

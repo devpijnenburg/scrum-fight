@@ -12,7 +12,9 @@
 }
 
 .landing-hero { text-align: center; }
+.landing-heading { margin-bottom: .5rem; }
 .landing-title {
+  display: block;
   font-size: clamp(2.2rem, 6vw, 3.5rem);
   font-weight: 900;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -21,6 +23,12 @@
   background-clip: text;
   line-height: 1.1;
   margin-bottom: .5rem;
+}
+.landing-tagline {
+  display: block;
+  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  font-weight: 800;
+  color: var(--text);
 }
 .landing-subtitle { color: var(--text-muted); font-size: 1.1rem; font-weight: 600; }
 .landing-anon-note {
@@ -79,3 +87,52 @@
   gap: .8rem;
   margin-top: .6rem;
 }
+
+/* ── Product information below the forms ───────────────────────────────────── */
+.landing-info {
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 1.5rem;
+}
+.landing-section h2 { font-size: 1.4rem; font-weight: 900; margin-bottom: .9rem; }
+.landing-section h3 { font-size: 1.02rem; font-weight: 800; margin-bottom: .35rem; }
+.landing-section p { color: var(--text-muted); line-height: 1.6; }
+.landing-lead { font-size: 1.05rem; }
+
+.landing-steps,
+.landing-tiles {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.landing-step,
+.landing-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.3rem;
+}
+
+.landing-features {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: .55rem 1.5rem;
+  color: var(--text-muted);
+}
+.landing-features li::before { content: '✓'; color: var(--success); font-weight: 900; margin-right: .55rem; }
+
+.landing-faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: .85rem 0;
+}
+.landing-faq-item summary {
+  cursor: pointer;
+  font-weight: 800;
+  list-style-position: inside;
+}
+.landing-faq-item p { margin-top: .55rem; }

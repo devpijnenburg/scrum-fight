@@ -1,4 +1,4 @@
-/* Scrum Fight stylesheet entry point.
+/* ScrumFight stylesheet entry point.
  *
  * Every page links only this file. Order matters (later rules win):
  *   tokens → base → components → pages → responsive overrides.

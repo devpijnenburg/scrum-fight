@@ -4,8 +4,7 @@
 // Usage:
 //   <site-nav></site-nav>              — brand + profile if logged in, lang switcher if not
 //   <site-nav show-cta></site-nav>     — same + login/register buttons when not logged in
-//   <site-footer></site-footer>        — footer with login/register links when logged out
-//   <site-footer hide-auth></site-footer> — footer without the login/register links
+//   <site-footer></site-footer>        — the one footer, identical on every page
 
 import { t, applyTranslations, buildLangDropdown, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
@@ -254,29 +253,37 @@ if (!customElements.get('site-nav')) customElements.define('site-nav', SiteNav);
 // ── SiteFooter ────────────────────────────────────────────────────────────────
 
 class SiteFooter extends HTMLElement {
-  //   <site-footer></site-footer>          — full footer: brand and link columns
-  //   <site-footer hide-auth></site-footer> — without the login/register links
-  //   <site-footer compact></site-footer>  — one slim row, for the room
+  // One footer for every page: <site-footer></site-footer>. No variants — the
+  // content is the same everywhere; texts and public links follow the chosen
+  // language, and the Account column follows the login state.
   connectedCallback() {
-    const user     = getCurrentUser();
-    const showAuth = !this.hasAttribute('hide-auth') && !user;
+    this._render();
+    document.addEventListener('langchange', () => setPublicLinks(this));
+    // Only shown where the payments feature is on (or to manage a paid plan).
+    paymentsEnabled().then((enabled) => {
+      this._paymentsEnabled = enabled;
+      this._updateSubscriptionLink();
+    });
+  }
 
-    this.innerHTML = this.hasAttribute('compact') ? `
-      <footer class="site-footer site-footer-compact">
-        <div class="footer-compact-inner">
-          <div class="lang-switcher"></div>
-          <span class="footer-copy" data-i18n="footer.copy">© 2026 ScrumFight</span>
-          <nav class="footer-compact-links">
-            <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
-            <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
-          </nav>
-        </div>
-      </footer>
-    ` : `
+  // Re-render after a login/logout on the same page (e.g. in the room).
+  refresh() {
+    this._render();
+  }
+
+  _updateSubscriptionLink() {
+    const link = this.querySelector('._footer-subscription');
+    if (link && showSubscriptionLinks(this._paymentsEnabled, getCurrentUser())) link.classList.remove('hidden');
+  }
+
+  _render() {
+    const user = getCurrentUser();
+
+    this.innerHTML = `
       <footer class="site-footer">
         <div class="footer-inner">
           <div class="footer-brand">
-            <a class="footer-logo" data-public-link="home">
+            <a class="footer-logo" href="/" data-public-link="home">
               <span class="navbar-logo" aria-hidden="true">⚔️</span>
               <span class="navbar-brand-text">
                 <span class="navbar-name">ScrumFight</span>
@@ -288,23 +295,20 @@ class SiteFooter extends HTMLElement {
           </div>
           <nav class="footer-col" aria-labelledby="footer-col-product">
             <h2 id="footer-col-product" data-i18n="footer.col.product">Product</h2>
-            <a data-public-link="features" data-i18n="nav.features">Functies</a>
-            <a data-public-link="events" data-i18n="nav.events">Scrum events</a>
-            <a data-public-link="faq" data-i18n="nav.faq">FAQ</a>
+            <a href="/features" data-public-link="features" data-i18n="nav.features">Functies</a>
+            <a href="/scrum-events" data-public-link="events" data-i18n="nav.events">Scrum events</a>
+            <a href="/faq" data-public-link="faq" data-i18n="nav.faq">FAQ</a>
             <a href="/subscription.html" class="hidden _footer-subscription" data-i18n="footer.subscription">Abonnementen</a>
           </nav>
-          ${user ? `
           <nav class="footer-col" aria-labelledby="footer-col-account">
             <h2 id="footer-col-account" data-i18n="footer.col.account">Account</h2>
+            ${user ? `
             <a href="/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
             <a href="/stats.html" data-i18n="nav.stats">Statistieken</a>
-            <a href="/profile.html" data-i18n="nav.profile">Profiel</a>
-          </nav>` : showAuth ? `
-          <nav class="footer-col" id="footerAuth" aria-labelledby="footer-col-account">
-            <h2 id="footer-col-account" data-i18n="footer.col.account">Account</h2>
+            <a href="/profile.html" data-i18n="nav.profile">Profiel</a>` : `
             <a href="/login.html" data-i18n="footer.login">Inloggen</a>
-            <a href="/login.html#register" data-i18n="footer.register">Registreren</a>
-          </nav>` : ''}
+            <a href="/login.html#register" data-i18n="footer.register">Registreren</a>`}
+          </nav>
           <nav class="footer-col" aria-labelledby="footer-col-legal">
             <h2 id="footer-col-legal" data-i18n="footer.col.legal">Juridisch</h2>
             <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
@@ -319,14 +323,8 @@ class SiteFooter extends HTMLElement {
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
     setPublicLinks(this);
-    document.addEventListener('langchange', () => setPublicLinks(this));
     applyTranslations();
-
-    // Only shown where the payments feature is on (or to manage a paid plan).
-    paymentsEnabled().then((enabled) => {
-      const link = this.querySelector('._footer-subscription');
-      if (link && showSubscriptionLinks(enabled, getCurrentUser())) link.classList.remove('hidden');
-    });
+    this._updateSubscriptionLink();
   }
 }
 

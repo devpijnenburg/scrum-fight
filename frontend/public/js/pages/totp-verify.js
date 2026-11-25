@@ -2,7 +2,7 @@
 // The OAuth callback redirects here with ?preAuthToken=…
 
 import '../core/errorReporter.js'; // als eerste: meldt ook fouten van de modules hieronder
-import '../core/i18n.js';
+import '../components/siteChrome.js';
 
 const preAuthToken = new URLSearchParams(location.search).get('preAuthToken');
 

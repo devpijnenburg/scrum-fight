@@ -287,3 +287,46 @@ describe('status', () => {
     expect(statusLines()).toHaveLength(2);
   });
 });
+
+describe('"Kamer geopend" pas bij de eerste speler', () => {
+  const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+  let info;
+
+  beforeEach(() => {
+    setLogLevel('info');
+    info = jest.spyOn(console, 'info').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    info.mockRestore();
+    resetLogLevel();
+  });
+
+  const lines = () => info.mock.calls.map(([l]) => l);
+
+  it('logs nothing on info when a room is loaded but nobody gets in', async () => {
+    await sessions.open(dbRoom());
+    sessions.playerLeft('ROOM01'); // join aborted
+    jest.advanceTimersByTime(500);  // empty-room grace period
+    expect(sessions.get('ROOM01')).toBeNull();
+    expect(lines()).toEqual([]);
+  });
+
+  it('logs "Kamer geopend" once, when the first player is in', async () => {
+    const room = await sessions.open(dbRoom());
+    expect(lines()).toEqual([]);
+    room.addPlayer('s1', { name: 'Alice' });
+    sessions.announce('ROOM01');
+    sessions.announce('ROOM01');
+    expect(lines()).toEqual([
+      '[realtime:rooms] Kamer geopend  room=ROOM01 type=saved method=fibonacci openRooms=1',
+    ]);
+
+    room.removePlayer('s1');
+    sessions.playerLeft('ROOM01');
+    jest.advanceTimersByTime(500);
+    expect(lines().slice(1)).toEqual([
+      expect.stringMatching(/^\[realtime:rooms\] Kamer is leeg/),
+      '[realtime:rooms] Kamer gesloten  room=ROOM01 reason=empty openRooms=0',
+    ]);
+  });
+});

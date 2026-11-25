@@ -11,6 +11,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createLogger } = require('../shared/logger');
+
+const dbLog = createLogger('db');
+const defaultLog = (message, fields) => dbLog.info(message, fields);
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 const LOCK_KEY = 727_101; // arbitrary, unique to this app's migration runner
@@ -21,7 +25,8 @@ function listMigrationFiles(dir = MIGRATIONS_DIR) {
     .sort();
 }
 
-async function runMigrations(pool, { dir = MIGRATIONS_DIR, log = console.log } = {}) {
+// `log(message, fields)` — standaard de gedeelde logger (component `db`).
+async function runMigrations(pool, { dir = MIGRATIONS_DIR, log = defaultLog } = {}) {
   const client = await pool.connect();
   try {
     await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY]);
@@ -43,7 +48,7 @@ async function runMigrations(pool, { dir = MIGRATIONS_DIR, log = console.log } =
         await client.query(sql);
         await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file]);
         await client.query('COMMIT');
-        log(`[db] Applied migration ${file}`);
+        log('Migratie uitgevoerd', { migration: file });
       } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
         err.message = `Migration ${file} failed: ${err.message}`;
@@ -51,7 +56,8 @@ async function runMigrations(pool, { dir = MIGRATIONS_DIR, log = console.log } =
       }
     }
 
-    log(pending.length ? `[db] ${pending.length} migration(s) applied` : '[db] Schema up to date');
+    if (pending.length) log('Migraties klaar', { applied: pending.length });
+    else log('Databaseschema is up-to-date', { migrations: applied.size });
     return pending;
   } finally {
     await client.query('SELECT pg_advisory_unlock($1)', [LOCK_KEY]).catch(() => {});

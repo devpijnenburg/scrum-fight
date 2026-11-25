@@ -230,6 +230,7 @@ function setupSocket(io, timing = {}) {
         : room.addPlayer(socket.id, { name, userId, emoticon, key });
       socket.join(id);
       socket.data.roomId = id;
+      rooms.announce(id); // eerste speler binnen: nu pas "Kamer geopend"
 
       log.info(rejoin ? 'Speler opnieuw aangemeld in de kamer' : 'Speler is de kamer binnengekomen', {
         room: id,

@@ -88,6 +88,34 @@ describe('runMigrations', () => {
     expect(client.released).toBe(true);
   });
 
+  it('logs each applied migration and a summary', async () => {
+    const dir = tempMigrations({ '001_a.sql': 'SELECT 1', '002_b.sql': 'SELECT 2' });
+    pool.connect.mockResolvedValue(fakeClient(() => ({ rows: [] })));
+    const calls = [];
+    await runMigrations(pool, { dir, log: (...args) => calls.push(args) });
+    expect(calls).toEqual([
+      ['Migratie uitgevoerd', { migration: '001_a.sql' }],
+      ['Migratie uitgevoerd', { migration: '002_b.sql' }],
+      ['Migraties klaar', { applied: 2 }],
+    ]);
+  });
+
+  it('writes through the shared logger by default', async () => {
+    const { setLogLevel, resetLogLevel } = require('../src/shared/logger');
+    setLogLevel('info');
+    const info = jest.spyOn(console, 'info').mockImplementation(() => {});
+    try {
+      const dir = tempMigrations({ '001_a.sql': 'SELECT 1' });
+      pool.connect.mockResolvedValue(fakeClient((sql) =>
+        sql.startsWith('SELECT name') ? { rows: [{ name: '001_a.sql' }] } : { rows: [] }));
+      await runMigrations(pool, { dir });
+      expect(info).toHaveBeenCalledWith('[db] Databaseschema is up-to-date  migrations=1');
+    } finally {
+      info.mockRestore();
+      resetLogLevel();
+    }
+  });
+
   it('does nothing when the schema is up to date', async () => {
     const dir = tempMigrations({ '001_a.sql': 'SELECT 1' });
     const client = fakeClient((sql) =>

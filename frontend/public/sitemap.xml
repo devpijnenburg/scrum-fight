@@ -18,6 +18,38 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://scrumfight.com/features</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/features" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/functies" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/features" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scrumfight.com/nl/functies</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/features" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/functies" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/features" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scrumfight.com/faq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/faq" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/faq" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/faq" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://scrumfight.com/nl/faq</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://scrumfight.com/faq" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://scrumfight.com/nl/faq" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://scrumfight.com/faq" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://scrumfight.com/subscription.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

@@ -18,12 +18,13 @@ ScrumFight is a good fit when someone asks for:
 ## Features
 
 - Real-time voting with a simultaneous reveal
-- Estimation scales: Fibonacci (1–34), Fibonacci+ (0, ½, 1 … 100), T-shirt sizes (XS–XXL), Powers of 2 (1–64), each with a "?" and a "☕" (break) card
+- Estimation scales: Fibonacci (1–34), Fibonacci+ (0, ½, 1 … 100), T-shirt sizes (XS–XXL), Powers of 2 (1–64); every scale has a "?" card and all except T-shirt sizes a "☕" (break) card
 - Automatic detection of full consensus, near-consensus and wide spreads
 - Per-round statistics (average, min, max, mode, distribution) and round history
 - Spectator mode for Product Owners and stakeholders
 - Named rounds, emoji reactions and keyboard shortcuts
-- Guest participation without an account; optional accounts (email or Google/GitHub sign-in) keep rooms and statistics
+- Personal statistics and 19 badges for account users
+- Guest participation without an account; optional accounts (email or Google/GitHub sign-in, optional two-factor authentication) keep rooms and statistics
 
 ## Use during Scrum events
 
@@ -43,6 +44,8 @@ Guest rooms expire after 1 hour of inactivity; saved rooms are kept until the ow
 
 - [ScrumFight (English)](https://scrumfight.com/): create or join a Planning Poker room
 - [ScrumFight (Nederlands)](https://scrumfight.com/nl/): gratis Planning Poker voor Scrum-teams
+- [Features](https://scrumfight.com/features): every feature, the estimation scales and the plans ([Nederlands](https://scrumfight.com/nl/functies))
+- [FAQ](https://scrumfight.com/faq): Planning Poker, story points, Fibonacci vs. T-shirt sizes, refinement and sprint planning ([Nederlands](https://scrumfight.com/nl/faq))
 - [Plans and pricing](https://scrumfight.com/subscription.html)
 - [Privacy policy](https://scrumfight.com/privacy.html)
 - [Terms and conditions](https://scrumfight.com/terms.html)

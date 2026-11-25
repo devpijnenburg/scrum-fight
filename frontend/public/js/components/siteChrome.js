@@ -7,7 +7,7 @@
 //   <site-footer></site-footer>        — footer with login/register links when logged out
 //   <site-footer hide-auth></site-footer> — footer without the login/register links
 
-import { t, applyTranslations, buildLangDropdown } from '../core/i18n.js';
+import { t, applyTranslations, buildLangDropdown, getLang } from '../core/i18n.js';
 import { apiFetch } from '../core/api.js';
 import { getCurrentUser, logout } from '../core/auth.js';
 import { escapeHtml } from '../core/html.js';
@@ -141,6 +141,8 @@ class ProfileMenu extends HTMLElement {
     this._wire();
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    setPublicLinks(this);
+    document.addEventListener('langchange', () => setPublicLinks(this));
     applyTranslations();
   }
 
@@ -175,6 +177,21 @@ class ProfileMenu extends HTMLElement {
 
 if (!customElements.get('profile-menu')) customElements.define('profile-menu', ProfileMenu);
 
+// ── Public page links ─────────────────────────────────────────────────────────
+// The public pages exist per language: /, /features, /faq and /nl/, /nl/functies, /nl/faq.
+
+const PUBLIC_URLS = {
+  en: { home: '/', features: '/features', faq: '/faq' },
+  nl: { home: '/nl/', features: '/nl/functies', faq: '/nl/faq' },
+};
+
+function setPublicLinks(root) {
+  const urls = PUBLIC_URLS[getLang()] || PUBLIC_URLS.en;
+  for (const [key, href] of Object.entries(urls)) {
+    root.querySelectorAll(`[data-public-link="${key}"]`).forEach((a) => { a.href = href; });
+  }
+}
+
 // ── SiteNav ───────────────────────────────────────────────────────────────────
 
 class SiteNav extends HTMLElement {
@@ -183,18 +200,35 @@ class SiteNav extends HTMLElement {
   }
 
   _render() {
-    const user    = getCurrentUser();
-    const showCta = this.hasAttribute('show-cta');
+    const user      = getCurrentUser();
+    const showCta   = this.hasAttribute('show-cta');
+    // Public pages (home, features, FAQ) link to each other; the language
+    // switch is in the footer there to keep the bar calm.
+    const showLinks = this.hasAttribute('show-links');
+    const lang      = showLinks ? '' : '<div class="lang-switcher _nav-lang"></div>';
 
     this.innerHTML = `
       <nav class="navbar">
-        <a href="/" class="navbar-brand">⚔️ ScrumFight <small class="navbar-subtitle">Story Estimator 2.0</small></a>
+        <div class="navbar-left">
+          <a href="/" class="navbar-brand" data-public-link="home">
+            <span class="navbar-logo" aria-hidden="true">⚔️</span>
+            <span class="navbar-brand-text">
+              <span class="navbar-name">ScrumFight</span>
+              <small class="navbar-subtitle">Story Estimator 2.0</small>
+            </span>
+          </a>
+          ${showLinks ? `
+          <div class="navbar-links">
+            <a class="navbar-link" data-public-link="features" data-i18n="nav.features">Functies</a>
+            <a class="navbar-link" data-public-link="faq" data-i18n="nav.faq">FAQ</a>
+          </div>` : ''}
+        </div>
         <div class="navbar-actions">
           ${user
-            ? `<div class="lang-switcher _nav-lang"></div><profile-menu></profile-menu>`
-            : `<div class="lang-switcher _nav-lang"></div>
+            ? `${lang}<profile-menu></profile-menu>`
+            : `${lang}
                ${showCta
-                 ? `<a href="/login.html" class="btn btn-ghost" data-i18n="nav.login">Inloggen</a>
+                 ? `<a href="/login.html" class="btn btn-ghost btn-sm" data-i18n="nav.login">Inloggen</a>
                     <a href="/login.html#register" class="btn btn-primary btn-sm" data-i18n="nav.register">Registreren</a>`
                  : ''}`
           }
@@ -203,8 +237,13 @@ class SiteNav extends HTMLElement {
     `;
 
     this.querySelectorAll('._nav-lang').forEach(buildLangDropdown);
+    this._updateLinks();
+    document.addEventListener('langchange', () => this._updateLinks());
     applyTranslations();
   }
+
+  // The public pages exist per language: /, /features, /faq and /nl/, /nl/functies, /nl/faq.
+  _updateLinks() { setPublicLinks(this); }
 }
 
 if (!customElements.get('site-nav')) customElements.define('site-nav', SiteNav);
@@ -224,6 +263,8 @@ class SiteFooter extends HTMLElement {
             <span class="footer-copy" data-i18n="footer.copy">© 2026 ScrumFight</span>
           </div>
           <nav class="footer-links">
+            <a data-public-link="features" data-i18n="nav.features">Functies</a>
+            <a data-public-link="faq" data-i18n="nav.faq">FAQ</a>
             <a href="/privacy.html" data-i18n="footer.privacy">Privacybeleid</a>
             <a href="/subscription.html" class="hidden _footer-subscription" data-i18n="footer.subscription">Abonnementen</a>
             <a href="/terms.html" data-i18n="footer.terms">Algemene voorwaarden</a>
@@ -238,6 +279,8 @@ class SiteFooter extends HTMLElement {
     `;
 
     this.querySelectorAll('.lang-switcher').forEach(buildLangDropdown);
+    setPublicLinks(this);
+    document.addEventListener('langchange', () => setPublicLinks(this));
     applyTranslations();
 
     // Only shown where the payments feature is on (or to manage a paid plan).

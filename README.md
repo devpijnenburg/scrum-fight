@@ -33,8 +33,9 @@ De limieten staan in `backend/src/domains/billing/plans.js`. Opgeslagen kamers w
 
 ## Vindbaarheid (SEO en AI-assistenten)
 
-- **Landingspagina's**: `/` is Engels (ook `x-default`), `/nl/` is Nederlands. Beide hebben dezelfde app-markup plus productinformatie (wat, hoe, Scrum events, functies, FAQ). `/nl/` heeft `data-lang-locked` en toont daardoor altijd Nederlands. De taalwissel gaat daar naar de andere URL (`hreflang`). Houd beide bestanden gelijk; `frontend/__tests__/seo.test.mjs` controleert dat ids, vertaalsleutels en teksten overeenkomen met `i18n.js`.
-- **Metadata**: title, description, canonical, `hreflang`, Open Graph/Twitter (`/img/og-image.png`, 1200×630) en JSON-LD (`WebSite`, `WebApplication`, `FAQPage`).
+- **Publieke pagina's** per taal: home (`/`, `/nl/`), functies (`/features`, `/nl/functies`) en FAQ (`/faq`, `/nl/faq`), gekoppeld met `hreflang`. De Engelse home volgt de taalkeuze van de bezoeker; alle andere publieke pagina's hebben `data-lang-locked` en tonen altijd hun eigen taal. De taalwissel gaat daar naar de andere URL. De twee home-pagina's delen dezelfde app-markup; `frontend/__tests__/seo.test.mjs` controleert dat ids, vertaalsleutels en teksten overeenkomen met `i18n.js`, en dat de NL- en EN-versie van functies en FAQ dezelfde opbouw hebben.
+- **Navigatie**: op de publieke pagina's (`<site-nav show-links>`) staan Functies en FAQ in de balk en de taalkeuze alleen in de footer.
+- **Metadata**: title, description, canonical, `hreflang`, Open Graph/Twitter (`/img/og-image.png`, 1200×630) en JSON-LD (`WebSite` en `WebApplication` op home, `FAQPage` op de FAQ, `BreadcrumbList` op functies en FAQ).
 - **App-pagina's** (kamer, dashboard, login, profiel, statistieken, beheer) hebben `noindex`.
 - **Crawlerbestanden** in `frontend/public`: `robots.txt` (AI-crawlers expliciet welkom), `sitemap.xml` en `llms.txt` (samenvatting voor taalmodellen).
 - **nginx** geeft voor onbekende URL's een echte 404 (`404.html`) in plaats van de homepage.

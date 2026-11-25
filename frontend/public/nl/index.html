@@ -60,71 +60,16 @@
         "priceCurrency": "EUR"
       },
       "featureList": [
-        "Realtime stemmen en gelijktijdige reveal",
+        "Realtime stemmen met gelijktijdige reveal",
         "Fibonacci, Fibonacci+, T-shirt maten en Powers of 2",
-        "Automatische herkenning van consensus en grote verschillen",
-        "Statistieken per ronde: gemiddelde, minimum, maximum en verdeling",
-        "Toeschouwermodus voor Product Owners en stakeholders",
+        "Herkenning van consensus en spreiding",
+        "Statistieken per ronde en rondegeschiedenis",
+        "Toeschouwermodus",
         "Meedoen als gast, zonder account",
-        "Sneltoetsen, emoji-reacties en rondenamen",
-        "Beschikbaar in het Nederlands en Engels"
+        "Persoonlijke statistieken en badges",
+        "Nederlands en Engels"
       ],
       "keywords": "planning poker, scrum poker, story points, backlog refinement, sprint planning, agile estimation, scrum"
-    },
-    {
-      "@type": "FAQPage",
-      "@id": "https://scrumfight.com/nl/#faq",
-      "inLanguage": "nl",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Wat is Planning Poker?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Planning Poker (ook wel Scrum Poker) is een schattingstechniek waarbij elk teamlid tegelijk en verborgen een kaart kiest met een schatting voor een user story. Daarna worden de kaarten onthuld en bespreekt het team de verschillen. Zo voorkom je dat de eerste mening de rest beïnvloedt."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is ScrumFight gratis?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja. Het gratis plan heeft tot 7 deelnemers per kamer en 3 opgeslagen kamers. Pro (15 deelnemers, 20 kamers) en Premium (onbeperkt) zijn er voor grotere teams."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Heb ik een account nodig?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Nee. Vul een naam in en je kunt meteen een kamer aanmaken of meedoen. Met een account bewaar je kamers en statistieken."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Kan ik ScrumFight gebruiken tijdens refinement?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja, daar is het voor gemaakt. Maak één kamer aan voor je team, schat de stories een voor een en gebruik de reveal om het gesprek te starten waar de schattingen uiteenlopen."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Welke schattingsmethoden zijn er?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt maten (XS t/m XXL) en Powers of 2 (1 t/m 64), allemaal met een ?- en ☕-kaart."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Werkt het voor remote teams?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja. ScrumFight draait in de browser en synchroniseert realtime, dus het werkt naast Teams, Zoom of Google Meet."
-          }
-        }
-      ]
     }
   ]
 }
@@ -132,7 +77,7 @@
 </head>
 <body class="page-landing">
 
-  <site-nav show-cta></site-nav>
+  <site-nav show-cta show-links></site-nav>
 
   <!-- Hero -->
   <main class="landing-main">
@@ -141,14 +86,13 @@
         <span class="landing-title">⚔️ ScrumFight</span>
         <span class="landing-tagline" data-i18n="landing.tagline">Gratis online Planning Poker voor Scrum-teams</span>
       </h1>
-      <p class="landing-subtitle" data-i18n="landing.subtitle">Schat stories. Win de sprint.</p>
-      <p class="landing-anon-note" data-i18n="landing.anon">✅ Geen account nodig — gewoon een naam invullen en spelen!</p>
+      <p class="landing-pill" data-i18n="landing.anon">✓ Geen account nodig</p>
     </div>
 
     <div class="landing-cards">
 
       <!-- Create room card — full width -->
-      <div class="form-card form-card-wide">
+      <div class="form-card form-card-wide form-card-create">
         <h2 class="form-card-title" data-i18n="landing.create.title">✨ Kamer aanmaken</h2>
 
         <div class="create-fields">
@@ -176,7 +120,7 @@
       </div>
 
       <!-- Join room card — step 1: code, step 2: name -->
-      <div class="form-card form-card-wide">
+      <div class="form-card form-card-wide form-card-join">
         <h2 class="form-card-title" data-i18n="landing.join.title">🚪 Kamer joinen</h2>
 
         <!-- Step 1: code -->
@@ -214,6 +158,7 @@
       </div>
 
     </div>
+
     <!-- Product information: what search engines and AI assistants read -->
     <div class="landing-info">
       <section class="landing-section" aria-labelledby="what-title">
@@ -261,52 +206,35 @@
         </div>
       </section>
 
-      <section class="landing-section" aria-labelledby="features-title">
-        <h2 id="features-title" data-i18n="landing.info.features.title">Functies</h2>
-        <ul class="landing-features">
-          <li data-i18n="landing.info.features.1">Realtime stemmen en gelijktijdige reveal</li>
-          <li data-i18n="landing.info.features.2">Fibonacci, Fibonacci+, T-shirt maten en Powers of 2</li>
-          <li data-i18n="landing.info.features.3">Automatische herkenning van consensus en grote verschillen</li>
-          <li data-i18n="landing.info.features.4">Statistieken per ronde: gemiddelde, minimum, maximum en verdeling</li>
-          <li data-i18n="landing.info.features.5">Toeschouwermodus voor Product Owners en stakeholders</li>
-          <li data-i18n="landing.info.features.6">Meedoen als gast, zonder account</li>
-          <li data-i18n="landing.info.features.7">Sneltoetsen, emoji-reacties en rondenamen</li>
-          <li data-i18n="landing.info.features.8">Beschikbaar in het Nederlands en Engels</li>
-        </ul>
-      </section>
-
-      <section class="landing-section" aria-labelledby="faq-title">
-        <h2 id="faq-title" data-i18n="landing.info.faq.title">Veelgestelde vragen</h2>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.1.q">Wat is Planning Poker?</summary>
-          <p data-i18n="landing.info.faq.1.a">Planning Poker (ook wel Scrum Poker) is een schattingstechniek waarbij elk teamlid tegelijk en verborgen een kaart kiest met een schatting voor een user story. Daarna worden de kaarten onthuld en bespreekt het team de verschillen. Zo voorkom je dat de eerste mening de rest beïnvloedt.</p>
-        </details>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.2.q">Is ScrumFight gratis?</summary>
-          <p data-i18n="landing.info.faq.2.a">Ja. Het gratis plan heeft tot 7 deelnemers per kamer en 3 opgeslagen kamers. Pro (15 deelnemers, 20 kamers) en Premium (onbeperkt) zijn er voor grotere teams.</p>
-        </details>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.3.q">Heb ik een account nodig?</summary>
-          <p data-i18n="landing.info.faq.3.a">Nee. Vul een naam in en je kunt meteen een kamer aanmaken of meedoen. Met een account bewaar je kamers en statistieken.</p>
-        </details>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.4.q">Kan ik ScrumFight gebruiken tijdens refinement?</summary>
-          <p data-i18n="landing.info.faq.4.a">Ja, daar is het voor gemaakt. Maak één kamer aan voor je team, schat de stories een voor een en gebruik de reveal om het gesprek te starten waar de schattingen uiteenlopen.</p>
-        </details>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.5.q">Welke schattingsmethoden zijn er?</summary>
-          <p data-i18n="landing.info.faq.5.a">Fibonacci (1, 2, 3, 5, 8, 13, 21, 34), Fibonacci+ (0, ½, 1, 2, 3, 5, 8, 13, 20, 40, 100), T-shirt maten (XS t/m XXL) en Powers of 2 (1 t/m 64), allemaal met een ?- en ☕-kaart.</p>
-        </details>
-        <details class="landing-faq-item">
-          <summary data-i18n="landing.info.faq.6.q">Werkt het voor remote teams?</summary>
-          <p data-i18n="landing.info.faq.6.a">Ja. ScrumFight draait in de browser en synchroniseert realtime, dus het werkt naast Teams, Zoom of Google Meet.</p>
-        </details>
+      <section class="landing-section" aria-labelledby="key-title">
+        <h2 id="key-title" data-i18n="landing.info.key.title">Waarom ScrumFight</h2>
+        <div class="landing-keys">
+          <article class="landing-key">
+            <h3 data-i18n="landing.info.key.1.title">⚡ Realtime</h3>
+            <p data-i18n="landing.info.key.1.body">Iedereen stemt tegelijk, alle kaarten gaan in één keer open.</p>
+          </article>
+          <article class="landing-key">
+            <h3 data-i18n="landing.info.key.2.title">🃏 Vier schalen</h3>
+            <p data-i18n="landing.info.key.2.body">Fibonacci, Fibonacci+, T-shirt maten en Powers of 2.</p>
+          </article>
+          <article class="landing-key">
+            <h3 data-i18n="landing.info.key.3.title">🎯 Consensus in één oogopslag</h3>
+            <p data-i18n="landing.info.key.3.body">Direct zien of het team het eens is, of waar het gesprek moet beginnen.</p>
+          </article>
+          <article class="landing-key">
+            <h3 data-i18n="landing.info.key.4.title">👤 Geen account nodig</h3>
+            <p data-i18n="landing.info.key.4.body">Naam invullen en meedoen. Een account is alleen nodig om kamers te bewaren.</p>
+          </article>
+        </div>
+        <p class="landing-more">
+          <a href="/nl/functies" data-public-link="features" data-i18n="landing.info.more.features">Alle functies →</a>
+          <a href="/nl/faq" data-public-link="faq" data-i18n="landing.info.more.faq">Veelgestelde vragen →</a>
+        </p>
       </section>
     </div>
   </main>
 
   <site-footer></site-footer>
-
   <script type="module" src="/js/pages/landing.js"></script>
 </body>
 </html>

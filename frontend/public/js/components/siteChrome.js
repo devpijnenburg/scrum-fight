@@ -203,10 +203,10 @@ class SiteNav extends HTMLElement {
   _render() {
     const user      = getCurrentUser();
     const showCta   = this.hasAttribute('show-cta');
-    // Public pages (home, features, FAQ) link to each other; the language
-    // switch is in the footer there to keep the bar calm.
+    // Public pages (home, features, Scrum events, FAQ) link to each other and
+    // show only a flag as language switch, to keep the bar calm.
     const showLinks = this.hasAttribute('show-links');
-    const lang      = showLinks ? '' : '<div class="lang-switcher _nav-lang"></div>';
+    const lang      = `<div class="lang-switcher _nav-lang${showLinks ? ' lang-switcher-compact' : ''}"></div>`;
 
     this.innerHTML = `
       <nav class="navbar">

@@ -902,6 +902,7 @@ function buildLangDropdown(container) {
   const toggle = document.createElement('button');
   toggle.className = 'lang-toggle';
   toggle.type = 'button';
+  toggle.setAttribute('aria-label', 'Language / Taal');
 
   const menu = document.createElement('div');
   menu.className = 'lang-menu hidden';

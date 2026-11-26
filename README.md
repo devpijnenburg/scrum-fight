@@ -232,6 +232,17 @@ De volgorde van deze events per scenario (joinen, stemmen, onthullen, herverbind
 | `reaction`          | server → room  | Broadcast: emoji-reactie van een speler           |
 | `room-expired`      | server → client| Gastkamer verlopen wegens inactiviteit            |
 
+## Pipeline (OTAP)
+
+De workflow **OTAP Pipeline** (`.github/workflows/deploy.yml`) draait bij elke push:
+
+| Branch | Tests | Build (images naar ghcr.io) | Deploy to Test | Deploy to Production |
+|--------|-------|-----------------------------|----------------|----------------------|
+| feature-branch | ✓ | ✓ | ✓ | — |
+| `main` | ✓ | ✓ (ook tag `latest`) | — (staat al op test vanaf de branch) | ✓ |
+
+De test-deploy draait dus alleen op feature-branches; na een merge gaat `main` na de build direct naar productie.
+
 ## Deployment op een VPS
 
 ```bash

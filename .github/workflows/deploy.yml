@@ -177,8 +177,28 @@ jobs:
           ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
-          echo "${{ secrets.GITHUB_TOKEN }}" | \
-            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # Lukt het inloggen bij ghcr.io niet, laat dan zien hoe de DNS op de
+          # server erbij staat: meestal is dat de oorzaak (resolver gestopt, of
+          # resolv.conf wijst naar een adres waar niets luistert).
+          diagnose_dns() {
+            echo "::group::Diagnose: DNS op de server"
+            echo "--- /etc/resolv.conf"; cat /etc/resolv.conf 2>/dev/null || echo "(niet leesbaar)"
+            echo "--- luistert op poort 53"; { ss -lnu 'sport = :53'; ss -lnt 'sport = :53'; } 2>/dev/null || echo "(ss niet beschikbaar)"
+            echo "--- DNS-diensten"
+            for svc in systemd-resolved dnsmasq unbound named; do
+              echo "$svc: $(systemctl is-active "$svc" 2>/dev/null || true)"
+            done
+            echo "--- /etc/docker/daemon.json"; cat /etc/docker/daemon.json 2>/dev/null || echo "(niet aanwezig)"
+            echo "--- getent hosts ghcr.io"; getent hosts ghcr.io || echo "(geen antwoord)"
+            echo "::endgroup::"
+            getent hosts ghcr.io >/dev/null \
+              || echo "::error title=DNS op de server::ghcr.io is op de server niet op te zoeken; zie de groep 'Diagnose: DNS op de server' in deze stap."
+          }
+          if ! echo "${{ secrets.GITHUB_TOKEN }}" | \
+              docker login ghcr.io -u "${{ github.actor }}" --password-stdin; then
+            diagnose_dns
+            exit 1
+          fi
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
             -p scrum-fight-test \
             -f ~/scrum-fight/docker-compose.test.yml \
@@ -306,8 +326,28 @@ jobs:
           ssh -4 -p 622 -i ~/.ssh/deploy_key \
             ${{ secrets.DEPLOY_USER }}@murderbot.nl << 'EOF'
           set -euo pipefail
-          echo "${{ secrets.GITHUB_TOKEN }}" | \
-            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # Lukt het inloggen bij ghcr.io niet, laat dan zien hoe de DNS op de
+          # server erbij staat: meestal is dat de oorzaak (resolver gestopt, of
+          # resolv.conf wijst naar een adres waar niets luistert).
+          diagnose_dns() {
+            echo "::group::Diagnose: DNS op de server"
+            echo "--- /etc/resolv.conf"; cat /etc/resolv.conf 2>/dev/null || echo "(niet leesbaar)"
+            echo "--- luistert op poort 53"; { ss -lnu 'sport = :53'; ss -lnt 'sport = :53'; } 2>/dev/null || echo "(ss niet beschikbaar)"
+            echo "--- DNS-diensten"
+            for svc in systemd-resolved dnsmasq unbound named; do
+              echo "$svc: $(systemctl is-active "$svc" 2>/dev/null || true)"
+            done
+            echo "--- /etc/docker/daemon.json"; cat /etc/docker/daemon.json 2>/dev/null || echo "(niet aanwezig)"
+            echo "--- getent hosts ghcr.io"; getent hosts ghcr.io || echo "(geen antwoord)"
+            echo "::endgroup::"
+            getent hosts ghcr.io >/dev/null \
+              || echo "::error title=DNS op de server::ghcr.io is op de server niet op te zoeken; zie de groep 'Diagnose: DNS op de server' in deze stap."
+          }
+          if ! echo "${{ secrets.GITHUB_TOKEN }}" | \
+              docker login ghcr.io -u "${{ github.actor }}" --password-stdin; then
+            diagnose_dns
+            exit 1
+          fi
           docker compose \
             -f ~/scrum-fight/docker-compose.prod.yml \
             --env-file ~/scrum-fight/.env \

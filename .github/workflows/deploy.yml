@@ -212,7 +212,9 @@ jobs:
             | grep -E '/scrum-fight-(backend|frontend):' \
             | grep -v ':latest$' \
             | xargs -r -n1 docker rmi >/dev/null 2>&1 || true
-          docker image prune -f
+          # Niet fataal: een gelijktijdige deploy van een ander project op deze VM
+          # kan al een prune draaien ("a prune operation is already running").
+          docker image prune -f || true
           IMAGE_TAG="${{ needs.build.outputs.image_tag }}" docker compose \
             -p scrum-fight-test \
             -f ~/scrum-fight/docker-compose.test.yml \
@@ -320,7 +322,9 @@ jobs:
             -f ~/scrum-fight/docker-compose.prod.yml \
             --env-file ~/scrum-fight/.env \
             up -d
-          docker image prune -f
+          # Niet fataal: een gelijktijdige deploy van een ander project op deze VM
+          # kan al een prune draaien ("a prune operation is already running").
+          docker image prune -f || true
           docker compose \
             -f ~/scrum-fight/docker-compose.prod.yml \
             --env-file ~/scrum-fight/.env \

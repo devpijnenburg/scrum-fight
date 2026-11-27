@@ -9,6 +9,8 @@ RUN node scripts/stamp-assets.mjs public
 FROM nginx:1.30-alpine
 # nginx.conf is een template: ${BACKEND_URL} wordt bij het opstarten ingevuld
 ENV BACKEND_URL=http://backend:3000
+# Umami website-id; docker-compose.test.yml zet het id van acceptance
+ENV UMAMI_WEBSITE_ID=d5fec095-4118-4343-8c8d-44199f17ba09
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=assets /build/public /usr/share/nginx/html
 EXPOSE 80

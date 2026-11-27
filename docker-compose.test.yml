@@ -1,6 +1,9 @@
 services:
   db:
     image: postgres:16-alpine
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     container_name: scrum-fight-test-db
     restart: unless-stopped
     environment:
@@ -17,6 +20,9 @@ services:
 
   backend:
     image: ghcr.io/${GHCR_OWNER}/scrum-fight-backend:${IMAGE_TAG}
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     container_name: scrum-fight-test-backend
     restart: unless-stopped
     depends_on:
@@ -58,6 +64,9 @@ services:
 
   frontend:
     image: ghcr.io/${GHCR_OWNER}/scrum-fight-frontend:${IMAGE_TAG}
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     container_name: scrum-fight-test-frontend
     restart: unless-stopped
     depends_on:

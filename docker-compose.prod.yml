@@ -1,6 +1,9 @@
 services:
   db:
     image: postgres:16-alpine
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -16,6 +19,9 @@ services:
 
   backend:
     image: ghcr.io/${GHCR_OWNER}/scrum-fight-backend:latest
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     restart: unless-stopped
     depends_on:
       db:
@@ -56,6 +62,9 @@ services:
 
   frontend:
     image: ghcr.io/${GHCR_OWNER}/scrum-fight-frontend:latest
+    dns:
+      - 172.29.53.53
+      - fd53:6d62:6f74::53
     restart: unless-stopped
     depends_on:
       - backend

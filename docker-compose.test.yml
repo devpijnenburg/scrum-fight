@@ -71,6 +71,9 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    environment:
+      # Aparte Umami-website voor acceptance
+      UMAMI_WEBSITE_ID: 2616061e-58a5-4cb4-8ddd-a8dc8dbec00c
     ports:
       - "${FRONTEND_TEST_PORT:-8082}:80"
 
